@@ -1,0 +1,290 @@
+<!-- templates/reportes/reporte_generado.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ reporte.nombre }} | Sistema de Administración de Condominios{% endblock %}
+{% block header %}{{ reporte.nombre }}{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="m-0"><i class="fas fa-chart-bar"></i> Reporte: {{ reporte.nombre }}</h5>
+        <div>
+            <a href="{% url 'descargar-reporte' reporte.id %}" class="btn btn-light btn-sm">
+                <i class="fas fa-download"></i> Descargar CSV
+            </a>
+            <button onclick="window.print()" class="btn btn-light btn-sm">
+                <i class="fas fa-print"></i> Imprimir
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <p><strong>Tipo:</strong> 
+                    {% if reporte.tipo == 'ACCESOS' %}
+                        <span class="badge text-bg-primary">Accesos</span>
+                    {% elif reporte.tipo == 'RESIDENTES' %}
+                        <span class="badge text-bg-success">Residentes</span>
+                    {% elif reporte.tipo == 'VIVIENDAS' %}
+                        <span class="badge text-bg-info">Viviendas</span>
+                    {% elif reporte.tipo == 'FINANCIERO' %}
+                        <span class="badge text-bg-warning">Financiero</span>
+                    {% endif %}
+                </p>
+                <p><strong>Período:</strong> {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <p><strong>Generado por:</strong> {{ reporte.creado_por.first_name }} {{ reporte.creado_por.last_name }}</p>
+                <p><strong>Fecha de generación:</strong> {{ fecha_generacion|date:"d/m/Y H:i" }}</p>
+            </div>
+        </div>
+        
+        <!-- Gráfico -->
+        <div class="row mb-4">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="m-0">{{ chart_title }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="reportChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tablas de datos según el tipo de reporte -->
+        {% if reporte.tipo == 'ACCESOS' %}
+            <h5 class="mt-4 mb-3">Detalle de Visitas</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Visitante</th>
+                            <th>Documento</th>
+                            <th>Vivienda</th>
+                            <th>Autorizado por</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th>Duración</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visita in visitas %}
+                        <tr>
+                            <td>{{ visita.nombre_visitante }}</td>
+                            <td>{{ visita.documento_visitante }}</td>
+                            <td>{{ visita.vivienda_destino }}</td>
+                            <td>{{ visita.residente_autoriza }}</td>
+                            <td>{{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% if visita.fecha_hora_salida %}
+                                    {{ visita.fecha_hora_salida|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">Sin registrar</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if visita.fecha_hora_salida %}
+                                    {% with duracion=visita.fecha_hora_salida|timeuntil:visita.fecha_hora_entrada %}
+                                        {{ duracion }}
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No hay visitas registradas en este período</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif reporte.tipo == 'RESIDENTES' %}
+            <h5 class="mt-4 mb-3">Listado de Residentes</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Vivienda</th>
+                            <th>Tipo</th>
+                            <th>Fecha Ingreso</th>
+                            <th>Vehículos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for residente in residentes %}
+                        <tr>
+                            <td>{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</td>
+                            <td>
+                                {% if residente.vivienda %}
+                                    {{ residente.vivienda.edificio.nombre }} - {{ residente.vivienda.numero }}
+                                {% else %}
+                                    <span class="text-muted">Sin asignar</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if residente.es_propietario %}
+                                    <span class="badge text-bg-primary">Propietario</span>
+                                {% else %}
+                                    <span class="badge text-bg-info">Inquilino</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
+                            <td>{{ residente.vehiculos }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay residentes registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif reporte.tipo == 'VIVIENDAS' %}
+            <h5 class="mt-4 mb-3">Listado de Viviendas</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Edificio</th>
+                            <th>Número</th>
+                            <th>Piso</th>
+                            <th>M²</th>
+                            <th>Habitaciones</th>
+                            <th>Baños</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vivienda in viviendas %}
+                        <tr>
+                            <td>{{ vivienda.edificio.nombre }}</td>
+                            <td>{{ vivienda.numero }}</td>
+                            <td>{{ vivienda.piso }}</td>
+                            <td>{{ vivienda.metros_cuadrados }}</td>
+                            <td>{{ vivienda.habitaciones }}</td>
+                            <td>{{ vivienda.baños }}</td>
+                            <td>
+                                {% if vivienda.estado == 'OCUPADO' %}
+                                    <span class="badge text-bg-success">Ocupado</span>
+                                {% elif vivienda.estado == 'DESOCUPADO' %}
+                                    <span class="badge text-bg-secondary">Desocupado</span>
+                                {% else %}
+                                    <span class="badge text-bg-warning">Mantenimiento</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No hay viviendas registradas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('reportChart').getContext('2d');
+        
+        // Obtener datos del backend
+        const labels = {{ chart_labels|safe }};
+        const data = {{ chart_data|safe }};
+        
+        // Definir colores para gráficos
+        let backgroundColors = [];
+        let borderColors = [];
+        
+        {% if reporte.tipo == 'VIVIENDAS' %}
+            // Colores específicos para estado de viviendas
+            backgroundColors = [
+                'rgba(40, 167, 69, 0.7)',    // Ocupadas - verde
+                'rgba(108, 117, 125, 0.7)',  // Desocupadas - gris
+                'rgba(255, 193, 7, 0.7)'     // Mantenimiento - amarillo
+            ];
+            borderColors = [
+                'rgba(40, 167, 69, 1)',
+                'rgba(108, 117, 125, 1)',
+                'rgba(255, 193, 7, 1)'
+            ];
+        {% elif reporte.tipo == 'RESIDENTES' %}
+            // Colores específicos para tipos de residentes
+            backgroundColors = [
+                'rgba(0, 123, 255, 0.7)',    // Propietarios - azul
+                'rgba(23, 162, 184, 0.7)'    // Inquilinos - cian
+            ];
+            borderColors = [
+                'rgba(0, 123, 255, 1)',
+                'rgba(23, 162, 184, 1)'
+            ];
+        {% else %}
+            // Para visitas y otros, usar un color por cada día
+            for (let i = 0; i < labels.length; i++) {
+                const hue = (i * 25) % 360;
+                backgroundColors.push(`hsla(${hue}, 70%, 60%, 0.7)`);
+                borderColors.push(`hsla(${hue}, 70%, 60%, 1)`);
+            }
+        {% endif %}
+        
+        // Definir el tipo de gráfico según el tipo de reporte
+        let chartType = 'bar';
+        {% if reporte.tipo == 'RESIDENTES' or reporte.tipo == 'VIVIENDAS' %}
+            chartType = 'pie';
+        {% endif %}
+        
+        // Crear el gráfico
+        const reportChart = new Chart(ctx, {
+            type: chartType,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '{{ chart_title }}',
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    borderColor: borderColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: false,
+                        text: '{{ chart_title }}'
+                    }
+                },
+                {% if reporte.tipo == 'ACCESOS' %}
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Número de visitas'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Fecha'
+                        }
+                    }
+                }
+                {% endif %}
+            }
+        });
+    });
+</script>
+{% endblock %}

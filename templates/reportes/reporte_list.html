@@ -47,13 +47,12 @@
                         <td>{{ reporte.creado_por.first_name }} {{ reporte.creado_por.last_name }}</td>
                         <td>
                             <div class="btn-group btn-group-sm">
+                                <a href="{% url 'generar-reporte' reporte.id %}" class="btn btn-primary">
+                                    <i class="fas fa-chart-bar"></i> Visualizar
+                                </a>
                                 {% if reporte.archivo %}
                                     <a href="{% url 'descargar-reporte' reporte.id %}" class="btn btn-success">
-                                        <i class="fas fa-download"></i>
-                                    </a>
-                                {% else %}
-                                    <a href="{% url 'generar-reporte' reporte.id %}" class="btn btn-primary">
-                                        <i class="fas fa-file-export"></i> Generar
+                                        <i class="fas fa-download"></i> CSV
                                     </a>
                                 {% endif %}
                             </div>

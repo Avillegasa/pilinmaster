@@ -1,5 +1,6 @@
-from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
+from django.shortcuts import render, redirect,  get_object_or_404
+from django.urls import reverse_lazy, reverse
+from django.core.files.base import ContentFile
 from django.views.generic import ListView, CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
@@ -12,6 +13,11 @@ from .models import Reporte
 from .forms import ReporteForm
 from accesos.models import Visita, MovimientoResidente
 from viviendas.models import Vivienda, Residente
+import json
+
+from .models import Reporte
+from accesos.models import Visita, MovimientoResidente 
+from viviendas.models import Vivienda, Residente 
 
 class ReporteListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
     model = Reporte
@@ -32,17 +38,42 @@ class ReporteCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
 def generar_reporte(request, pk):
     reporte = get_object_or_404(Reporte, pk=pk)
     
-    # Crear un archivo CSV en memoria
-    output = StringIO()
-    writer = csv.writer(output)
+    # Obtener datos según el tipo de reporte
+    context = {
+        'reporte': reporte,
+        'fecha_generacion': datetime.now(),
+    }
     
-    # Dependiendo del tipo de reporte, generamos diferentes datos
     if reporte.tipo == 'ACCESOS':
-        writer.writerow(['ID', 'Nombre Visitante', 'Documento', 'Vivienda', 'Fecha Entrada', 'Fecha Salida', 'Duración (horas)'])
+        # Obtener datos de visitas
         visitas = Visita.objects.filter(
             fecha_hora_entrada__date__gte=reporte.fecha_desde,
             fecha_hora_entrada__date__lte=reporte.fecha_hasta
-        )
+        ).order_by('fecha_hora_entrada')
+        
+        context['visitas'] = visitas
+        
+        # Preparar datos para el gráfico
+        visitas_por_dia = {}
+        for visita in visitas:
+            fecha = visita.fecha_hora_entrada.date().strftime('%Y-%m-%d')
+            if fecha in visitas_por_dia:
+                visitas_por_dia[fecha] += 1
+            else:
+                visitas_por_dia[fecha] = 1
+        
+        # Convertir a formato para el gráfico
+        labels = list(visitas_por_dia.keys())
+        data = list(visitas_por_dia.values())
+        
+        context['chart_labels'] = json.dumps(labels)
+        context['chart_data'] = json.dumps(data)
+        context['chart_title'] = 'Visitas por día'
+        
+        # También crear CSV para descarga
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['ID', 'Nombre Visitante', 'Documento', 'Vivienda', 'Fecha Entrada', 'Fecha Salida', 'Duración (horas)'])
         
         for visita in visitas:
             duracion = ''
@@ -58,10 +89,31 @@ def generar_reporte(request, pk):
                 visita.fecha_hora_salida.strftime('%d/%m/%Y %H:%M') if visita.fecha_hora_salida else 'Sin salida',
                 duracion
             ])
+        
+        # Guardar el archivo CSV
+        reporte.archivo.save(
+            f"reporte_{reporte.tipo.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            ContentFile(output.getvalue().encode('utf-8')),
+            save=True
+        )
     
     elif reporte.tipo == 'RESIDENTES':
-        writer.writerow(['ID', 'Nombre', 'Vivienda', 'Es Propietario', 'Fecha Ingreso', 'Vehículos'])
+        # Obtener datos de residentes
         residentes = Residente.objects.all()
+        context['residentes'] = residentes
+        
+        # Preparar datos para gráfico de propietarios vs inquilinos
+        propietarios = residentes.filter(es_propietario=True).count()
+        inquilinos = residentes.filter(es_propietario=False).count()
+        
+        context['chart_labels'] = json.dumps(['Propietarios', 'Inquilinos'])
+        context['chart_data'] = json.dumps([propietarios, inquilinos])
+        context['chart_title'] = 'Distribución de Residentes'
+        
+        # Crear CSV
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['ID', 'Nombre', 'Vivienda', 'Es Propietario', 'Fecha Ingreso', 'Vehículos'])
         
         for residente in residentes:
             writer.writerow([
@@ -72,10 +124,31 @@ def generar_reporte(request, pk):
                 residente.fecha_ingreso.strftime('%d/%m/%Y'),
                 residente.vehiculos
             ])
+        
+        reporte.archivo.save(
+            f"reporte_{reporte.tipo.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            ContentFile(output.getvalue().encode('utf-8')),
+            save=True
+        )
     
     elif reporte.tipo == 'VIVIENDAS':
-        writer.writerow(['ID', 'Edificio', 'Número', 'Piso', 'Metros Cuadrados', 'Habitaciones', 'Baños', 'Estado'])
+        # Obtener datos de viviendas
         viviendas = Vivienda.objects.all()
+        context['viviendas'] = viviendas
+        
+        # Preparar datos para gráfico de estados de viviendas
+        ocupadas = viviendas.filter(estado='OCUPADO').count()
+        desocupadas = viviendas.filter(estado='DESOCUPADO').count()
+        mantenimiento = viviendas.filter(estado='MANTENIMIENTO').count()
+        
+        context['chart_labels'] = json.dumps(['Ocupadas', 'Desocupadas', 'En Mantenimiento'])
+        context['chart_data'] = json.dumps([ocupadas, desocupadas, mantenimiento])
+        context['chart_title'] = 'Estado de Viviendas'
+        
+        # Crear CSV
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['ID', 'Edificio', 'Número', 'Piso', 'Metros Cuadrados', 'Habitaciones', 'Baños', 'Estado'])
         
         for vivienda in viviendas:
             writer.writerow([
@@ -88,16 +161,15 @@ def generar_reporte(request, pk):
                 vivienda.baños,
                 vivienda.estado
             ])
+        
+        reporte.archivo.save(
+            f"reporte_{reporte.tipo.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            ContentFile(output.getvalue().encode('utf-8')),
+            save=True
+        )
     
-    # Guardar el archivo generado en el modelo de Reporte
-    reporte.archivo.save(
-        f"reporte_{reporte.tipo.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-        ContentFile(output.getvalue().encode('utf-8')),
-        save=True
-    )
-    
-    # Redirigir a la descarga del archivo
-    return redirect('descargar-reporte', pk=reporte.pk)
+    # Renderizar la plantilla con los datos
+    return render(request, 'reportes/reporte_generado.html', context)
 
 @login_required
 def descargar_reporte(request, pk):
