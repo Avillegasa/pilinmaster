@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ edificio.nombre }} | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Detalles del Edificio{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5>{{ edificio.nombre }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre</label>
+                        <p class="form-control">{{ edificio.nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Pisos</label>
+                        <p class="form-control">{{ edificio.pisos }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Dirección</label>
+                        <p class="form-control">{{ edificio.direccion }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha de Construcción</label>
+                        <p class="form-control">{{ edificio.fecha_construccion|date:"d/m/Y"|default:"No especificada" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Total de Viviendas</label>
+                        <p class="form-control">{{ edificio.viviendas.count }}</p>
+                    </div>
+                </div>
+                
+                <h5 class="mt-4 mb-3">Viviendas en este Edificio</h5>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>Piso</th>
+                                <th>Estado</th>
+                                <th>Residentes</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vivienda in edificio.viviendas.all %}
+                            <tr>
+                                <td>{{ vivienda.numero }}</td>
+                                <td>{{ vivienda.piso }}</td>
+                                <td>
+                                    {% if vivienda.estado == 'OCUPADO' %}
+                                        <span class="badge text-bg-success">Ocupado</span>
+                                    {% elif vivienda.estado == 'DESOCUPADO' %}
+                                        <span class="badge text-bg-secondary">Desocupado</span>
+                                    {% else %}
+                                        <span class="badge text-bg-warning">Mantenimiento</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ vivienda.residentes.count }}</td>
+                                <td>
+                                    <a href="{% url 'vivienda-detail' vivienda.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No hay viviendas registradas en este edificio</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-4 d-flex justify-content-between">
+                    <a href="{% url 'edificio-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                    <div>
+                        <a href="{% url 'edificio-update' edificio.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'edificio-delete' edificio.id %}" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Edificio | Sistema de Administración de Condominios
+{% endblock %}
+
+{% block header %}
+    {% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Edificio
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.nombre|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.pisos|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {{ form.direccion|as_crispy_field }}
+                    {{ form.fecha_construccion|as_crispy_field }}
+                    
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{% url 'edificio-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

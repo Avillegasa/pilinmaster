@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Usuario | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Eliminar Usuario{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h5>
+            </div>
+            <div class="card-body text-center">
+                <p class="lead">¿Estás seguro que deseas eliminar el usuario?</p>
+                <div class="alert alert-warning">
+                    <strong>{{ usuario.first_name }} {{ usuario.last_name }}</strong> ({{ usuario.username }})
+                </div>
+                <p>Esta acción no se puede deshacer.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mt-4 d-flex justify-content-center gap-3">
+                        <a href="{% url 'usuario-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

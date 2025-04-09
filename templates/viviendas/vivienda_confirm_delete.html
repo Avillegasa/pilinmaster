@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Vivienda | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Eliminar Vivienda{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h5>
+            </div>
+            <div class="card-body text-center">
+                <p class="lead">¿Estás seguro que deseas eliminar la vivienda?</p>
+                <div class="alert alert-warning">
+                    <strong>Vivienda {{ vivienda.numero }} - Piso {{ vivienda.piso }}</strong><br>
+                    Edificio: {{ vivienda.edificio.nombre }}
+                </div>
+                <p>Esta acción no se puede deshacer y puede afectar a los residentes asignados a esta vivienda.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mt-4 d-flex justify-content-center gap-3">
+                        <a href="{% url 'vivienda-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

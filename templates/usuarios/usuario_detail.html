@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ usuario.username }} | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Detalles del Usuario{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5>{{ usuario.first_name }} {{ usuario.last_name }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    {% if usuario.foto %}
+                        <img src="{{ usuario.foto.url }}" alt="{{ usuario }}" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-5x text-secondary"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre de usuario</label>
+                        <p class="form-control">{{ usuario.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Correo electrónico</label>
+                        <p class="form-control">{{ usuario.email }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Rol</label>
+                        <p class="form-control">{{ usuario.rol.nombre|default:"Sin rol" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Estado</label>
+                        <p class="form-control">
+                            {% if usuario.is_active %}
+                                <span class="badge text-bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge text-bg-danger">Inactivo</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono</label>
+                        <p class="form-control">{{ usuario.telefono|default:"No especificado" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Documento</label>
+                        <p class="form-control">{{ usuario.tipo_documento }}: {{ usuario.numero_documento|default:"No especificado" }}</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 d-flex justify-content-between">
+                    <a href="{% url 'usuario-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                    <div>
+                        <a href="{% url 'usuario-update' usuario.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'usuario-delete' usuario.id %}" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

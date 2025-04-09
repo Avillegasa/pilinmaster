@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Registrar Visita | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Registrar Visita{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.nombre_visitante|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.documento_visitante|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.vivienda_destino|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.residente_autoriza|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {{ form.motivo|as_crispy_field }}
+                    
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{% url 'visita-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check"></i> Registrar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

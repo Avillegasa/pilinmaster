@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Viviendas</h5>
+                        <h2 class="card-text">{{ total_viviendas }}</h2>
+                    </div>
+                    <i class="fas fa-home fa-3x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Ocupación</h5>
+                        <h2 class="card-text">{{ porcentaje_ocupacion|floatformat:1 }}%</h2>
+                    </div>
+                    <i class="fas fa-chart-pie fa-3x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Residentes</h5>
+                        <h2 class="card-text">{{ total_residentes }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-3x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Visitas Activas</h5>
+                        <h2 class="card-text">{{ visitas_activas }}</h2>
+                    </div>
+                    <i class="fas fa-user-check fa-3x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Gráfica de ocupación -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-pie"></i> Ocupación de Viviendas</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="ocupacionChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Últimos movimientos -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5><i class="fas fa-exchange-alt"></i> Últimos Movimientos</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Residente</th>
+                                <th>Tipo</th>
+                                <th>Fecha/Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movimiento in ultimos_movimientos %}
+                            <tr>
+                                <td>{{ movimiento.residente }}</td>
+                                <td>
+                                    {% if movimiento.fecha_hora_entrada and not movimiento.fecha_hora_salida %}
+                                        <span class="badge text-bg-success">Entrada</span>
+                                    {% elif movimiento.fecha_hora_salida and not movimiento.fecha_hora_entrada %}
+                                        <span class="badge text-bg-danger">Salida</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if movimiento.fecha_hora_entrada and not movimiento.fecha_hora_salida %}
+                                        {{ movimiento.fecha_hora_entrada|date:"d/m/Y H:i" }}
+                                    {% elif movimiento.fecha_hora_salida and not movimiento.fecha_hora_entrada %}
+                                        {{ movimiento.fecha_hora_salida|date:"d/m/Y H:i" }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">No hay movimientos registrados</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Últimas visitas -->
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5><i class="fas fa-clipboard-list"></i> Últimas Visitas</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Visitante</th>
+                                <th>Documento</th>
+                                <th>Vivienda</th>
+                                <th>Autorizado por</th>
+                                <th>Fecha/Hora Entrada</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for visita in ultimas_visitas %}
+                            <tr>
+                                <td>{{ visita.nombre_visitante }}</td>
+                                <td>{{ visita.documento_visitante }}</td>
+                                <td>{{ visita.vivienda_destino }}</td>
+                                <td>{{ visita.residente_autoriza }}</td>
+                                <td>{{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    {% if visita.fecha_hora_salida %}
+                                        <span class="badge text-bg-secondary">Finalizada</span>
+                                    {% else %}
+                                        <span class="badge text-bg-success">Activa</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No hay visitas registradas</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Gráfico de ocupación de viviendas
+    const ctx = document.getElementById('ocupacionChart').getContext('2d');
+    const ocupacionChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Ocupadas', 'Desocupadas'],
+            datasets: [{
+                data: [{{ viviendas_ocupadas }}, {{ total_viviendas|add:"-"|add:viviendas_ocupadas }}],
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(108, 117, 125, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(40, 167, 69, 1)',
+                    'rgba(108, 117, 125, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

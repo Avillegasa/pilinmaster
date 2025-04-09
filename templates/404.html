@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}404 - Página no encontrada{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 text-center">
+        <h1 class="display-1 text-danger">404</h1>
+        <h2 class="mb-4">Página no encontrada</h2>
+        <p class="lead">Lo sentimos, la página que estás buscando no existe o ha sido movida.</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">
+            <i class="fas fa-home"></i> Volver al inicio
+        </a>
+    </div>
+</div>
+{% endblock %}

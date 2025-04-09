@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Visitas | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Gestión de Visitas{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <p class="text-muted">Total: {{ visitas.count }} visitas activas</p>
+    <a href="{% url 'visita-create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Registrar Visita
+    </a>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Visitante</th>
+                        <th>Documento</th>
+                        <th>Vivienda</th>
+                        <th>Residente Autoriza</th>
+                        <th>Entrada</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visita in visitas %}
+                    <tr>
+                        <td>{{ visita.id }}</td>
+                        <td>{{ visita.nombre_visitante }}</td>
+                        <td>{{ visita.documento_visitante }}</td>
+                        <td>{{ visita.vivienda_destino }}</td>
+                        <td>{{ visita.residente_autoriza }}</td>
+                        <td>{{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'visita-salida' visita.id %}" class="btn btn-sm btn-success">
+                                <i class="fas fa-sign-out-alt"></i> Registrar Salida
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No hay visitas activas</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
