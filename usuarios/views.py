@@ -64,3 +64,5 @@ class RolDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
     model = Rol
     template_name = 'usuarios/rol_confirm_delete.html'
     success_url = reverse_lazy('rol-list')
+
+
