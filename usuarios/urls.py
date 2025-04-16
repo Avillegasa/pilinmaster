@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views_api import CustomTokenObtainPairView
+from .views_api import CustomTokenObtainPairView,usuario_actual
 from rest_framework_simplejwt.views import TokenRefreshView
 urlpatterns = [
     # URLs para Usuario
@@ -19,4 +19,5 @@ urlpatterns = [
     #URLs para movil usuario
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/me/', usuario_actual, name='usuario_actual'),
 ]
