@@ -1,42 +1,28 @@
-{% extends 'base.html' %}
-{% load crispy_forms_tags %}
-
-{% block title %}Iniciar Sesión | Sistema de Administración de Condominios{% endblock %}
-
+{% load static %} <!-- Agregado para cargar el tag static -->
 {% block auth_content %}
-<div class="container">
-    <div class="row justify-content-center vh-100 align-items-center">
-        <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</h4>
-                </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="id_username" class="form-label">Usuario</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                <input type="text" name="username" id="id_username" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="id_password" class="form-label">Contraseña</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input type="password" name="password" id="id_password" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-sign-in-alt"></i> Acceder
-                            </button>
-                        </div>
-                    </form>
-                </div>
+<div style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #0066cc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; position: relative;">
+    <div style="text-align: center; background-color: rgba(255, 255, 255, 0.8); padding: 30px; border-radius: 10px; width: 100%; max-width: 400px;">
+        <!-- Imagen sin borde negro -->
+        <img src="{% static 'media/logo.png' %}" alt="Logo" style="max-width: 200px; height: auto; margin-bottom: 10px; border-radius: 50%;">
+        <!-- Texto principal con color negro -->
+        <h1 style="font-size: 2.5em; color: #000; margin-bottom: 10px;">Sistema de Administración de Condominios</h1>
+        <!-- Texto "Iniciar Sesión" en negrita y color negro -->
+        <h2 style="color: #000; font-weight: bold; margin-bottom: 20px;">Iniciar Sesión</h2>
+        <form method="post" style="margin-top: 20px;">
+            {% csrf_token %}
+            <div style="margin-bottom: 20px;">
+                <label for="id_username" style="font-size: 1.2em; color: #333;">Usuario</label>
+                <input type="text" name="username" id="id_username" required style="width: 100%; padding: 10px; font-size: 1.2em; border: 1px solid #ccc; border-radius: 5px;"/>
             </div>
-        </div>
+            <div style="margin-bottom: 20px;">
+                <label for="id_password" style="font-size: 1.2em; color: #333;">Contraseña</label>
+                <input type="password" name="password" id="id_password" required style="width: 100%; padding: 10px; font-size: 1.2em; border: 1px solid #ccc; border-radius: 5px;"/>
+            </div>
+            <button type="submit" style="width: 100%; padding: 10px; background-color: #ffcc00; color: #333; font-size: 1.5em; border: none; border-radius: 5px;">Acceder</button>
+        </form>
+        <p style="margin-top: 20px; color: #fff;"><a href="#" style="color: #fff; font-size: 1.1em;">¿Olvidaste tu contraseña?</a></p>
     </div>
+    <!-- Texto de marca en la parte inferior derecha -->
+    <p style="position: absolute; bottom: 10px; right: 10px; color: #fff; font-size: 1em; font-weight: bold;">EQUIPO TECHFORGE</p>
 </div>
 {% endblock %}
