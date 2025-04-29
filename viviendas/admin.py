@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Edificio, Vivienda, Residente
+from .models import Edificio, Vivienda, Residente, TipoResidente
 
 class ViviendaInline(admin.TabularInline):
     model = Vivienda
@@ -28,12 +28,22 @@ class ViviendaAdmin(admin.ModelAdmin):
         return obj.residentes.count()
     total_residentes.short_description = 'Total de residentes'
 
+class TipoResidenteAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'descripcion', 'es_propietario', 'total_residentes')
+    list_filter = ('es_propietario',)
+    search_fields = ('nombre', 'descripcion')
+    
+    def total_residentes(self, obj):
+        return obj.residentes.count()
+    total_residentes.short_description = 'Total de residentes'
+
 class ResidenteAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'vivienda', 'es_propietario', 'fecha_ingreso', 'vehiculos')
-    list_filter = ('es_propietario', 'vivienda__edificio')
+    list_display = ('usuario', 'vivienda', 'tipo_residente', 'es_propietario', 'fecha_ingreso', 'vehiculos', 'activo')
+    list_filter = ('tipo_residente', 'activo', 'vivienda__edificio')
     search_fields = ('usuario__first_name', 'usuario__last_name', 'vivienda__numero')
     date_hierarchy = 'fecha_ingreso'
 
 admin.site.register(Edificio, EdificioAdmin)
 admin.site.register(Vivienda, ViviendaAdmin)
+admin.site.register(TipoResidente, TipoResidenteAdmin)
 admin.site.register(Residente, ResidenteAdmin)

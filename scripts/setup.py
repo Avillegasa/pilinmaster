@@ -19,7 +19,7 @@ django.setup()
 
 from django.contrib.auth import get_user_model
 from usuarios.models import Rol
-from viviendas.models import Edificio, Vivienda, Residente
+from viviendas.models import Edificio, Vivienda, Residente, TipoResidente
 
 Usuario = get_user_model()
 
@@ -39,6 +39,18 @@ def setup():
             
             for nombre, descripcion in roles.items():
                 Rol.objects.get_or_create(nombre=nombre, defaults={'descripcion': descripcion})
+            
+            # Crear tipos de residentes
+            print("Creando tipos de residentes...")
+            tipos_residentes = {
+                'Titular': {'descripcion': 'Habitante principal de la vivienda', 'es_propietario': True},
+                'Dueño': {'descripcion': 'Propietario que no reside en el condominio', 'es_propietario': True},
+                'Copropietario': {'descripcion': 'Habitante de la vivienda sin ser titular', 'es_propietario': True},
+                'Menor': {'descripcion': 'Habitante menor de edad', 'es_propietario': False},
+            }
+            
+            for nombre, datos in tipos_residentes.items():
+                TipoResidente.objects.get_or_create(nombre=nombre, defaults=datos)
             
             # Crear superusuario (administrador)
             print("Creando superusuario...")
@@ -96,9 +108,41 @@ def setup():
             # Crear usuarios residentes y asignarlos a viviendas
             print("Creando residentes de ejemplo...")
             residentes = [
-                {'nombre': 'Carlos', 'apellido': 'González', 'username': 'carlos', 'vivienda': '101', 'propietario': True},
-                {'nombre': 'María', 'apellido': 'Rodríguez', 'username': 'maria', 'vivienda': '102', 'propietario': True},
-                {'nombre': 'Jorge', 'apellido': 'Fernández', 'username': 'jorge', 'vivienda': '201', 'propietario': False},
+                {
+                    'nombre': 'Carlos', 
+                    'apellido': 'González', 
+                    'username': 'carlos', 
+                    'vivienda': '101', 
+                    'tipo': 'Titular'
+                },
+                {
+                    'nombre': 'María', 
+                    'apellido': 'Rodríguez', 
+                    'username': 'maria', 
+                    'vivienda': '102', 
+                    'tipo': 'Titular'
+                },
+                {
+                    'nombre': 'Jorge', 
+                    'apellido': 'Fernández', 
+                    'username': 'jorge', 
+                    'vivienda': '201', 
+                    'tipo': 'Copropietario'
+                },
+                {
+                    'nombre': 'Ana', 
+                    'apellido': 'López', 
+                    'username': 'ana', 
+                    'vivienda': '301', 
+                    'tipo': 'Dueño'
+                },
+                {
+                    'nombre': 'Pedro', 
+                    'apellido': 'Ramírez', 
+                    'username': 'pedro', 
+                    'vivienda': '102', 
+                    'tipo': 'Menor'
+                }
             ]
             
             for r in residentes:
@@ -117,11 +161,15 @@ def setup():
                     vivienda.estado = 'OCUPADO'
                     vivienda.save()
                     
+                    tipo_residente = TipoResidente.objects.get(nombre=r['tipo'])
+                    
                     Residente.objects.create(
                         usuario=usuario,
                         vivienda=vivienda,
-                        es_propietario=r['propietario'],
-                        vehiculos=1 if r['propietario'] else 0,
+                        tipo_residente=tipo_residente,
+                        es_propietario=tipo_residente.es_propietario,
+                        vehiculos=1 if tipo_residente.nombre in ['Titular', 'Dueño'] else 0,
+                        activo=True
                     )
             
             print("Configuración inicial completada con éxito.")

@@ -4,8 +4,8 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, D
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from usuarios.views import AdminRequiredMixin
-from .models import Edificio, Vivienda, Residente
-from .forms import EdificioForm, ViviendaForm, ResidenteForm
+from .models import Edificio, Vivienda, Residente, TipoResidente
+from .forms import EdificioForm, ViviendaForm, ResidenteForm, TipoResidenteForm
 
 # Vistas de Edificios
 class EdificioListView(LoginRequiredMixin, ListView):
@@ -62,6 +62,29 @@ class ViviendaDetailView(LoginRequiredMixin, DetailView):
     model = Vivienda
     template_name = 'viviendas/vivienda_detail.html'
     context_object_name = 'vivienda'
+
+# Vistas de Tipos de Residentes
+class TipoResidenteListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+    model = TipoResidente
+    template_name = 'viviendas/tipo_residente_list.html'
+    context_object_name = 'tipos_residentes'
+
+class TipoResidenteCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+    model = TipoResidente
+    form_class = TipoResidenteForm
+    template_name = 'viviendas/tipo_residente_form.html'
+    success_url = reverse_lazy('tipo-residente-list')
+
+class TipoResidenteUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+    model = TipoResidente
+    form_class = TipoResidenteForm
+    template_name = 'viviendas/tipo_residente_form.html'
+    success_url = reverse_lazy('tipo-residente-list')
+
+class TipoResidenteDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+    model = TipoResidente
+    template_name = 'viviendas/tipo_residente_confirm_delete.html'
+    success_url = reverse_lazy('tipo-residente-list')
 
 # Vistas de Residentes
 class ResidenteListView(LoginRequiredMixin, ListView):

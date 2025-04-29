@@ -62,6 +62,7 @@
                                 <th>Tipo</th>
                                 <th>Fecha Ingreso</th>
                                 <th>Vehículos</th>
+                                <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -70,14 +71,20 @@
                             <tr>
                                 <td>{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</td>
                                 <td>
-                                    {% if residente.es_propietario %}
+                                    {{ residente.tipo_residente.nombre }}
+                                    {% if residente.tipo_residente.es_propietario %}
                                         <span class="badge text-bg-primary">Propietario</span>
-                                    {% else %}
-                                        <span class="badge text-bg-info">Inquilino</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
                                 <td>{{ residente.vehiculos }}</td>
+                                <td>
+                                    {% if residente.activo %}
+                                        <span class="badge text-bg-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge text-bg-danger">Inactivo</span>
+                                    {% endif %}
+                                </td>
                                 <td>
                                     <a href="{% url 'residente-detail' residente.id %}" class="btn btn-sm btn-info">
                                         <i class="fas fa-eye"></i>
@@ -86,7 +93,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center">No hay residentes en esta vivienda</td>
+                                <td colspan="6" class="text-center">No hay residentes en esta vivienda</td>
                             </tr>
                             {% endfor %}
                         </tbody>

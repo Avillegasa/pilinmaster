@@ -58,6 +58,11 @@
                     <i class="fas fa-building"></i> Edificios
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {% if '/viviendas/tipos-residentes/' in request.path %}active{% endif %}" href="{% url 'tipo-residente-list' %}">
+                    <i class="fas fa-id-card"></i> Tipos de Residentes
+                </a>
+            </li>
         </ul>
         {% endif %}
     </div>

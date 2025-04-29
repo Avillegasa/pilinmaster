@@ -27,10 +27,16 @@
                     
                     <div class="row">
                         <div class="col-md-6">
-                            {{ form.es_propietario|as_crispy_field }}
+                            {{ form.tipo_residente|as_crispy_field }}
                         </div>
                         <div class="col-md-6">
                             {{ form.vehiculos|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            {{ form.activo|as_crispy_field }}
                         </div>
                     </div>
                     

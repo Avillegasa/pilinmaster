@@ -23,6 +23,7 @@
                         <th>Tipo</th>
                         <th>Fecha Ingreso</th>
                         <th>Vehículos</th>
+                        <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -39,14 +40,20 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if residente.es_propietario %}
+                            {{ residente.tipo_residente.nombre }}
+                            {% if residente.tipo_residente.es_propietario %}
                                 <span class="badge text-bg-primary">Propietario</span>
-                            {% else %}
-                                <span class="badge text-bg-info">Inquilino</span>
                             {% endif %}
                         </td>
                         <td>{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
                         <td>{{ residente.vehiculos }}</td>
+                        <td>
+                            {% if residente.activo %}
+                                <span class="badge text-bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge text-bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
                         <td>
                             <div class="btn-group btn-group-sm">
                                 <a href="{% url 'residente-detail' residente.id %}" class="btn btn-info">
@@ -63,7 +70,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center">No hay residentes registrados</td>
+                        <td colspan="8" class="text-center">No hay residentes registrados</td>
                     </tr>
                     {% endfor %}
                 </tbody>
