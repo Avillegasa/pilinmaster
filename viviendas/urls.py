@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import api
 
 urlpatterns = [
     # URLs para Edificio
@@ -28,4 +29,8 @@ urlpatterns = [
     path('tipos-residentes/nuevo/', views.TipoResidenteCreateView.as_view(), name='tipo-residente-create'),
     path('tipos-residentes/<int:pk>/editar/', views.TipoResidenteUpdateView.as_view(), name='tipo-residente-update'),
     path('tipos-residentes/<int:pk>/eliminar/', views.TipoResidenteDeleteView.as_view(), name='tipo-residente-delete'),
+    
+    # API endpoints
+    path('api/edificio/<int:edificio_id>/viviendas/', api.viviendas_por_edificio, name='api-viviendas-por-edificio'),
+    path('api/vivienda/<int:vivienda_id>/residentes/', api.residentes_por_vivienda, name='api-residentes-por-vivienda'),
 ]

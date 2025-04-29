@@ -4,6 +4,67 @@
 {% block header %}Gestión de Viviendas{% endblock %}
 
 {% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" id="filtroForm" class="row g-3">
+            <!-- Filtro por edificio -->
+            <div class="col-md-3">
+                <label for="edificio" class="form-label">Edificio</label>
+                <select name="edificio" id="edificio" class="form-select">
+                    <option value="">Todos los edificios</option>
+                    {% for edificio in edificios %}
+                        <option value="{{ edificio.id }}" {% if filtro_edificio == edificio.id|stringformat:"i" %}selected{% endif %}>
+                            {{ edificio.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Filtro por piso -->
+            <div class="col-md-3">
+                <label for="piso" class="form-label">Piso</label>
+                <select name="piso" id="piso" class="form-select">
+                    <option value="">Todos los pisos</option>
+                    {% for piso in pisos %}
+                        <option value="{{ piso }}" {% if filtro_piso == piso|stringformat:"i" %}selected{% endif %}>
+                            {{ piso }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Filtro por estado -->
+            <div class="col-md-3">
+                <label for="estado" class="form-label">Estado</label>
+                <select name="estado" id="estado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    {% for estado in estados %}
+                        <option value="{{ estado }}" {% if filtro_estado == estado %}selected{% endif %}>
+                            {% if estado == 'OCUPADO' %}Ocupado
+                            {% elif estado == 'DESOCUPADO' %}Desocupado
+                            {% elif estado == 'MANTENIMIENTO' %}En mantenimiento
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Botones de acción -->
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                <a href="{% url 'vivienda-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-broom"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="mb-4 d-flex justify-content-between align-items-center">
     <p class="text-muted">Total: {{ viviendas.count }} viviendas</p>
     <a href="{% url 'vivienda-create' %}" class="btn btn-primary">
@@ -69,4 +130,19 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-submit del formulario al cambiar los filtros
+        const formInputs = document.querySelectorAll('#filtroForm select');
+        
+        formInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                document.getElementById('filtroForm').submit();
+            });
+        });
+    });
+</script>
 {% endblock %}
