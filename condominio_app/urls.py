@@ -24,6 +24,10 @@ urlpatterns = [
     path('viviendas/', include('viviendas.urls')),
     path('accesos/', include('accesos.urls')),
     path('reportes/', include('reportes.urls')),
+    
+    # API endpoints - mapear para acceso más fácil
+    path('api/visitas/historial/', include('accesos.urls')),
+    path('api/viviendas/<int:vivienda_id>/residentes/', include('accesos.urls')),
 ]
 
 # Servir archivos estáticos y media en modo de desarrollo

@@ -82,3 +82,89 @@ body {
     line-height: 1.5;
     border-radius: .2rem;
 }
+
+/* Estilos para usuarios/residentes inactivos */
+.usuario-inactivo, .residente-inactivo, .residente-inactivo-vivienda {
+    opacity: 0.7;
+    background-color: #f8f9fa !important;
+}
+
+.usuario-inactivo td, .residente-inactivo td, .residente-inactivo-vivienda td {
+    color: #6c757d;
+}
+
+/* Mejoras para los switch de mostrar/ocultar inactivos */
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Estilos para mensajes de alerta */
+.alert {
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+}
+
+/* Estilos para etiquetas de estado */
+.badge.text-bg-success {
+    background-color: #198754 !important;
+    color: white !important;
+}
+
+.badge.text-bg-danger {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.badge.text-bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.badge.text-bg-info {
+    background-color: #0dcaf0 !important;
+    color: #212529 !important;
+}
+
+.badge.text-bg-primary {
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+.badge.text-bg-secondary {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+/* Mejoras para los botones de acción */
+.btn-success {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #212529;
+}
+
+.btn-info {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
+    color: #212529;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}

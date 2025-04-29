@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from usuarios.models import Usuario
 
 class Edificio(models.Model):
@@ -60,7 +62,22 @@ class Residente(models.Model):
         # Sincronizar es_propietario con tipo_residente para mantener compatibilidad
         if self.tipo_residente:
             self.es_propietario = self.tipo_residente.es_propietario
+        
+        # Sincronizar activo con is_active del usuario
+        self.activo = self.usuario.is_active
+        
         super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.usuario.first_name} {self.usuario.last_name} - Vivienda {self.vivienda.numero if self.vivienda else 'No asignada'}"
+
+# Señal para sincronizar el estado del residente cuando cambia el estado del usuario
+@receiver(post_save, sender=Usuario)
+def update_residente_status(sender, instance, **kwargs):
+    try:
+        if hasattr(instance, 'residente'):
+            if instance.residente.activo != instance.is_active:
+                instance.residente.activo = instance.is_active
+                instance.residente.save(update_fields=['activo'])
+    except Exception:
+        pass  # Si no hay residente asociado, no hacer nada

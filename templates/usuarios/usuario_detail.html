@@ -68,9 +68,12 @@
                         <a href="{% url 'usuario-update' usuario.id %}" class="btn btn-warning">
                             <i class="fas fa-edit"></i> Editar
                         </a>
-                        <a href="{% url 'usuario-delete' usuario.id %}" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Eliminar
-                        </a>
+                        {% if request.user != usuario %}
+                            <a href="{% url 'usuario-change-state' usuario.id %}" class="btn {% if usuario.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                                <i class="fas {% if usuario.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                {% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

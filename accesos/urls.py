@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import api
 
 urlpatterns = [
     # URLs para Visita
@@ -11,4 +12,8 @@ urlpatterns = [
     path('movimientos/', views.MovimientoResidenteListView.as_view(), name='movimiento-list'),
     path('movimientos/entrada/', views.MovimientoResidenteEntradaView.as_view(), name='movimiento-entrada'),
     path('movimientos/salida/', views.MovimientoResidenteSalidaView.as_view(), name='movimiento-salida'),
+    
+    # API URLs
+    path('api/visitas/historial/', api.historial_visitas, name='api-visitas-historial'),
+    path('api/viviendas/<int:vivienda_id>/residentes/', api.residentes_por_vivienda, name='api-residentes-vivienda'),
 ]

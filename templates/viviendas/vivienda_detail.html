@@ -52,7 +52,13 @@
                     </div>
                 </div>
                 
-                <h5 class="mt-4 mb-3">Residentes</h5>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Residentes</h5>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="mostrarInactivosVivienda">
+                        <label class="form-check-label" for="mostrarInactivosVivienda">Mostrar inactivos</label>
+                    </div>
+                </div>
                 
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">
@@ -68,7 +74,7 @@
                         </thead>
                         <tbody>
                             {% for residente in vivienda.residentes.all %}
-                            <tr>
+                            <tr class="{% if not residente.activo %}residente-inactivo-vivienda d-none{% endif %}">
                                 <td>{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</td>
                                 <td>
                                     {{ residente.tipo_residente.nombre }}
@@ -86,9 +92,14 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="{% url 'residente-detail' residente.id %}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'residente-detail' residente.id %}" class="btn btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'usuario-change-state' residente.usuario.id %}" class="btn {% if residente.activo %}btn-danger{% else %}btn-success{% endif %}">
+                                            <i class="fas {% if residente.activo %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             {% empty %}
@@ -117,4 +128,24 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Control para mostrar/ocultar residentes inactivos
+        const checkboxInactivos = document.getElementById('mostrarInactivosVivienda');
+        const residentesInactivos = document.querySelectorAll('.residente-inactivo-vivienda');
+        
+        checkboxInactivos.addEventListener('change', function() {
+            residentesInactivos.forEach(function(residente) {
+                if (checkboxInactivos.checked) {
+                    residente.classList.remove('d-none');
+                } else {
+                    residente.classList.add('d-none');
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

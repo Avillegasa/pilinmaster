@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from django.http import HttpResponseRedirect
 from .models import Usuario, Rol
 from .forms import UsuarioCreationForm, UsuarioChangeForm, RolForm
 
@@ -32,10 +34,27 @@ class UsuarioUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
     template_name = 'usuarios/usuario_form.html'
     success_url = reverse_lazy('usuario-list')
 
-class UsuarioDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
-    model = Usuario
-    template_name = 'usuarios/usuario_confirm_delete.html'
-    success_url = reverse_lazy('usuario-list')
+# Reemplazo de la vista DeleteView por una vista personalizada para cambiar estado
+class UsuarioChangeStateView(LoginRequiredMixin, AdminRequiredMixin, View):
+    def get(self, request, pk):
+        usuario = get_object_or_404(Usuario, pk=pk)
+        return render(request, 'usuarios/usuario_change_state.html', {'usuario': usuario})
+    
+    def post(self, request, pk):
+        usuario = get_object_or_404(Usuario, pk=pk)
+        
+        # Verificar si es el mismo usuario que está intentando desactivarse
+        if usuario == request.user:
+            messages.error(request, "No puedes cambiar tu propio estado.")
+            return HttpResponseRedirect(reverse_lazy('usuario-list'))
+        
+        # Cambiar el estado del usuario (activar/desactivar)
+        usuario.is_active = not usuario.is_active
+        usuario.save()
+        
+        estado = "activado" if usuario.is_active else "desactivado"
+        messages.success(request, f'El usuario {usuario.username} ha sido {estado} correctamente.')
+        return HttpResponseRedirect(reverse_lazy('usuario-list'))
 
 class UsuarioDetailView(LoginRequiredMixin, DetailView):
     model = Usuario

@@ -21,6 +21,12 @@
                     {% endif %}
                 </div>
                 
+                {% if not residente.activo %}
+                <div class="alert alert-danger mb-4">
+                    <i class="fas fa-exclamation-triangle"></i> Este residente está actualmente inactivo. Para activarlo, necesitas reactivar su usuario asociado.
+                </div>
+                {% endif %}
+                
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Nombre de usuario</label>
@@ -94,8 +100,9 @@
                         <a href="{% url 'residente-update' residente.id %}" class="btn btn-warning">
                             <i class="fas fa-edit"></i> Editar
                         </a>
-                        <a href="{% url 'residente-delete' residente.id %}" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Eliminar
+                        <a href="{% url 'usuario-change-state' residente.usuario.id %}" class="btn {% if residente.activo %}btn-danger{% else %}btn-success{% endif %}">
+                            <i class="fas {% if residente.activo %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                            {% if residente.activo %}Desactivar{% else %}Activar{% endif %}
                         </a>
                     </div>
                 </div>
