@@ -1,19 +1,25 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block auth_content %}
-<div class="container">
-    <div class="row justify-content-center vh-100 align-items-center">
-        <div class="col-md-6 text-center">
-            <h1 class="display-4 mb-4">
-                <i class="fas fa-building"></i>Bienvenido a Torre Segura!
-            </h1>
-            <p class="lead mb-4">Bienvenido a su sistema de administración de condominios verticales.</p>
-            <div class="d-grid gap-2">
-                <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
-                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
-                </a>
-            </div>
-        </div>
+<div style="height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #001f3f, #007bff); color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <div style="text-align: center; max-width: 600px; padding: 30px; background-color: rgba(255, 255, 255, 0.1); border-radius: 15px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);">
+        <!-- Logo -->
+        <img src="{% static 'img/logo_ofi.png' %}" alt="Logo" style="width: 120px; height: auto; margin-bottom: 20px; border-radius: 50%; border: 3px solid white;">
+        
+        <!-- Título principal -->
+        <h1 style="font-size: 2.5em; font-weight: bold; margin-bottom: 10px;">Bienvenido al Sistema de Administración de Condominios</h1>
+        
+        <!-- Subtítulo -->
+        <p style="font-size: 1.2em; margin-bottom: 30px;">La solución moderna para gestionar tu comunidad residencial de manera eficiente.</p>
+        
+        <!-- Botón de inicio de sesión -->
+        <a href="{% url 'login' %}" style="display: inline-block; padding: 15px 30px; font-size: 1.2em; font-weight: bold; color: #001f3f; background-color: #ffcc00; border: none; border-radius: 50px; text-decoration: none; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); transition: all 0.3s;">
+            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+        </a>
+        
+        <!-- Texto de marca -->
+        <p style="margin-top: 30px; font-size: 1em; font-weight: bold; color: rgba(255, 255, 255, 0.8);">EQUIPO TECHFORGE</p>
     </div>
 </div>
 {% endblock %}

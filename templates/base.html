@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Torre Segura{% endblock %}</title>
-    
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="/static/img/favicon.ico" type="image/x-icon">
+    <title>{% block title %}Sistema de Administración de Condominios{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <!-- Custom CSS -->
     {% load static %}
@@ -28,7 +25,9 @@
                 {% include 'sidebar.html' %}
                 
                 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                    <div class="pt-3 pb-2 mb-3 border-bottom">
+                    <div class="pt-3 pb-2 mb-3 border-bottom d-flex align-items-center">
+                        <!-- Agregar el logo -->
+                        <img src="{% static 'img/logo_ofi.png' %}" alt="Logo" style="height: 40px; margin-right: 10px;">
                         <h1 class="h2">{% block header %}{% endblock %}</h1>
                     </div>
                     
@@ -45,55 +44,6 @@
                 </main>
             </div>
         </div>
-        
-        <!-- Modal de Ayuda -->
-        <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="helpModalLabel">Ayuda y Soporte</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <h6 class="border-bottom pb-2">Navegación por el Sistema</h6>
-                        <p>El menú lateral te permite acceder a todas las funciones principales del sistema. Cada sección está representada con un ícono distintivo.</p>
-                        
-                        <h6 class="border-bottom pb-2 mt-4">Funciones Principales</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <ul class="list-unstyled">
-                                    <li><i class="fas fa-tachometer-alt text-primary me-2"></i> <strong>Dashboard:</strong> Resumen general del condominio</li>
-                                    <li><i class="fas fa-home text-primary me-2"></i> <strong>Viviendas:</strong> Gestión de apartamentos</li>
-                                    <li><i class="fas fa-user-friends text-primary me-2"></i> <strong>Residentes:</strong> Administración de inquilinos</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <ul class="list-unstyled">
-                                    <li><i class="fas fa-clipboard-list text-primary me-2"></i> <strong>Visitas:</strong> Control de accesos</li>
-                                    <li><i class="fas fa-id-badge text-primary me-2"></i> <strong>Empleados:</strong> Gestión de personal</li>
-                                    <li><i class="fas fa-chart-bar text-primary me-2"></i> <strong>Reportes:</strong> Generación de informes</li>
-                                </ul>
-                            </div>
-                        </div>
-                        
-                        <h6 class="border-bottom pb-2 mt-4">Contacto de Soporte</h6>
-                        <p>Si necesitas ayuda adicional, puedes contactar al soporte técnico:</p>
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-envelope text-primary me-2"></i>
-                            <span>soporte@torresegura.com</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-phone text-primary me-2"></i>
-                            <span>+52 555 123 4567</span>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        <a href="#" class="btn btn-primary">Manual de Usuario</a>
-                    </div>
-                </div>
-            </div>
-        </div>
     {% else %}
         {% block auth_content %}{% endblock %}
     {% endif %}
@@ -105,20 +55,6 @@
     
     <!-- Custom JS -->
     <script src="{% static 'js/scripts.js' %}"></script>
-    
-    <!-- Notificaciones -->
-    <script>
-        // Auto-ocultar alertas después de 5 segundos
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(function(alert) {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                });
-            }, 5000);
-        });
-    </script>
     
     {% block extra_js %}{% endblock %}
 </body>

@@ -7,16 +7,17 @@
 {% block content %}
 <div class="row">
     <div class="col-md-6 mx-auto">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h5><i class="fas fa-user-circle"></i> Información de Perfil</h5>
+        <div class="card shadow-lg border-0">
+            <!-- Cambiar el fondo del encabezado para mayor contraste -->
+            <div class="card-header" style="background-color: #001a33; color: #ffffff; text-align: center;">
+                <h5 class="mb-0"><i class="fas fa-user-circle"></i> Información de Perfil</h5>
             </div>
             <div class="card-body">
                 <div class="text-center mb-4">
                     {% if usuario.foto %}
-                        <img src="{{ usuario.foto.url }}" alt="{{ usuario }}" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                        <img src="{{ usuario.foto.url }}" alt="{{ usuario }}" class="img-fluid rounded-circle shadow" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #001f3f;">
                     {% else %}
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center shadow" style="width: 150px; height: 150px; border: 4px solid #001f3f;">
                             <i class="fas fa-user fa-5x text-secondary"></i>
                         </div>
                     {% endif %}
@@ -24,39 +25,39 @@
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Nombre completo</label>
-                        <p class="form-control">{{ usuario.first_name }} {{ usuario.last_name }}</p>
+                        <label class="form-label text-muted">Nombre completo</label>
+                        <p class="form-control bg-light text-dark">{{ usuario.first_name }} {{ usuario.last_name }}</p>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Nombre de usuario</label>
-                        <p class="form-control">{{ usuario.username }}</p>
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Correo electrónico</label>
-                        <p class="form-control">{{ usuario.email }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Rol</label>
-                        <p class="form-control">{{ usuario.rol.nombre }}</p>
+                        <label class="form-label text-muted">Nombre de usuario</label>
+                        <p class="form-control bg-light text-dark">{{ usuario.username }}</p>
                     </div>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label">Teléfono</label>
-                        <p class="form-control">{{ usuario.telefono|default:"No especificado" }}</p>
+                        <label class="form-label text-muted">Correo electrónico</label>
+                        <p class="form-control bg-light text-dark">{{ usuario.email }}</p>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Documento</label>
-                        <p class="form-control">{{ usuario.tipo_documento }}: {{ usuario.numero_documento|default:"No especificado" }}</p>
+                        <label class="form-label text-muted">Rol</label>
+                        <p class="form-control bg-light text-dark">{{ usuario.rol.nombre }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Teléfono</label>
+                        <p class="form-control bg-light text-dark">{{ usuario.telefono|default:"No especificado" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Documento</label>
+                        <p class="form-control bg-light text-dark">{{ usuario.tipo_documento }}: {{ usuario.numero_documento|default:"No especificado" }}</p>
                     </div>
                 </div>
                 
                 <div class="d-grid gap-2">
-                    <a href="{% url 'password_change' %}" class="btn btn-primary">
+                    <a href="{% url 'password_change' %}" class="btn btn-warning text-white shadow">
                         <i class="fas fa-key"></i> Cambiar Contraseña
                     </a>
                 </div>
