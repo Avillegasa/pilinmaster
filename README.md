@@ -268,6 +268,145 @@ Si encuentras problemas durante la configuración, verifica:
 - Los registros de Django para mensajes de error específicos
 - La configuración de SITE_ID en settings.py coincide con el ID del sitio creado
 
-## Licencia
+## SETUP PARA REPORTES
 
-Este proyecto está licenciado bajo la Licencia MIT. Ver el archivo LICENSE para más detalles.
+# 📊 Módulo de Reportes - Guía de Instalación (Windows)
+
+Este módulo permite generar reportes dinámicos con filtros personalizados y exportación a PDF, Excel, CSV y HTML usando **WeasyPrint**.
+
+---
+
+## ✅ Requisitos
+
+- Python 3.10+ (recomendado: 3.12.x)
+- Git
+- VS Code o terminal
+- Acceso a internet
+- Windows 64 bits
+
+---
+
+## 🧪 Clonar el proyecto
+
+```bash
+git clone https://github.com/Avillegasa/pilinmaster.git
+cd pilinmaster/condominio_app
+```
+
+---
+
+## 📦 Crear entorno virtual
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+---
+
+## 📥 Instalar dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 🧱 Instalar GTK para WeasyPrint
+
+WeasyPrint necesita bibliotecas del sistema como `cairo`, `pango`, `gobject`.
+
+1. Descargar el instalador GTK desde:  
+   🔹 [https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases)
+
+2. Instalar `gtk3-runtime-*.exe` en:  
+   ```
+   C:\Program Files\GTK3-Runtime Win64
+   ```
+
+3. Agregar al **PATH del sistema**:
+
+   ```
+   C:\Program Files\GTK3-Runtime Win64\bin
+   ```
+
+4. Reiniciar VSCode o terminal.
+
+5. Verificar con:
+
+   ```bash
+   where gobject-2.0-0.dll
+   ```
+
+   ✅ Si aparece la ruta, todo está correcto.
+
+---
+
+## 🧹 Compatibilidad entre versiones
+
+Si hay errores con `pydyf`:
+
+```bash
+pip install WeasyPrint==60.0
+pip install pydyf==0.8.0
+```
+
+---
+
+## 📄 Migraciones y superusuario
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+---
+
+## 🚀 Correr el servidor
+
+```bash
+python manage.py runserver
+```
+
+Accede a: [http://127.0.0.1:8000/reportes/](http://127.0.0.1:8000/reportes/)
+
+---
+
+## 🛠 Filtro `get_item` en templates
+
+Agregar el filtro a `reportes/templatetags/dict_extras.py`:
+
+```python
+from django import template
+register = template.Library()
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+```
+
+Asegúrate de tener también `__init__.py` en esa carpeta.  
+Y en la plantilla `reporte_list.html`, cargarlo con:
+
+```django
+{% load dict_extras %}
+```
+
+---
+
+## ✅ Verificación final
+
+- ✅ Visualización y exportación de reportes
+- ✅ Filtros por edificio, estado, tipo
+- ✅ Exportación PDF/Excel/CSV/HTML
+- ✅ Gráficos y tablas dinámicas
+
+---
+
+## 📌 Recomendaciones
+
+- Cambiar SQLite por PostgreSQL en producción
+- Usar Linux + Gunicorn + Nginx para despliegue
+- Agregar permisos de escritura si se generan PDFs en disco
+

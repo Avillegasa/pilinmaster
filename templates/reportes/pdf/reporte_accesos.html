@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Accesos - {{ reporte.nombre }}</title>
+</head>
+<body>
+    <!-- Encabezado del reporte -->
+    <div class="header">
+        <div class="titulo">{{ reporte.nombre }}</div>
+        <div class="subtitulo">Reporte de Accesos</div>
+        <div class="fecha">
+            Período: {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}<br>
+            Generado el: {{ fecha_generacion|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+    
+    <!-- Resumen estadístico -->
+    <div class="resumen">
+        <h3>Resumen Estadístico</h3>
+        <table class="resumen-table">
+            <tr>
+                <td><strong>Total de visitas:</strong></td>
+                <td>{{ total_visitas }}</td>
+                <td><strong>Visitas activas:</strong></td>
+                <td>{{ visitas_activas }}</td>
+                <td><strong>Visitas finalizadas:</strong></td>
+                <td>{{ visitas_finalizadas }}</td>
+            </tr>
+            {% if duracion_promedio %}
+            <tr>
+                <td><strong>Duración promedio:</strong></td>
+                <td colspan="5">{{ duracion_promedio }} horas</td>
+            </tr>
+            {% endif %}
+            {% if nombre_edificio %}
+            <tr>
+                <td><strong>Edificio:</strong></td>
+                <td colspan="5">{{ nombre_edificio }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+    
+    {% if incluir_graficos %}
+    <!-- Sección de gráficos -->
+    <div class="graficos">
+        <h3>Gráficos</h3>
+        
+        {% if chart_data.visitas_por_dia %}
+        <div class="grafico">
+            <h4>{{ chart_data.visitas_por_dia.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico de barras: Visitas por día</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.estado_visitas %}
+        <div class="grafico">
+            <h4>{{ chart_data.estado_visitas.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Estado de visitas</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.visitas_por_edificio %}
+        <div class="grafico">
+            <h4>{{ chart_data.visitas_por_edificio.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Visitas por edificio</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if paginar %}
+    <!-- Salto de página antes de los datos -->
+    <div class="page-break"></div>
+    {% endif %}
+    
+    <!-- Tabla de datos detallados -->
+    <div class="datos">
+        <h3>Detalle de Visitas</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Visitante</th>
+                    <th>Documento</th>
+                    <th>Vivienda</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for visita in visitas %}
+                <tr>
+                    <td>{{ visita.id }}</td>
+                    <td>{{ visita.nombre_visitante }}</td>
+                    <td>{{ visita.documento_visitante }}</td>
+                    <td>{{ visita.vivienda_destino }}</td>
+                    <td>{{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        {% if visita.fecha_hora_salida %}
+                            {{ visita.fecha_hora_salida|date:"d/m/Y H:i" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if visita.fecha_hora_salida %}
+                            Finalizada
+                        {% else %}
+                            Activa
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center;">No hay visitas que coincidan con los criterios del reporte</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pie de página -->
+    <div class="pie-pagina">
+        Torre Segura - Sistema de Administración de Condominios - Página <span class="pagina"></span>
+    </div>
+</body>
+</html>
