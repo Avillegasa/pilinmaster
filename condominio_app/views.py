@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from viviendas.models import Edificio, Vivienda, Residente, TipoResidente
 from accesos.models import Visita, MovimientoResidente
+from personal.models import Empleado, Asignacion
 
 @login_required
 def dashboard(request):
@@ -44,6 +45,10 @@ def dashboard(request):
     
     total_residentes = residentes.count()
     
+    # Contar propietarios e inquilinos
+    propietarios_count = residentes.filter(es_propietario=True).count()
+    inquilinos_count = residentes.filter(es_propietario=False).count()
+    
     # Estadísticas por tipo de residente
     tipos_residentes = TipoResidente.objects.all()
     estadisticas_tipos = []
@@ -69,6 +74,15 @@ def dashboard(request):
         visitas_activas = Visita.objects.filter(fecha_hora_salida__isnull=True).count()
         ultimas_visitas = Visita.objects.all().order_by('-fecha_hora_entrada')[:5]
     
+    # Estadísticas de personal
+    total_personal = Empleado.objects.filter(activo=True).count()
+    
+    # Obtener asignaciones pendientes
+    total_asignaciones_pendientes = Asignacion.objects.filter(estado='PENDIENTE').count()
+    
+    # Obtener las últimas asignaciones
+    ultimas_asignaciones = Asignacion.objects.all().order_by('-fecha_asignacion')[:5]
+    
     # Obtener los últimos movimientos de residentes
     if edificio_id:
         ultimos_movimientos = MovimientoResidente.objects.filter(
@@ -87,10 +101,15 @@ def dashboard(request):
         'viviendas_mantenimiento': viviendas_mantenimiento,
         'porcentaje_ocupacion': porcentaje_ocupacion,
         'total_residentes': total_residentes,
+        'propietarios_count': propietarios_count,
+        'inquilinos_count': inquilinos_count,
         'estadisticas_tipos': estadisticas_tipos,
         'visitas_activas': visitas_activas,
         'ultimas_visitas': ultimas_visitas,
         'ultimos_movimientos': ultimos_movimientos,
+        'total_personal': total_personal,
+        'total_asignaciones_pendientes': total_asignaciones_pendientes,
+        'ultimas_asignaciones': ultimas_asignaciones,
     }
     
     return render(request, 'dashboard.html', context)

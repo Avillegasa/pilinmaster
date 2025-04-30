@@ -130,6 +130,144 @@ Si deseas contribuir a este proyecto:
 4. Haz push a la rama (`git push origin feature/nueva-caracteristica`)
 5. Abre un Pull Request
 
+## Configuración de la Autenticación con Google
+
+Para habilitar el inicio de sesión con Google en el sistema de administración de condominios, sigue estos pasos:
+
+## 1. Instalar Dependencias
+
+Primero, asegúrate de que todas las dependencias estén instaladas:
+
+```bash
+pip install -r requirements.txt
+```
+
+## 2. Crear un Proyecto en la Consola de Desarrolladores de Google
+
+1. Ve a la [Consola de Google Cloud](https://console.cloud.google.com/)
+2. Crea un nuevo proyecto o selecciona uno existente
+3. Ve a "APIs & Servicios" > "Credenciales"
+4. Haz clic en "Crear credenciales" y selecciona "ID de cliente OAuth"
+5. Configura la pantalla de consentimiento si se te solicita
+6. Para el tipo de aplicación, selecciona "Aplicación web"
+7. Pon un nombre descriptivo para tu aplicación
+8. En "Orígenes de JavaScript autorizados", agrega:
+   ```
+   http://localhost:8000
+   ```
+9. En "URIs de redirección autorizadas", agrega:
+   ```
+   http://localhost:8000/accounts/google/login/callback/
+   ```
+10. Haz clic en "Crear"
+11. Anota el "ID de cliente" y la "Clave secreta de cliente" que se te proporcionarán
+
+## 3. Configurar Django Allauth
+
+1. Ajusta las siguientes variables en `settings.py`:
+
+```python
+GOOGLE_CLIENT_ID = 'tu-client-id'  # Reemplaza con tu ID de cliente
+GOOGLE_SECRET = 'tu-secret-key'    # Reemplaza con tu clave secreta
+```
+
+2. Aplica las migraciones para crear las tablas necesarias:
+
+```bash
+python manage.py migrate
+```
+
+3. Crea un sitio en el admin de Django:
+   - Accede a http://localhost:8000/admin/
+   - Ve a "Sitios" y edita el sitio existente o crea uno nuevo
+   - Establece el "Nombre del dominio" como "localhost:8000"
+   - Establece el "Nombre visible" como "Torre Segura"
+
+4. Configura el proveedor de Google:
+   - En el admin de Django, ve a "Social Accounts" > "Social applications"
+   - Haz clic en "Añadir social application"
+   - Selecciona "Google" como proveedor
+   - Ingresa un nombre descriptivo (por ejemplo, "Google Login")
+   - Ingresa el ID de cliente y la clave secreta que obtuviste de Google
+   - Añade el sitio que creaste anteriormente al campo "Sitios disponibles"
+   - Guarda los cambios
+
+## 4. Ajustes Adicionales (Opcional)
+
+Para personalizar aún más la experiencia de inicio de sesión con Google, puedes modificar las siguientes configuraciones en `settings.py`:
+
+```python
+# Configuración de redes sociales
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        'VERIFIED_EMAIL': True,
+        'EXCHANGE_TOKEN': True,
+        'LOCALE_FUNC': lambda request: 'es_MX',
+        'FIELDS': [
+            'id',
+            'email',
+            'name',
+            'first_name',
+            'last_name',
+            'verified',
+            'locale',
+            'picture',
+        ],
+    }
+}
+```
+
+## 5. Asociación de Cuentas
+
+Cuando un usuario inicia sesión con su cuenta de Google por primera vez, puedes:
+
+1. **Crear una nueva cuenta de usuario**: Django AllAuth creará automáticamente una cuenta de usuario con la información del perfil de Google.
+2. **Asociar con una cuenta existente**: Si deseas permitir que los usuarios asocien sus cuentas existentes con Google, asegúrate de tener habilitada la siguiente configuración:
+
+```python
+ACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_ADAPTER = 'usuarios.adapters.CustomSocialAccountAdapter'  # Opcional para personalizar el proceso
+```
+
+## 6. Configuración para Producción
+
+Cuando despliegues el sistema en producción, asegúrate de:
+
+1. Actualizar los "Orígenes de JavaScript autorizados" y "URIs de redirección autorizadas" en la Consola de Google Cloud con la URL de tu sitio en producción.
+2. Actualizar el objeto "Sitio" en el admin de Django con el dominio correcto.
+3. Usar variables de entorno para el ID de cliente y la clave secreta en lugar de codificarlos directamente en `settings.py`.
+
+```python
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
+GOOGLE_SECRET = os.environ.get('GOOGLE_SECRET')
+```
+
+## 7. Funcionamiento
+
+Una vez configurado, los usuarios podrán:
+
+1. Hacer clic en el botón "Iniciar sesión con Google" en la página de login
+2. Serán redirigidos a la pantalla de autenticación de Google
+3. Después de autenticarse, regresarán a la aplicación y serán redirigidos al dashboard o a la página de completar perfil para nuevos usuarios
+
+## 8. Solución de Problemas
+
+Si encuentras problemas durante la configuración, verifica:
+
+- Que las URIs de redirección sean exactamente las mismas en la Consola de Google y en tu configuración de Django
+- Que la API de Google People esté habilitada en tu proyecto de Google Cloud
+- Los registros de Django para mensajes de error específicos
+- La configuración de SITE_ID en settings.py coincide con el ID del sitio creado
+
 ## Licencia
 
 Este proyecto está licenciado bajo la Licencia MIT. Ver el archivo LICENSE para más detalles.

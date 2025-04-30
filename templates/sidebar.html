@@ -1,5 +1,14 @@
 <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
     <div class="position-sticky pt-3">
+        <!-- Búsqueda rápida en versión móvil -->
+        <div class="d-md-none px-3 mb-3">
+            <input type="text" class="form-control" placeholder="Buscar...">
+        </div>
+        
+        <!-- Sección principal -->
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-1 mb-1 text-muted">
+            <span>Principal</span>
+        </h6>
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
@@ -7,12 +16,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if '/usuarios/' in request.path %}active{% endif %}" href="{% url 'usuario-list' %}">
-                    <i class="fas fa-users"></i> Usuarios
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {% if '/viviendas/' in request.path %}active{% endif %}" href="{% url 'vivienda-list' %}">
+                <a class="nav-link {% if '/viviendas/' in request.path and not '/viviendas/residentes/' in request.path and not '/viviendas/edificios/' in request.path and not '/viviendas/tipos-residentes/' in request.path %}active{% endif %}" href="{% url 'vivienda-list' %}">
                     <i class="fas fa-home"></i> Viviendas
                 </a>
             </li>
@@ -21,6 +25,13 @@
                     <i class="fas fa-user-friends"></i> Residentes
                 </a>
             </li>
+        </ul>
+        
+        <!-- Sección de control de acceso -->
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-muted">
+            <span>Control de Acceso</span>
+        </h6>
+        <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link {% if '/accesos/visitas/' in request.path %}active{% endif %}" href="{% url 'visita-list' %}">
                     <i class="fas fa-clipboard-list"></i> Visitas
@@ -31,6 +42,30 @@
                     <i class="fas fa-exchange-alt"></i> Entradas/Salidas
                 </a>
             </li>
+        </ul>
+        
+        <!-- Sección de personal (nueva) -->
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-muted">
+            <span>Personal</span>
+        </h6>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if '/personal/empleados/' in request.path %}active{% endif %}" href="{% url 'empleado-list' %}">
+                    <i class="fas fa-id-badge"></i> Empleados
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if '/personal/asignaciones/' in request.path %}active{% endif %}" href="{% url 'asignacion-list' %}">
+                    <i class="fas fa-tasks"></i> Asignaciones
+                </a>
+            </li>
+        </ul>
+        
+        <!-- Sección de reportes y utilidades -->
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-muted">
+            <span>Reportes y Utilidades</span>
+        </h6>
+        <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link {% if '/reportes/' in request.path %}active{% endif %}" href="{% url 'reporte-list' %}">
                     <i class="fas fa-chart-bar"></i> Reportes
@@ -44,10 +79,16 @@
         </ul>
         
         {% if user.rol.nombre == 'Administrador' %}
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+        <!-- Sección de administración -->
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-muted">
             <span>Administración</span>
         </h6>
         <ul class="nav flex-column mb-2">
+            <li class="nav-item">
+                <a class="nav-link {% if '/usuarios/' in request.path and not '/perfil/' in request.path %}active{% endif %}" href="{% url 'usuario-list' %}">
+                    <i class="fas fa-users"></i> Usuarios
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link {% if '/usuarios/roles/' in request.path %}active{% endif %}" href="{% url 'rol-list' %}">
                     <i class="fas fa-user-tag"></i> Roles
@@ -63,7 +104,18 @@
                     <i class="fas fa-id-card"></i> Tipos de Residentes
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {% if '/personal/puestos/' in request.path %}active{% endif %}" href="{% url 'puesto-list' %}">
+                    <i class="fas fa-briefcase"></i> Puestos de Trabajo
+                </a>
+            </li>
         </ul>
         {% endif %}
+        
+        <!-- Versión y ayuda -->
+        <div class="px-3 mt-4 mb-2 text-center">
+            <div class="small text-muted">Versión 1.2.0</div>
+            <a href="#" class="small text-decoration-none" data-bs-toggle="modal" data-bs-target="#helpModal">Ayuda</a>
+        </div>
     </div>
 </nav>

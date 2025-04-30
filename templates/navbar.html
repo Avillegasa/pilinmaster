@@ -1,16 +1,61 @@
 <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
     <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="{% url 'dashboard' %}">
-        <i class="fas fa-building"></i> Torre Segura - Panel de Control
+        <i class="fas fa-building"></i> Torre Segura
     </a>
     <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="w-100"></div>
-    <div class="navbar-nav">
-        <div class="nav-item text-nowrap">
-            <a class="nav-link px-3" href="{% url 'logout' %}">
-                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+    
+    <!-- Barra de búsqueda en la parte central -->
+    <div class="navbar-search d-none d-md-flex w-100">
+        <form class="w-100">
+            <input class="form-control form-control-dark w-100" type="text" placeholder="Buscar..." aria-label="Buscar">
+        </form>
+    </div>
+    
+    <!-- Sección derecha con información del usuario -->
+    <div class="navbar-nav flex-row">
+        <!-- Notificaciones (para futuras implementaciones) -->
+        <div class="nav-item dropdown mx-1">
+            <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-bell"></i>
+                {% if notifications_count > 0 %}
+                <span class="position-absolute top-25 start-75 translate-middle badge rounded-pill bg-danger">
+                    {{ notifications_count }}
+                </span>
+                {% endif %}
             </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
+                <li><h6 class="dropdown-header">Notificaciones</h6></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#">No hay notificaciones</a></li>
+            </ul>
+        </div>
+        
+        <!-- Información del usuario -->
+        <div class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle px-3 d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {% if user.foto %}
+                    <img src="{{ user.foto.url }}" alt="{{ user }}" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                {% else %}
+                    <i class="fas fa-user-circle me-2"></i>
+                {% endif %}
+                <span class="d-none d-lg-inline">{{ user.first_name }} {{ user.last_name }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li>
+                    <div class="dropdown-item-text">
+                        <div class="fw-bold">{{ user.first_name }} {{ user.last_name }}</div>
+                        <div class="small text-muted">{{ user.email }}</div>
+                        <div class="small text-muted">Rol: {{ user.rol.nombre }}</div>
+                    </div>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user-circle me-2"></i> Mi Perfil</a></li>
+                <li><a class="dropdown-item" href="{% url 'password_change' %}"><i class="fas fa-key me-2"></i> Cambiar Contraseña</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión</a></li>
+            </ul>
         </div>
     </div>
 </header>

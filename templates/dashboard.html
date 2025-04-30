@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Dashboard | Sistema de Administración de Condominios{% endblock %}
 {% block header %}Dashboard{% endblock %}
@@ -34,9 +35,10 @@
 </div>
 {% endif %}
 
+<!-- Resumen general -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card text-white bg-primary">
+        <div class="card text-white bg-primary stat-card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -45,24 +47,15 @@
                     </div>
                     <i class="fas fa-home fa-3x"></i>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title">Ocupación</h5>
-                        <h2 class="card-text">{{ porcentaje_ocupacion|floatformat:1 }}%</h2>
-                    </div>
-                    <i class="fas fa-chart-pie fa-3x"></i>
+                <div class="progress mt-2" style="height: 8px;">
+                    <div class="progress-bar bg-light" role="progressbar" style="width: {{ porcentaje_ocupacion }}%"></div>
                 </div>
+                <div class="small mt-1">{{ porcentaje_ocupacion|floatformat:1 }}% ocupadas</div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-info">
+        <div class="card text-white bg-success stat-card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -71,11 +64,31 @@
                     </div>
                     <i class="fas fa-users fa-3x"></i>
                 </div>
+                <div class="small mt-3">
+                    <span class="me-2"><i class="fas fa-user-tag"></i> {{ propietarios_count }} propietarios</span>
+                    <span><i class="fas fa-user"></i> {{ inquilinos_count }} inquilinos</span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-white bg-warning">
+        <div class="card text-white bg-info stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title">Personal</h5>
+                        <h2 class="card-text">{{ total_personal }}</h2>
+                    </div>
+                    <i class="fas fa-id-badge fa-3x"></i>
+                </div>
+                <div class="small mt-3">
+                    <span class="me-2"><i class="fas fa-tasks"></i> {{ total_asignaciones_pendientes }} tareas pendientes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning stat-card">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
@@ -84,17 +97,23 @@
                     </div>
                     <i class="fas fa-user-check fa-3x"></i>
                 </div>
+                <div class="text-center mt-3">
+                    <a href="{% url 'visita-create' %}" class="btn btn-sm btn-light">Registrar nueva</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row mb-4">
-    <!-- Gráfica de ocupación -->
+    <!-- Gráfica de ocupación de viviendas -->
     <div class="col-md-6">
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5><i class="fas fa-chart-pie"></i> Ocupación de Viviendas</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Ocupación de Viviendas</h5>
+                <a href="{% url 'vivienda-list' %}" class="btn btn-sm btn-outline-primary">
+                    Ver todas
+                </a>
             </div>
             <div class="card-body">
                 <canvas id="ocupacionChart" height="250"></canvas>
@@ -105,8 +124,11 @@
     <!-- Estadísticas de tipos de residentes -->
     <div class="col-md-6">
         <div class="card shadow-sm">
-            <div class="card-header">
-                <h5><i class="fas fa-users"></i> Tipos de Residentes</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-users"></i> Tipos de Residentes</h5>
+                <a href="{% url 'residente-list' %}" class="btn btn-sm btn-outline-primary">
+                    Ver todos
+                </a>
             </div>
             <div class="card-body">
                 {% if estadisticas_tipos %}
@@ -122,44 +144,60 @@
 </div>
 
 <div class="row mb-4">
-    <!-- Últimos movimientos -->
+    <!-- Últimas asignaciones -->
     <div class="col-md-6">
         <div class="card shadow-sm">
-            <div class="card-header">
-                <h5><i class="fas fa-exchange-alt"></i> Últimos Movimientos</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-tasks"></i> Asignaciones Recientes</h5>
+                <a href="{% url 'asignacion-list' %}" class="btn btn-sm btn-outline-primary">
+                    Ver todas
+                </a>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-sm">
                         <thead>
                             <tr>
-                                <th>Residente</th>
-                                <th>Tipo</th>
-                                <th>Fecha/Hora</th>
+                                <th>Título</th>
+                                <th>Empleado</th>
+                                <th>Estado</th>
+                                <th>Prioridad</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for movimiento in ultimos_movimientos %}
+                            {% for asignacion in ultimas_asignaciones %}
                             <tr>
-                                <td>{{ movimiento.residente }}</td>
                                 <td>
-                                    {% if movimiento.fecha_hora_entrada and not movimiento.fecha_hora_salida %}
-                                        <span class="badge text-bg-success">Entrada</span>
-                                    {% elif movimiento.fecha_hora_salida and not movimiento.fecha_hora_entrada %}
-                                        <span class="badge text-bg-danger">Salida</span>
+                                    <a href="{% url 'asignacion-detail' asignacion.id %}">{{ asignacion.titulo|truncatechars:30 }}</a>
+                                    <div class="small text-muted">{{ asignacion.fecha_inicio|date:"d/m/Y" }}</div>
+                                </td>
+                                <td>{{ asignacion.empleado.usuario.first_name }} {{ asignacion.empleado.usuario.last_name }}</td>
+                                <td>
+                                    {% if asignacion.estado == 'PENDIENTE' %}
+                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                    {% elif asignacion.estado == 'EN_PROGRESO' %}
+                                        <span class="badge bg-info text-dark">En Progreso</span>
+                                    {% elif asignacion.estado == 'COMPLETADA' %}
+                                        <span class="badge bg-success">Completada</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Cancelada</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if movimiento.fecha_hora_entrada and not movimiento.fecha_hora_salida %}
-                                        {{ movimiento.fecha_hora_entrada|date:"d/m/Y H:i" }}
-                                    {% elif movimiento.fecha_hora_salida and not movimiento.fecha_hora_entrada %}
-                                        {{ movimiento.fecha_hora_salida|date:"d/m/Y H:i" }}
+                                    {% if asignacion.prioridad == 1 %}
+                                        <span class="badge bg-secondary">Baja</span>
+                                    {% elif asignacion.prioridad == 2 %}
+                                        <span class="badge bg-primary">Normal</span>
+                                    {% elif asignacion.prioridad == 3 %}
+                                        <span class="badge bg-warning text-dark">Alta</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Urgente</span>
                                     {% endif %}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center">No hay movimientos registrados</td>
+                                <td colspan="4" class="text-center">No hay asignaciones recientes</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -172,8 +210,11 @@
     <!-- Últimas visitas -->
     <div class="col-md-6">
         <div class="card shadow-sm">
-            <div class="card-header">
-                <h5><i class="fas fa-clipboard-list"></i> Últimas Visitas</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list"></i> Visitas Recientes</h5>
+                <a href="{% url 'visita-list' %}" class="btn btn-sm btn-outline-primary">
+                    Ver todas
+                </a>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -189,24 +230,90 @@
                         <tbody>
                             {% for visita in ultimas_visitas %}
                             <tr>
-                                <td>{{ visita.nombre_visitante }}</td>
+                                <td>
+                                    {{ visita.nombre_visitante }}
+                                    <div class="small text-muted">{{ visita.documento_visitante }}</div>
+                                </td>
                                 <td>{{ visita.vivienda_destino }}</td>
                                 <td>{{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}</td>
                                 <td>
                                     {% if visita.fecha_hora_salida %}
-                                        <span class="badge text-bg-secondary">Finalizada</span>
+                                        <span class="badge bg-secondary">Finalizada</span>
                                     {% else %}
-                                        <span class="badge text-bg-success">Activa</span>
+                                        <span class="badge bg-success">Activa</span>
                                     {% endif %}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center">No hay visitas registradas</td>
+                                <td colspan="4" class="text-center">No hay visitas recientes</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accesos directos -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-star"></i> Accesos Rápidos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <a href="{% url 'visita-create' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">
+                                <i class="fas fa-user-plus fa-2x text-success mb-2"></i>
+                                <div>Registrar Visita</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <a href="{% url 'movimiento-entrada' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">
+                                <i class="fas fa-sign-in-alt fa-2x text-primary mb-2"></i>
+                                <div>Registrar Entrada</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <a href="{% url 'reporte-create' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">
+                                <i class="fas fa-file-alt fa-2x text-info mb-2"></i>
+                                <div>Crear Reporte</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <a href="{% url 'asignacion-create' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">
+                                <i class="fas fa-tasks fa-2x text-warning mb-2"></i>
+                                <div>Nueva Asignación</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <a href="{% url 'residente-create' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">
+                                <i class="fas fa-user-friends fa-2x text-danger mb-2"></i>
+                                <div>Nuevo Residente</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <a href="{% url 'vivienda-create' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">
+                                <i class="fas fa-home fa-2x text-secondary mb-2"></i>
+                                <div>Nueva Vivienda</div>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
