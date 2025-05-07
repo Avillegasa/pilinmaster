@@ -31,10 +31,10 @@ def setup():
             # Crear roles básicos
             print("Creando roles...")
             roles = {
-                'Administrador': 'Control total del sistema',
-                'Vigilante': 'Gestión de entradas y salidas',
-                'Residente': 'Propietario o inquilino',
-                'Gerente': 'Gestión administrativa'
+                'Administrador': 'Control total del sistema', # Nosotros
+                'Vigilante': 'Gestión de entradas y salidas', #aplicacion movil y no puede usar este sistema 
+                'Residente': 'Propietario o inquilino', #aplicacion movil y no puede usar este sistema
+                'Gerente': 'Gestión administrativa' # El administrador puede ser el gerente del condominio
             }
             
             for nombre, descripcion in roles.items():

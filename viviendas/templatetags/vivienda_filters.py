@@ -57,3 +57,19 @@ def unique_items(queryset, field_name):
     
     # Devolver valores únicos ordenados (ignorar None)
     return sorted(set(v for v in values if v is not None))
+
+
+@register.filter
+def activas_count(queryset):
+    """
+    Devuelve la cantidad de viviendas activas en un queryset
+    """
+    return queryset(activo=True).count()
+
+@register.filter
+def inactivas_count(queryset):
+    """
+    Devuelve la cantidad de viviendas inactivas en un queryset
+    """
+    return queryset(activo=False).count()
+

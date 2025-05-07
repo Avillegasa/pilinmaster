@@ -17,6 +17,7 @@ class Vivienda(models.Model):
         ('OCUPADO', 'Ocupado'),
         ('DESOCUPADO', 'Desocupado'),
         ('MANTENIMIENTO', 'En mantenimiento'),
+        ('BAJA', 'Dado de baja'),
     ]
     
     edificio = models.ForeignKey(Edificio, on_delete=models.CASCADE, related_name='viviendas')
@@ -26,9 +27,18 @@ class Vivienda(models.Model):
     habitaciones = models.PositiveIntegerField(default=1)
     baños = models.PositiveIntegerField(default=1)
     estado = models.CharField(max_length=15, choices=ESTADOS, default='DESOCUPADO')
+    activo = models.BooleanField(default=True, help_text="Indica si la vivienda está activa o ha sido dada de baja")
+    fecha_baja = models.DateField(null=True, blank=True, help_text="Fecha en la que se dio de baja la vivienda")
+    motivo_baja = models.TextField(blank=True, null=True, help_text="Motivo por el cual se dio de baja la vivienda")
     
     def __str__(self):
         return f"Vivienda {self.numero} - Piso {self.piso}"
+    
+    # Guardar método para asegurar que la vivienda dada de baja tenga estado BAJA
+    def save(self, *args, **kwargs):
+        if not self.activo and self.estado != 'BAJA':
+            self.estado = 'BAJA'
+        super().save(*args, **kwargs)
 
 class TipoResidente(models.Model):
     """

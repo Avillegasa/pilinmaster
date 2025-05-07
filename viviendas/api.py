@@ -1,3 +1,4 @@
+# viviendas/api.py
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import Edificio, Vivienda, Residente
@@ -7,14 +8,24 @@ def viviendas_por_edificio(request, edificio_id):
     """API endpoint para obtener las viviendas de un edificio específico
     
     Si edificio_id es 0, devuelve todas las viviendas
+    Por defecto devuelve solo viviendas activas, a menos que se especifique
+    un parámetro 'incluir_inactivas=1'
     """
     try:
+        # Verificar si se deben incluir viviendas inactivas
+        incluir_inactivas = request.GET.get('incluir_inactivas', '0') == '1'
+        
+        # Base query para viviendas activas
+        query = Vivienda.objects
+        if not incluir_inactivas:
+            query = query.filter(activo=True)
+        
         if edificio_id == 0:
-            # Devolver todas las viviendas
-            viviendas = Vivienda.objects.all().order_by('edificio__nombre', 'piso', 'numero')
+            # Devolver todas las viviendas (activas por defecto)
+            viviendas = query.all().order_by('edificio__nombre', 'piso', 'numero')
         else:
-            # Devolver viviendas del edificio especificado
-            viviendas = Vivienda.objects.filter(edificio_id=edificio_id).order_by('piso', 'numero')
+            # Devolver viviendas del edificio especificado (activas por defecto)
+            viviendas = query.filter(edificio_id=edificio_id).order_by('piso', 'numero')
         
         data = []
         for vivienda in viviendas:
@@ -23,6 +34,7 @@ def viviendas_por_edificio(request, edificio_id):
                 'numero': vivienda.numero,
                 'piso': vivienda.piso,
                 'estado': vivienda.estado,
+                'activo': vivienda.activo,
                 'edificio_nombre': vivienda.edificio.nombre,
                 'residentes_count': vivienda.residentes.count()
             })

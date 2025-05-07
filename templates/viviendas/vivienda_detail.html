@@ -7,10 +7,25 @@
 <div class="row">
     <div class="col-md-8 mx-auto">
         <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h5>Vivienda {{ vivienda.numero }} - Piso {{ vivienda.piso }}</h5>
+            <div class="card-header {% if vivienda.activo %}bg-primary{% else %}bg-secondary{% endif %} text-white">
+                <h5>
+                    Vivienda {{ vivienda.numero }} - Piso {{ vivienda.piso }}
+                    {% if not vivienda.activo %}
+                    <span class="badge bg-danger ms-2">Dada de baja</span>
+                    {% endif %}
+                </h5>
             </div>
             <div class="card-body">
+                {% if not vivienda.activo %}
+                <div class="alert alert-warning mb-4">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Esta vivienda ha sido dada de baja</strong>
+                    <p class="mb-0 mt-2">
+                        <strong>Fecha de baja:</strong> {{ vivienda.fecha_baja|date:"d/m/Y" }}<br>
+                        <strong>Motivo:</strong> {{ vivienda.motivo_baja }}
+                    </p>
+                </div>
+                {% endif %}
+                
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Edificio</label>
@@ -23,8 +38,10 @@
                                 <span class="badge text-bg-success">Ocupado</span>
                             {% elif vivienda.estado == 'DESOCUPADO' %}
                                 <span class="badge text-bg-secondary">Desocupado</span>
-                            {% else %}
+                            {% elif vivienda.estado == 'MANTENIMIENTO' %}
                                 <span class="badge text-bg-warning">Mantenimiento</span>
+                            {% elif vivienda.estado == 'BAJA' %}
+                                <span class="badge text-bg-danger">Dado de baja</span>
                             {% endif %}
                         </p>
                     </div>
@@ -165,14 +182,25 @@
                     <a href="{% url 'vivienda-list' %}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Volver
                     </a>
+                    {% if vivienda.activo %}
                     <div>
                         <a href="{% url 'vivienda-update' vivienda.id %}" class="btn btn-warning">
                             <i class="fas fa-edit"></i> Editar
                         </a>
-                        <a href="{% url 'vivienda-delete' vivienda.id %}" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Eliminar
+                        <a href="{% url 'vivienda-baja' vivienda.id %}" class="btn btn-danger">
+                            <i class="fas fa-archive"></i> Dar de Baja
                         </a>
                     </div>
+                    {% else %}
+                    <div>
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fas fa-archive"></i> Dar de Baja
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

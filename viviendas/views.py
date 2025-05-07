@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
 from usuarios.views import AdminRequiredMixin
 from .models import Edificio, Vivienda, Residente, TipoResidente
-from .forms import EdificioForm, ViviendaForm, ResidenteForm, TipoResidenteForm
+from .forms import EdificioForm, ViviendaForm, ResidenteForm, TipoResidenteForm, ViviendaBajaForm
 
 # Vistas de Edificios
 class EdificioListView(LoginRequiredMixin, ListView):
@@ -36,6 +38,7 @@ class EdificioDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'edificio'
 
 # Vistas de Viviendas
+
 class ViviendaListView(LoginRequiredMixin, ListView):
     model = Vivienda
     template_name = 'viviendas/vivienda_list.html'
@@ -58,6 +61,15 @@ class ViviendaListView(LoginRequiredMixin, ListView):
         estado = self.request.GET.get('estado')
         if estado:
             queryset = queryset.filter(estado=estado)
+        
+        # Filtrar por activo/inactivo si se proporciona
+        activo = self.request.GET.get('activo')
+        if activo:
+            activo_bool = activo == 'true'
+            queryset = queryset.filter(activo=activo_bool)
+        else:
+            # Por defecto mostrar solo viviendas activas
+            queryset = queryset.filter(activo=True)
             
         return queryset
     
@@ -71,6 +83,7 @@ class ViviendaListView(LoginRequiredMixin, ListView):
         context['filtro_edificio'] = self.request.GET.get('edificio', '')
         context['filtro_piso'] = self.request.GET.get('piso', '')
         context['filtro_estado'] = self.request.GET.get('estado', '')
+        context['filtro_activo'] = self.request.GET.get('activo', 'true')
         
         # Añadir lista de pisos disponibles para el selector
         pisos = Vivienda.objects.values_list('piso', flat=True).distinct().order_by('piso')
@@ -78,6 +91,10 @@ class ViviendaListView(LoginRequiredMixin, ListView):
         
         # Añadir lista de estados para el selector
         context['estados'] = [estado[0] for estado in Vivienda.ESTADOS]
+        
+        # Contar el total de viviendas activas e inactivas
+        context['total_activas'] = Vivienda.objects.filter(activo=True).count()
+        context['total_inactivas'] = Vivienda.objects.filter(activo=False).count()
         
         return context
 
@@ -237,3 +254,58 @@ class ResidenteDetailView(LoginRequiredMixin, DetailView):
     model = Residente
     template_name = 'viviendas/residente_detail.html'
     context_object_name = 'residente'
+
+
+
+class ViviendaBajaView(LoginRequiredMixin, AdminRequiredMixin, View):
+    """
+    Vista para dar de baja una vivienda en lugar de eliminarla.
+    Esta vista permite establecer un motivo de baja y la fecha.
+    """
+    template_name = 'viviendas/vivienda_baja.html'
+    
+    def get(self, request, pk):
+        vivienda = get_object_or_404(Vivienda, pk=pk)
+        
+        # Verificar si tiene residentes activos
+        residentes_activos = vivienda.residentes.filter(activo=True).count()
+        
+        form = ViviendaBajaForm(instance=vivienda)
+        
+        return render(request, self.template_name, {
+            'vivienda': vivienda,
+            'form': form,
+            'residentes_activos': residentes_activos
+        })
+    
+    def post(self, request, pk):
+        vivienda = get_object_or_404(Vivienda, pk=pk)
+        form = ViviendaBajaForm(request.POST, instance=vivienda)
+        
+        # Verificar si tiene residentes activos
+        residentes_activos = vivienda.residentes.filter(activo=True).count()
+        
+        if residentes_activos > 0 and not request.POST.get('confirmar_residentes'):
+            messages.error(request, "No se puede dar de baja una vivienda con residentes activos. Debe reubicarlos primero.")
+            return render(request, self.template_name, {
+                'vivienda': vivienda,
+                'form': form,
+                'residentes_activos': residentes_activos
+            })
+        
+        if form.is_valid():
+            # Marcar como inactiva y cambiar estado
+            vivienda.activo = False
+            vivienda.estado = 'BAJA'
+            vivienda.fecha_baja = form.cleaned_data.get('fecha_baja') or timezone.now().date()
+            vivienda.motivo_baja = form.cleaned_data.get('motivo_baja')
+            vivienda.save()
+            
+            messages.success(request, f"La vivienda {vivienda.numero} ha sido dada de baja correctamente.")
+            return redirect('vivienda-list')
+        
+        return render(request, self.template_name, {
+            'vivienda': vivienda,
+            'form': form,
+            'residentes_activos': residentes_activos
+        })

@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import Edificio, Vivienda, Residente, TipoResidente
 
 class EdificioForm(forms.ModelForm):
@@ -17,6 +18,35 @@ class ViviendaForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['edificio'].queryset = Edificio.objects.all().order_by('nombre')
+
+
+class ViviendaBajaForm(forms.ModelForm):
+    """
+    Formulario para dar de baja una vivienda.
+    Permite ingresar el motivo y la fecha de la baja.
+    """
+    fecha_baja = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        initial=timezone.now().date(),
+        help_text="Fecha en la que se da de baja la vivienda."
+    )
+    
+    motivo_baja = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3}),
+        required=True,
+        help_text="Motivo por el cual se da de baja la vivienda."
+    )
+    
+    confirmar_residentes = forms.BooleanField(
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(),
+        help_text="Confirmo que he revisado y entiendo que los residentes asociados a esta vivienda perderán su asignación."
+    )
+    
+    class Meta:
+        model = Vivienda
+        fields = ['fecha_baja', 'motivo_baja']
 
 class TipoResidenteForm(forms.ModelForm):
     class Meta:

@@ -16,6 +16,7 @@ urlpatterns = [
     path('<int:pk>/', views.ViviendaDetailView.as_view(), name='vivienda-detail'),
     path('<int:pk>/editar/', views.ViviendaUpdateView.as_view(), name='vivienda-update'),
     path('<int:pk>/eliminar/', views.ViviendaDeleteView.as_view(), name='vivienda-delete'),
+    path('<int:pk>/baja/', views.ViviendaBajaView.as_view(), name='vivienda-baja'),  # Nueva URL para baja
     
     # URLs para Residente
     path('residentes/', views.ResidenteListView.as_view(), name='residente-list'),
