@@ -33,4 +33,8 @@ db.sqlite3
 *.cache
 *.coverage
 *.egg-info/
+<<<<<<< HEAD
 .cache/
+=======
+.cache/
+>>>>>>> main

@@ -49,12 +49,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     emptyOption.textContent = '---------';
                     residenteSelect.appendChild(emptyOption);
                     
-                    // Agregar opciones de residentes
+                    // Agregar opciones de residentes (solo activos)
                     data.forEach(residente => {
-                        let option = document.createElement('option');
-                        option.value = residente.id;
-                        option.textContent = residente.nombre;
-                        residenteSelect.appendChild(option);
+                        // Verificar si el residente está activo
+                        if (residente.activo) {
+                            let option = document.createElement('option');
+                            option.value = residente.id;
+                            option.textContent = residente.nombre;
+                            residenteSelect.appendChild(option);
+                        }
                     });
                     
                     // Reactivar el select
@@ -66,4 +69,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
     }
+    
+    // Función para configurar los switch de mostrar/ocultar inactivos
+    function setupInactivosSwitch(switchId, elementClass) {
+        const checkbox = document.getElementById(switchId);
+        if (checkbox) {
+            const elementosInactivos = document.querySelectorAll('.' + elementClass);
+            
+            checkbox.addEventListener('change', function() {
+                elementosInactivos.forEach(function(elemento) {
+                    if (checkbox.checked) {
+                        elemento.classList.remove('d-none');
+                    } else {
+                        elemento.classList.add('d-none');
+                    }
+                });
+            });
+        }
+    }
+    
+    // Configurar los switches
+    setupInactivosSwitch('mostrarInactivos', 'usuario-inactivo');
+    setupInactivosSwitch('mostrarInactivosVivienda', 'residente-inactivo-vivienda');
+    setupInactivosSwitch('mostrarInactivos', 'residente-inactivo');
+    
+    // Hacer que los mensajes de alerta se cierren automáticamente después de 5 segundos
+    const alertList = document.querySelectorAll('.alert');
+    alertList.forEach(function(alert) {
+        setTimeout(function() {
+            const closeButton = alert.querySelector('.btn-close');
+            if (closeButton) {
+                closeButton.click();
+            }
+        }, 5000);
+    });
 });

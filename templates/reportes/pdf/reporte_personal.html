@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Personal - {{ reporte.nombre }}</title>
+</head>
+<body>
+    <!-- Encabezado del reporte -->
+    <div class="header">
+        <div class="titulo">{{ reporte.nombre }}</div>
+        <div class="subtitulo">Reporte de Personal</div>
+        <div class="fecha">
+            Período: {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}<br>
+            Generado el: {{ fecha_generacion|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+    
+    <!-- Resumen estadístico -->
+    <div class="resumen">
+        <h3>Resumen Estadístico</h3>
+        <table class="resumen-table">
+            <tr>
+                <td><strong>Total de empleados:</strong></td>
+                <td>{{ total_empleados }}</td>
+                <td><strong>Empleados activos:</strong></td>
+                <td>{{ activos }}</td>
+                <td><strong>Empleados inactivos:</strong></td>
+                <td>{{ inactivos }}</td>
+            </tr>
+        </table>
+        
+        {% if puestos_stats %}
+        <h4>Distribución por Puesto de Trabajo</h4>
+        <table class="puestos-table">
+            <tr>
+                {% for puesto in puestos_stats %}
+                <th>{{ puesto.nombre }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for puesto in puestos_stats %}
+                <td>{{ puesto.cantidad }}</td>
+                {% endfor %}
+            </tr>
+        </table>
+        {% endif %}
+    </div>
+    
+    {% if incluir_graficos %}
+    <!-- Sección de gráficos -->
+    <div class="graficos">
+        <h3>Gráficos</h3>
+        
+        {% if chart_data.empleados_por_puesto %}
+        <div class="grafico">
+            <h4>{{ chart_data.empleados_por_puesto.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico de barras: Empleados por puesto</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.estado_empleados %}
+        <div class="grafico">
+            <h4>{{ chart_data.estado_empleados.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Estado de empleados</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.tipo_contrato %}
+        <div class="grafico">
+            <h4>{{ chart_data.tipo_contrato.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Tipo de contrato</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if paginar %}
+    <!-- Salto de página antes de los datos -->
+    <div class="page-break"></div>
+    {% endif %}
+    
+    <!-- Tabla de datos detallados -->
+    <div class="datos">
+        <h3>Detalle de Empleados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Puesto</th>
+                    <th>Tipo Contrato</th>
+                    <th>Fecha Contratación</th>
+                    <th>Especialidad</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for empleado in empleados %}
+                <tr>
+                    <td>{{ empleado.id }}</td>
+                    <td>{{ empleado.usuario.first_name }} {{ empleado.usuario.last_name }}</td>
+                    <td>{{ empleado.puesto.nombre }}</td>
+                    <td>{{ empleado.get_tipo_contrato_display }}</td>
+                    <td>{{ empleado.fecha_contratacion|date:"d/m/Y" }}</td>
+                    <td>{{ empleado.especialidad|default:"No especificada" }}</td>
+                    <td>{{ empleado.activo|yesno:"Activo,Inactivo" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center;">No hay empleados que coincidan con los criterios del reporte</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Asignaciones en el período -->
+    {% if asignaciones %}
+    <div class="page-break"></div>
+    <div class="asignaciones">
+        <h3>Asignaciones en el Período</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Empleado</th>
+                    <th>Tipo</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asignacion in asignaciones %}
+                <tr>
+                    <td>{{ asignacion.id }}</td>
+                    <td>{{ asignacion.titulo }}</td>
+                    <td>{{ asignacion.empleado.usuario.first_name }} {{ asignacion.empleado.usuario.last_name }}</td>
+                    <td>
+                        {% if asignacion.tipo == 'TAREA' %}
+                            Tarea puntual
+                        {% else %}
+                            Responsabilidad recurrente
+                        {% endif %}
+                    </td>
+                    <td>{{ asignacion.fecha_inicio|date:"d/m/Y" }}</td>
+                    <td>
+                        {% if asignacion.fecha_fin %}
+                            {{ asignacion.fecha_fin|date:"d/m/Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if asignacion.estado == 'PENDIENTE' %}
+                            Pendiente
+                        {% elif asignacion.estado == 'EN_PROGRESO' %}
+                            En progreso
+                        {% elif asignacion.estado == 'COMPLETADA' %}
+                            Completada
+                        {% else %}
+                            Cancelada
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    <!-- Pie de página -->
+    <div class="pie-pagina">
+        Torre Segura - Sistema de Administración de Condominios - Página <span class="pagina"></span>
+    </div>
+</body>
+</html>

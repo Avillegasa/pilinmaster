@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Viviendas - {{ reporte.nombre }}</title>
+</head>
+<body>
+    <!-- Encabezado del reporte -->
+    <div class="header">
+        <div class="titulo">{{ reporte.nombre }}</div>
+        <div class="subtitulo">Reporte de Viviendas</div>
+        <div class="fecha">
+            Período: {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}<br>
+            Generado el: {{ fecha_generacion|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+    
+    <!-- Resumen estadístico -->
+    <div class="resumen">
+        <h3>Resumen Estadístico</h3>
+        <table class="resumen-table">
+            <tr>
+                <td><strong>Total de viviendas:</strong></td>
+                <td>{{ total_viviendas }}</td>
+                <td><strong>Ocupadas:</strong></td>
+                <td>{{ ocupadas }}</td>
+                <td><strong>Desocupadas:</strong></td>
+                <td>{{ desocupadas }}</td>
+            </tr>
+            <tr>
+                <td><strong>En mantenimiento:</strong></td>
+                <td>{{ mantenimiento }}</td>
+                <td><strong>Porcentaje de ocupación:</strong></td>
+                <td>{{ porcentaje_ocupacion|floatformat:2 }}%</td>
+                <td><strong>Edificio:</strong></td>
+                <td>{{ nombre_edificio }}</td>
+            </tr>
+        </table>
+        
+        {% if tamanios %}
+        <h4>Distribución por Tamaño</h4>
+        <table class="tamanios-table">
+            <tr>
+                {% for t in tamanios %}
+                <th>{{ t.rango }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for t in tamanios %}
+                <td>{{ t.count }}</td>
+                {% endfor %}
+            </tr>
+        </table>
+        {% endif %}
+    </div>
+    
+    {% if incluir_graficos %}
+    <!-- Sección de gráficos -->
+    <div class="graficos">
+        <h3>Gráficos</h3>
+        
+        {% if chart_data.estado_viviendas %}
+        <div class="grafico">
+            <h4>{{ chart_data.estado_viviendas.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Estado de viviendas</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.tamanios_viviendas %}
+        <div class="grafico">
+            <h4>{{ chart_data.tamanios_viviendas.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Distribución por tamaño</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.viviendas_por_edificio %}
+        <div class="grafico">
+            <h4>{{ chart_data.viviendas_por_edificio.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Viviendas por edificio</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.viviendas_por_piso %}
+        <div class="grafico">
+            <h4>{{ chart_data.viviendas_por_piso.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico de barras: Viviendas por piso</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if paginar %}
+    <!-- Salto de página antes de los datos -->
+    <div class="page-break"></div>
+    {% endif %}
+    
+    <!-- Tabla de datos detallados -->
+    <div class="datos">
+        <h3>Detalle de Viviendas</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Edificio</th>
+                    <th>Número</th>
+                    <th>Piso</th>
+                    <th>Metros²</th>
+                    <th>Habitaciones</th>
+                    <th>Baños</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for vivienda in viviendas %}
+                <tr>
+                    <td>{{ vivienda.id }}</td>
+                    <td>{{ vivienda.edificio.nombre }}</td>
+                    <td>{{ vivienda.numero }}</td>
+                    <td>{{ vivienda.piso }}</td>
+                    <td>{{ vivienda.metros_cuadrados }}</td>
+                    <td>{{ vivienda.habitaciones }}</td>
+                    <td>{{ vivienda.baños }}</td>
+                    <td>
+                        {% if vivienda.estado == 'OCUPADO' %}
+                            Ocupado
+                        {% elif vivienda.estado == 'DESOCUPADO' %}
+                            Desocupado
+                        {% else %}
+                            En mantenimiento
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center;">No hay viviendas que coincidan con los criterios del reporte</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pie de página -->
+    <div class="pie-pagina">
+        Torre Segura - Sistema de Administración de Condominios - Página <span class="pagina"></span>
+    </div>
+</body>
+</html>

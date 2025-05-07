@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import api
 
 urlpatterns = [
     # URLs para Edificio
@@ -15,6 +16,7 @@ urlpatterns = [
     path('<int:pk>/', views.ViviendaDetailView.as_view(), name='vivienda-detail'),
     path('<int:pk>/editar/', views.ViviendaUpdateView.as_view(), name='vivienda-update'),
     path('<int:pk>/eliminar/', views.ViviendaDeleteView.as_view(), name='vivienda-delete'),
+    path('<int:pk>/baja/', views.ViviendaBajaView.as_view(), name='vivienda-baja'),  # Nueva URL para baja
     
     # URLs para Residente
     path('residentes/', views.ResidenteListView.as_view(), name='residente-list'),
@@ -22,4 +24,14 @@ urlpatterns = [
     path('residentes/<int:pk>/', views.ResidenteDetailView.as_view(), name='residente-detail'),
     path('residentes/<int:pk>/editar/', views.ResidenteUpdateView.as_view(), name='residente-update'),
     path('residentes/<int:pk>/eliminar/', views.ResidenteDeleteView.as_view(), name='residente-delete'),
+    
+    # URLs para TipoResidente
+    path('tipos-residentes/', views.TipoResidenteListView.as_view(), name='tipo-residente-list'),
+    path('tipos-residentes/nuevo/', views.TipoResidenteCreateView.as_view(), name='tipo-residente-create'),
+    path('tipos-residentes/<int:pk>/editar/', views.TipoResidenteUpdateView.as_view(), name='tipo-residente-update'),
+    path('tipos-residentes/<int:pk>/eliminar/', views.TipoResidenteDeleteView.as_view(), name='tipo-residente-delete'),
+    
+    # API endpoints
+    path('api/edificio/<int:edificio_id>/viviendas/', api.viviendas_por_edificio, name='api-viviendas-por-edificio'),
+    path('api/vivienda/<int:vivienda_id>/residentes/', api.residentes_por_vivienda, name='api-residentes-por-vivienda'),
 ]

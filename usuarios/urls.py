@@ -8,7 +8,7 @@ urlpatterns = [
     path('nuevo/', views.UsuarioCreateView.as_view(), name='usuario-create'),
     path('<int:pk>/', views.UsuarioDetailView.as_view(), name='usuario-detail'),
     path('<int:pk>/editar/', views.UsuarioUpdateView.as_view(), name='usuario-update'),
-    path('<int:pk>/eliminar/', views.UsuarioDeleteView.as_view(), name='usuario-delete'),
+    path('<int:pk>/estado/', views.UsuarioChangeStateView.as_view(), name='usuario-change-state'),
     
     # URLs para Rol
     path('roles/', views.RolListView.as_view(), name='rol-list'),

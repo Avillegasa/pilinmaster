@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Residentes - {{ reporte.nombre }}</title>
+</head>
+<body>
+    <!-- Encabezado del reporte -->
+    <div class="header">
+        <div class="titulo">{{ reporte.nombre }}</div>
+        <div class="subtitulo">Reporte de Residentes</div>
+        <div class="fecha">
+            Período: {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}<br>
+            Generado el: {{ fecha_generacion|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+    
+    <!-- Resumen estadístico -->
+    <div class="resumen">
+        <h3>Resumen Estadístico</h3>
+        <table class="resumen-table">
+            <tr>
+                <td><strong>Total de residentes:</strong></td>
+                <td>{{ total_residentes }}</td>
+                <td><strong>Propietarios:</strong></td>
+                <td>{{ propietarios }}</td>
+                <td><strong>Inquilinos:</strong></td>
+                <td>{{ inquilinos }}</td>
+            </tr>
+            <tr>
+                <td><strong>Residentes activos:</strong></td>
+                <td>{{ activos }}</td>
+                <td><strong>Inactivos:</strong></td>
+                <td>{{ inactivos }}</td>
+                <td><strong>Edificio:</strong></td>
+                <td>{{ nombre_edificio }}</td>
+            </tr>
+        </table>
+        
+        {% if tipos_stats %}
+        <h4>Distribución por Tipo de Residente</h4>
+        <table class="tipos-table">
+            <tr>
+                {% for tipo in tipos_stats %}
+                <th>{{ tipo.nombre }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for tipo in tipos_stats %}
+                <td>{{ tipo.cantidad }}</td>
+                {% endfor %}
+            </tr>
+        </table>
+        {% endif %}
+    </div>
+    
+    {% if incluir_graficos %}
+    <!-- Sección de gráficos -->
+    <div class="graficos">
+        <h3>Gráficos</h3>
+        
+        {% if chart_data.tipos_residentes %}
+        <div class="grafico">
+            <h4>{{ chart_data.tipos_residentes.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico de barras: Residentes por tipo</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.propietarios_inquilinos %}
+        <div class="grafico">
+            <h4>{{ chart_data.propietarios_inquilinos.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Propietarios vs Inquilinos</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.estado_residentes %}
+        <div class="grafico">
+            <h4>{{ chart_data.estado_residentes.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Estado de residentes</div>
+        </div>
+        {% endif %}
+        
+        {% if chart_data.residentes_por_edificio %}
+        <div class="grafico">
+            <h4>{{ chart_data.residentes_por_edificio.titulo }}</h4>
+            <!-- Aquí iría la imagen del gráfico generada por Chart.js -->
+            <div class="grafico-placeholder">Gráfico circular: Residentes por edificio</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    {% if paginar %}
+    <!-- Salto de página antes de los datos -->
+    <div class="page-break"></div>
+    {% endif %}
+    
+    <!-- Tabla de datos detallados -->
+    <div class="datos">
+        <h3>Detalle de Residentes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Vivienda</th>
+                    <th>Tipo</th>
+                    <th>Es Propietario</th>
+                    <th>Fecha Ingreso</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for residente in residentes %}
+                <tr>
+                    <td>{{ residente.id }}</td>
+                    <td>{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</td>
+                    <td>
+                        {% if residente.vivienda %}
+                            {{ residente.vivienda }}
+                        {% else %}
+                            Sin asignar
+                        {% endif %}
+                    </td>
+                    <td>{{ residente.tipo_residente.nombre }}</td>
+                    <td>{{ residente.tipo_residente.es_propietario|yesno:"Sí,No" }}</td>
+                    <td>{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
+                    <td>{{ residente.activo|yesno:"Activo,Inactivo" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center;">No hay residentes que coincidan con los criterios del reporte</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pie de página -->
+    <div class="pie-pagina">
+        Torre Segura - Sistema de Administración de Condominios - Página <span class="pagina"></span>
+    </div>
+</body>
+</html>

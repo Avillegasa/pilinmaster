@@ -1,36 +1,114 @@
 {% extends 'base.html' %}
+{% load dict_extras %}
 
 {% block title %}Reportes | Sistema de Administración de Condominios{% endblock %}
 {% block header %}Gestión de Reportes{% endblock %}
 
 {% block content %}
-<div class="mb-4 d-flex justify-content-between align-items-center">
-    <p class="text-muted">Total: {{ reportes.count }} reportes</p>
-    <a href="{% url 'reporte-create' %}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Nuevo Reporte
-    </a>
+<!-- Filtro por tipo de reporte -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Filtrar por Tipo de Reporte</h6>
+    </div>
+    <div class="card-body">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'reporte-list' %}" class="btn {% if not tipo_actual %}btn-primary{% else %}btn-outline-primary{% endif %} mb-2">
+                <i class="fas fa-list"></i> Todos <span class="badge bg-light text-dark">{{ reportes.count }}</span>
+            </a>
+            {% for tipo_code, tipo_nombre in tipos %}
+                <a href="{% url 'reporte-list' %}?tipo={{ tipo_code }}" class="btn {% if tipo_actual == tipo_code %}btn-primary{% else %}btn-outline-primary{% endif %} mb-2">
+                    <i class="fas fa-{% if tipo_code == 'ACCESOS' %}clipboard-list{% elif tipo_code == 'RESIDENTES' %}users{% elif tipo_code == 'VIVIENDAS' %}home{% elif tipo_code == 'PERSONAL' %}id-badge{% else %}chart-bar{% endif %}"></i>
+                    {{ tipo_nombre }} <span class="badge bg-light text-dark">{{ contadores|get_item:tipo_code }}</span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
 </div>
+
+<!-- Reportes Favoritos -->
+{% if favoritos %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-warning text-dark">
+        <h6 class="m-0 font-weight-bold"><i class="fas fa-star"></i> Reportes Favoritos</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for reporte in favoritos %}
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ reporte.nombre }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ reporte.get_tipo_display }}</h6>
+                            <p class="card-text small">
+                                <strong>Período:</strong> {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a href="{% url 'reporte-preview' reporte.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-chart-bar"></i> Visualizar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <p class="text-muted">Total: {{ reportes.count }} reportes {% if tipo_actual %}({{ tipo_actual }}){% endif %}</p>
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" id="nuevoReporteDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-plus"></i> Nuevo Reporte
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="nuevoReporteDropdown">
+            {% for tipo_code, tipo_nombre in tipos %}
+                <li>
+                    <a class="dropdown-item" href="{% url 'reporte-create' %}?tipo={{ tipo_code }}">
+                        <i class="fas fa-{% if tipo_code == 'ACCESOS' %}clipboard-list{% elif tipo_code == 'RESIDENTES' %}users{% elif tipo_code == 'VIVIENDAS' %}home{% elif tipo_code == 'PERSONAL' %}id-badge{% else %}chart-bar{% endif %}"></i>
+                        Reporte de {{ tipo_nombre }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
 
 <div class="card shadow">
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
+            <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>#</th>
                         <th>Nombre</th>
                         <th>Tipo</th>
-                        <th>Fecha Creación</th>
                         <th>Período</th>
-                        <th>Creado por</th>
+                        <th>Creación</th>
+                        <th>Última Generación</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for reporte in reportes %}
                     <tr>
-                        <td>{{ reporte.id }}</td>
-                        <td>{{ reporte.nombre }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if reporte.es_favorito %}
+                                    <i class="fas fa-star text-warning me-2"></i>
+                                {% endif %}
+                                {{ reporte.nombre }}
+                            </div>
+                        </td>
                         <td>
                             {% if reporte.tipo == 'ACCESOS' %}
                                 <span class="badge text-bg-primary">Accesos</span>
@@ -38,29 +116,59 @@
                                 <span class="badge text-bg-success">Residentes</span>
                             {% elif reporte.tipo == 'VIVIENDAS' %}
                                 <span class="badge text-bg-info">Viviendas</span>
+                            {% elif reporte.tipo == 'PERSONAL' %}
+                                <span class="badge text-bg-secondary">Personal</span>
                             {% elif reporte.tipo == 'FINANCIERO' %}
                                 <span class="badge text-bg-warning">Financiero</span>
                             {% endif %}
                         </td>
-                        <td>{{ reporte.fecha_creacion|date:"d/m/Y H:i" }}</td>
                         <td>{{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}</td>
-                        <td>{{ reporte.creado_por.first_name }} {{ reporte.creado_por.last_name }}</td>
+                        <td>{{ reporte.fecha_creacion|date:"d/m/Y H:i" }}</td>
                         <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{% url 'generar-reporte' reporte.id %}" class="btn btn-primary">
-                                    <i class="fas fa-chart-bar"></i> Visualizar
+                            {% if reporte.ultima_generacion %}
+                                {{ reporte.ultima_generacion|date:"d/m/Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">No generado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'reporte-preview' reporte.id %}" class="btn btn-sm btn-primary" title="Vista Previa">
+                                    <i class="fas fa-chart-bar"></i>
                                 </a>
-                                {% if reporte.archivo %}
-                                    <a href="{% url 'descargar-reporte' reporte.id %}" class="btn btn-success">
-                                        <i class="fas fa-download"></i> CSV
-                                    </a>
-                                {% endif %}
+                                <a href="{% url 'reporte-update' reporte.id %}" class="btn btn-sm btn-warning" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'reporte-toggle-favorito' reporte.id %}" class="btn btn-sm {% if reporte.es_favorito %}btn-warning{% else %}btn-outline-warning{% endif %}" title="{% if reporte.es_favorito %}Quitar de favoritos{% else %}Marcar como favorito{% endif %}">
+                                    <i class="fas fa-star"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'reporte-duplicar' reporte.id %}">
+                                            <i class="fas fa-copy"></i> Duplicar
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="{% url 'reporte-delete' reporte.id %}">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </a>
+                                    </li>
+                                </ul>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center">No hay reportes generados</td>
+                        <td colspan="6" class="text-center">
+                            No hay reportes configurados{% if tipo_actual %} para el tipo seleccionado{% endif %}.
+                            <a href="{% url 'reporte-create' %}{% if tipo_actual %}?tipo={{ tipo_actual }}{% endif %}" class="btn btn-sm btn-primary ms-2">
+                                <i class="fas fa-plus"></i> Crear uno ahora
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -68,4 +176,29 @@
         </div>
     </div>
 </div>
+
+<!-- Widget de ayuda -->
+<div class="card shadow mt-4">
+    <div class="card-header bg-light">
+        <h6 class="m-0 font-weight-bold"><i class="fas fa-info-circle"></i> Sistema de Reportes</h6>
+    </div>
+    <div class="card-body">
+        <p>Con el sistema de reportes puedes:</p>
+        <ul>
+            <li><strong>Crear reportes:</strong> Configura los parámetros y filtros de los reportes que necesites.</li>
+            <li><strong>Guardar configuraciones:</strong> Las configuraciones se guardan para que puedas generar reportes con los mismos parámetros en el futuro.</li>
+            <li><strong>Diferentes formatos:</strong> Exporta tus reportes en PDF, Excel y CSV según tus necesidades.</li>
+            <li><strong>Marcar favoritos:</strong> Para acceder rápidamente a los reportes que uses con mayor frecuencia.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Agregar filtro personalizado para acceder a elementos de un diccionario
+    Handlebars.registerHelper('get_item', function(object, key) {
+        return object[key];
+    });
+</script>
 {% endblock %}

@@ -1,183 +1,199 @@
-from django.shortcuts import render, redirect,  get_object_or_404
-from django.urls import reverse_lazy, reverse
-from django.core.files.base import ContentFile
-from django.views.generic import ListView, CreateView
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-import csv
-from datetime import datetime
-from io import StringIO
-from usuarios.views import AdminRequiredMixin
-from .models import Reporte
-from .forms import ReporteForm
-from accesos.models import Visita, MovimientoResidente
-from viviendas.models import Vivienda, Residente
-import json
+from django.urls import reverse_lazy, reverse
+from django.utils import timezone
+from django.contrib import messages
 
-from .models import Reporte
-from accesos.models import Visita, MovimientoResidente 
-from viviendas.models import Vivienda, Residente 
+from usuarios.views import AdminRequiredMixin
+from .models import ReporteConfig
+from .forms import (
+    ReporteConfigForm, ReporteAccesosForm, ReporteResidentesForm, 
+    ReporteViviendasForm, ReportePersonalForm, ExportReportForm
+)
+from .utils import generar_contexto_reporte, generar_respuesta_reporte
+
 
 class ReporteListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
-    model = Reporte
+    model = ReporteConfig
     template_name = 'reportes/reporte_list.html'
     context_object_name = 'reportes'
+    
+    def get_queryset(self):
+        # Filtrar por tipo si se especifica
+        tipo = self.request.GET.get('tipo', '')
+        queryset = super().get_queryset()
+        
+        if tipo:
+            queryset = queryset.filter(tipo=tipo)
+        
+        # Ordenar por fecha de creación más reciente
+        return queryset.order_by('-es_favorito', '-fecha_creacion')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tipos'] = ReporteConfig.TIPOS
+        context['tipo_actual'] = self.request.GET.get('tipo', '')
+        
+        # Agregar contador de reportes por tipo
+        context['contadores'] = {
+            tipo[0]: ReporteConfig.objects.filter(tipo=tipo[0]).count()
+            for tipo in ReporteConfig.TIPOS
+        }
+        
+        # Agregar los reportes favoritos para acceso rápido
+        context['favoritos'] = ReporteConfig.objects.filter(es_favorito=True)[:5]
+        
+        return context
+
 
 class ReporteCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
-    model = Reporte
-    form_class = ReporteForm
+    model = ReporteConfig
     template_name = 'reportes/reporte_form.html'
-    success_url = reverse_lazy('generar-reporte')
+    
+    def get_form_class(self):
+        # Determinar el formulario a usar según el tipo de reporte
+        tipo = self.request.GET.get('tipo', 'ACCESOS')
+        
+        if tipo == 'RESIDENTES':
+            return ReporteResidentesForm
+        elif tipo == 'VIVIENDAS':
+            return ReporteViviendasForm
+        elif tipo == 'PERSONAL':
+            return ReportePersonalForm
+        else:  # ACCESOS por defecto
+            return ReporteAccesosForm
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tipo_reporte'] = self.request.GET.get('tipo', 'ACCESOS')
+        return context
     
     def form_valid(self, form):
         form.instance.creado_por = self.request.user
         return super().form_valid(form)
+    
+    def get_success_url(self):
+        messages.success(self.request, "Reporte creado con éxito")
+        return reverse('reporte-preview', args=[self.object.pk])
+
+
+class ReporteUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+    model = ReporteConfig
+    template_name = 'reportes/reporte_form.html'
+    
+    def get_form_class(self):
+        # Determinar el formulario a usar según el tipo de reporte
+        if self.object.tipo == 'RESIDENTES':
+            return ReporteResidentesForm
+        elif self.object.tipo == 'VIVIENDAS':
+            return ReporteViviendasForm
+        elif self.object.tipo == 'PERSONAL':
+            return ReportePersonalForm
+        else:  # ACCESOS por defecto
+            return ReporteAccesosForm
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tipo_reporte'] = self.object.tipo
+        return context
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Reporte actualizado con éxito")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('reporte-preview', args=[self.object.pk])
+
+
+class ReporteDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+    model = ReporteConfig
+    template_name = 'reportes/reporte_confirm_delete.html'
+    success_url = reverse_lazy('reporte-list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, "Reporte eliminado con éxito")
+        return super().delete(request, *args, **kwargs)
+
 
 @login_required
-def generar_reporte(request, pk):
-    reporte = get_object_or_404(Reporte, pk=pk)
+def reporte_preview(request, pk):
+    """Vista para previsualizar el reporte y ofrecer opciones de exportación"""
+    reporte_config = get_object_or_404(ReporteConfig, pk=pk)
     
-    # Obtener datos según el tipo de reporte
-    context = {
-        'reporte': reporte,
-        'fecha_generacion': datetime.now(),
-    }
-    
-    if reporte.tipo == 'ACCESOS':
-        # Obtener datos de visitas
-        visitas = Visita.objects.filter(
-            fecha_hora_entrada__date__gte=reporte.fecha_desde,
-            fecha_hora_entrada__date__lte=reporte.fecha_hasta
-        ).order_by('fecha_hora_entrada')
-        
-        context['visitas'] = visitas
-        
-        # Preparar datos para el gráfico
-        visitas_por_dia = {}
-        for visita in visitas:
-            fecha = visita.fecha_hora_entrada.date().strftime('%Y-%m-%d')
-            if fecha in visitas_por_dia:
-                visitas_por_dia[fecha] += 1
-            else:
-                visitas_por_dia[fecha] = 1
-        
-        # Convertir a formato para el gráfico
-        labels = list(visitas_por_dia.keys())
-        data = list(visitas_por_dia.values())
-        
-        context['chart_labels'] = json.dumps(labels)
-        context['chart_data'] = json.dumps(data)
-        context['chart_title'] = 'Visitas por día'
-        
-        # También crear CSV para descarga
-        output = StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['ID', 'Nombre Visitante', 'Documento', 'Vivienda', 'Fecha Entrada', 'Fecha Salida', 'Duración (horas)'])
-        
-        for visita in visitas:
-            duracion = ''
-            if visita.fecha_hora_salida:
-                duracion = round((visita.fecha_hora_salida - visita.fecha_hora_entrada).total_seconds() / 3600, 2)
+    # Crear el formulario de exportación
+    if request.method == 'POST':
+        export_form = ExportReportForm(request.POST)
+        if export_form.is_valid():
+            # Generar el contexto del reporte
+            contexto = generar_contexto_reporte(reporte_config)
             
-            writer.writerow([
-                visita.id,
-                visita.nombre_visitante,
-                visita.documento_visitante,
-                str(visita.vivienda_destino),
-                visita.fecha_hora_entrada.strftime('%d/%m/%Y %H:%M'),
-                visita.fecha_hora_salida.strftime('%d/%m/%Y %H:%M') if visita.fecha_hora_salida else 'Sin salida',
-                duracion
-            ])
-        
-        # Guardar el archivo CSV
-        reporte.archivo.save(
-            f"reporte_{reporte.tipo.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            ContentFile(output.getvalue().encode('utf-8')),
-            save=True
-        )
+            # Exportar según el formato seleccionado
+            formato = export_form.cleaned_data['formato']
+            incluir_graficos = export_form.cleaned_data['incluir_graficos']
+            paginar = export_form.cleaned_data['paginar']
+            orientacion = export_form.cleaned_data['orientacion']
+            
+            # Si es HTML, mostrar la vista previa
+            if formato == 'HTML':
+                return render(request, 'reportes/reporte_generado.html', contexto)
+            
+            # Para otros formatos, generar la respuesta
+            respuesta = generar_respuesta_reporte(
+                reporte_config, 
+                contexto, 
+                formato, 
+                incluir_graficos, 
+                paginar, 
+                orientacion
+            )
+            
+            return respuesta
+    else:
+        export_form = ExportReportForm(initial={'formato': reporte_config.formato_preferido})
     
-    elif reporte.tipo == 'RESIDENTES':
-        # Obtener datos de residentes
-        residentes = Residente.objects.all()
-        context['residentes'] = residentes
-        
-        # Preparar datos para gráfico de propietarios vs inquilinos
-        propietarios = residentes.filter(es_propietario=True).count()
-        inquilinos = residentes.filter(es_propietario=False).count()
-        
-        context['chart_labels'] = json.dumps(['Propietarios', 'Inquilinos'])
-        context['chart_data'] = json.dumps([propietarios, inquilinos])
-        context['chart_title'] = 'Distribución de Residentes'
-        
-        # Crear CSV
-        output = StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['ID', 'Nombre', 'Vivienda', 'Es Propietario', 'Fecha Ingreso', 'Vehículos'])
-        
-        for residente in residentes:
-            writer.writerow([
-                residente.id,
-                f"{residente.usuario.first_name} {residente.usuario.last_name}",
-                str(residente.vivienda) if residente.vivienda else 'Sin asignar',
-                'Sí' if residente.es_propietario else 'No',
-                residente.fecha_ingreso.strftime('%d/%m/%Y'),
-                residente.vehiculos
-            ])
-        
-        reporte.archivo.save(
-            f"reporte_{reporte.tipo.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            ContentFile(output.getvalue().encode('utf-8')),
-            save=True
-        )
+    # Generar el contexto del reporte para la vista previa
+    contexto = generar_contexto_reporte(reporte_config)
+    contexto['export_form'] = export_form
     
-    elif reporte.tipo == 'VIVIENDAS':
-        # Obtener datos de viviendas
-        viviendas = Vivienda.objects.all()
-        context['viviendas'] = viviendas
-        
-        # Preparar datos para gráfico de estados de viviendas
-        ocupadas = viviendas.filter(estado='OCUPADO').count()
-        desocupadas = viviendas.filter(estado='DESOCUPADO').count()
-        mantenimiento = viviendas.filter(estado='MANTENIMIENTO').count()
-        
-        context['chart_labels'] = json.dumps(['Ocupadas', 'Desocupadas', 'En Mantenimiento'])
-        context['chart_data'] = json.dumps([ocupadas, desocupadas, mantenimiento])
-        context['chart_title'] = 'Estado de Viviendas'
-        
-        # Crear CSV
-        output = StringIO()
-        writer = csv.writer(output)
-        writer.writerow(['ID', 'Edificio', 'Número', 'Piso', 'Metros Cuadrados', 'Habitaciones', 'Baños', 'Estado'])
-        
-        for vivienda in viviendas:
-            writer.writerow([
-                vivienda.id,
-                vivienda.edificio.nombre,
-                vivienda.numero,
-                vivienda.piso,
-                vivienda.metros_cuadrados,
-                vivienda.habitaciones,
-                vivienda.baños,
-                vivienda.estado
-            ])
-        
-        reporte.archivo.save(
-            f"reporte_{reporte.tipo.lower()}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            ContentFile(output.getvalue().encode('utf-8')),
-            save=True
-        )
-    
-    # Renderizar la plantilla con los datos
-    return render(request, 'reportes/reporte_generado.html', context)
+    return render(request, 'reportes/reporte_preview.html', contexto)
+
 
 @login_required
-def descargar_reporte(request, pk):
-    reporte = get_object_or_404(Reporte, pk=pk)
+def reporte_toggle_favorito(request, pk):
+    """Vista para marcar/desmarcar un reporte como favorito"""
+    reporte = get_object_or_404(ReporteConfig, pk=pk)
+    reporte.es_favorito = not reporte.es_favorito
+    reporte.save(update_fields=['es_favorito'])
     
-    if reporte.archivo:
-        response = HttpResponse(reporte.archivo.read(), content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="{reporte.archivo.name.split("/")[-1]}"'
-        return response
+    if reporte.es_favorito:
+        messages.success(request, "Reporte marcado como favorito")
+    else:
+        messages.info(request, "Reporte desmarcado como favorito")
     
-    return redirect('reporte-list')
+    # Redirigir de vuelta a la lista o a la vista previa
+    next_url = request.GET.get('next', reverse('reporte-list'))
+    return redirect(next_url)
+
+
+@login_required
+def reporte_duplicar(request, pk):
+    """Vista para duplicar un reporte existente"""
+    reporte_original = get_object_or_404(ReporteConfig, pk=pk)
+    
+    # Crear una copia del reporte
+    reporte_nuevo = ReporteConfig.objects.create(
+        nombre=f"Copia de {reporte_original.nombre}",
+        tipo=reporte_original.tipo,
+        fecha_desde=reporte_original.fecha_desde,
+        fecha_hasta=reporte_original.fecha_hasta,
+        creado_por=request.user,
+        filtros=reporte_original.filtros,
+        formato_preferido=reporte_original.formato_preferido,
+        es_favorito=False  # La copia no es favorita por defecto
+    )
+    
+    messages.success(request, f"Se ha creado una copia del reporte: {reporte_nuevo.nombre}")
+    return redirect('reporte-update', pk=reporte_nuevo.pk)

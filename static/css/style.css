@@ -1,22 +1,73 @@
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
+/* Estilos generales */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #0dcaf0;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --sidebar-width: 240px;
+    --navbar-height: 56px;
 }
 
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+}
+
+/* Barra de navegación superior */
+.navbar-brand {
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+    font-size: 1.1rem;
+    background-color: rgba(0, 0, 0, .25);
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, .8);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: rgba(255, 255, 255, 1);
+}
+
+.form-control-dark {
+    color: #fff;
+    background-color: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 255, 255, .1);
+}
+
+.form-control-dark:focus {
+    border-color: transparent;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
+}
+
+/* Sidebar */
 .sidebar {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
     z-index: 100;
-    padding: 48px 0 0;
+    padding: var(--navbar-height) 0 0;
     box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+    transition: all 0.3s;
+}
+
+@media (max-width: 767.98px) {
+    .sidebar {
+        top: var(--navbar-height);
+        padding-top: 0;
+    }
 }
 
 .sidebar-sticky {
     position: relative;
     top: 0;
-    height: calc(100vh - 48px);
+    height: calc(100vh - var(--navbar-height));
     padding-top: .5rem;
     overflow-x: hidden;
     overflow-y: auto;
@@ -24,51 +75,57 @@ body {
 
 .sidebar .nav-link {
     font-weight: 500;
-    color: #333;
+    color: var(--dark-color);
     padding: .5rem 1rem;
-    margin: .2rem 0;
+    margin: .1rem 0;
     border-radius: .25rem;
+    transition: all 0.2s;
 }
 
 .sidebar .nav-link:hover {
-    background-color: rgba(0, 123, 255, 0.1);
+    background-color: rgba(13, 110, 253, 0.1);
+    color: var(--primary-color);
 }
 
 .sidebar .nav-link.active {
-    color: #007bff;
-    background-color: rgba(0, 123, 255, 0.1);
+    color: var(--primary-color);
+    background-color: rgba(13, 110, 253, 0.1);
 }
 
 .sidebar .nav-link i {
     margin-right: 10px;
-    color: #999;
+    color: var(--secondary-color);
+    transition: all 0.2s;
 }
 
-.sidebar .nav-link.active i {
-    color: #007bff;
+.sidebar .nav-link.active i,
+.sidebar .nav-link:hover i {
+    color: var(--primary-color);
 }
 
-.navbar-brand {
-    padding-top: .75rem;
-    padding-bottom: .75rem;
-    font-size: 1rem;
-    background-color: rgba(0, 0, 0, .25);
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+.sidebar-heading {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: bold;
 }
 
-.form-control {
-    background-color: #fff;
-}
-
+/* Tarjetas y elementos de contenido */
 .card {
     margin-bottom: 1.5rem;
     border: none;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     transition: all 0.3s ease;
+    border-radius: 0.5rem;
 }
 
 .card:hover {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    border-top-left-radius: 0.5rem !important;
+    border-top-right-radius: 0.5rem !important;
+    background-color: rgba(0, 0, 0, 0.03);
 }
 
 .badge {
@@ -76,9 +133,136 @@ body {
     padding: .5em .7em;
 }
 
-.btn-group-sm>.btn, .btn-sm {
-    padding: .25rem .5rem;
-    font-size: .875rem;
-    line-height: 1.5;
-    border-radius: .2rem;
+/* Estilos para tablas */
+.table > :not(:last-child) > :last-child > * {
+    border-bottom-color: inherit;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Estilos para usuarios/residentes inactivos */
+.usuario-inactivo, .residente-inactivo, .residente-inactivo-vivienda, .empleado-inactivo {
+    opacity: 0.7;
+    background-color: #f8f9fa !important;
+}
+
+.usuario-inactivo td, .residente-inactivo td, .residente-inactivo-vivienda td, .empleado-inactivo td {
+    color: #6c757d;
+}
+
+/* Mejoras para los switch de mostrar/ocultar inactivos */
+.form-switch .form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Estilos para menús y dropdowns */
+.dropdown-menu {
+    border-radius: 0.375rem;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Estilos para botones y acciones */
+.btn {
+    font-weight: 500;
+    border-radius: 0.375rem;
+}
+
+.btn i {
+    margin-right: 0.25rem;
+}
+
+.btn-sm {
+    font-size: 0.8rem;
+    border-radius: 0.25rem;
+}
+
+/* Animaciones y efectos */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Dashboard stats cards */
+.stat-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: transform 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Sección de perfil */
+.user-profile-img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 5px solid #fff;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Estilos para validación de formularios */
+.is-invalid ~ .invalid-feedback {
+    display: block;
+}
+
+/* Estilos para paginación */
+.pagination .page-link {
+    border-radius: 0.25rem;
+    margin: 0 0.125rem;
+}
+
+/* Mejoras para modal */
+.modal-content {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+
+/* Estilos para notificaciones */
+.notification-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 0.7em;
+}
+
+/* Footer */
+.footer {
+    padding: 1.5rem 0;
+    color: #666;
+    background-color: #f5f5f5;
+    border-top: 1px solid #ddd;
 }

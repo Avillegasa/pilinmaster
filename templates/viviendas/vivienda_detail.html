@@ -7,10 +7,25 @@
 <div class="row">
     <div class="col-md-8 mx-auto">
         <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h5>Vivienda {{ vivienda.numero }} - Piso {{ vivienda.piso }}</h5>
+            <div class="card-header {% if vivienda.activo %}bg-primary{% else %}bg-secondary{% endif %} text-white">
+                <h5>
+                    Vivienda {{ vivienda.numero }} - Piso {{ vivienda.piso }}
+                    {% if not vivienda.activo %}
+                    <span class="badge bg-danger ms-2">Dada de baja</span>
+                    {% endif %}
+                </h5>
             </div>
             <div class="card-body">
+                {% if not vivienda.activo %}
+                <div class="alert alert-warning mb-4">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Esta vivienda ha sido dada de baja</strong>
+                    <p class="mb-0 mt-2">
+                        <strong>Fecha de baja:</strong> {{ vivienda.fecha_baja|date:"d/m/Y" }}<br>
+                        <strong>Motivo:</strong> {{ vivienda.motivo_baja }}
+                    </p>
+                </div>
+                {% endif %}
+                
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Edificio</label>
@@ -23,8 +38,10 @@
                                 <span class="badge text-bg-success">Ocupado</span>
                             {% elif vivienda.estado == 'DESOCUPADO' %}
                                 <span class="badge text-bg-secondary">Desocupado</span>
-                            {% else %}
+                            {% elif vivienda.estado == 'MANTENIMIENTO' %}
                                 <span class="badge text-bg-warning">Mantenimiento</span>
+                            {% elif vivienda.estado == 'BAJA' %}
+                                <span class="badge text-bg-danger">Dado de baja</span>
                             {% endif %}
                         </p>
                     </div>
@@ -52,62 +69,201 @@
                     </div>
                 </div>
                 
-                <h5 class="mt-4 mb-3">Residentes</h5>
-                
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Tipo</th>
-                                <th>Fecha Ingreso</th>
-                                <th>Vehículos</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for residente in vivienda.residentes.all %}
-                            <tr>
-                                <td>{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</td>
-                                <td>
-                                    {% if residente.es_propietario %}
-                                        <span class="badge text-bg-primary">Propietario</span>
-                                    {% else %}
-                                        <span class="badge text-bg-info">Inquilino</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
-                                <td>{{ residente.vehiculos }}</td>
-                                <td>
-                                    <a href="{% url 'residente-detail' residente.id %}" class="btn btn-sm btn-info">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">No hay residentes en esta vivienda</td>
-                            </tr>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Residentes</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Estadísticas de tipos de residentes -->
+                        <div class="row mb-4">
+                            {% for stat in stats_por_tipo %}
+                            <div class="col-md-4 mb-2">
+                                <div class="card h-100">
+                                    <div class="card-body text-center p-3">
+                                        <h6>
+                                            {{ stat.nombre }}
+                                            {% if stat.es_propietario %}
+                                                <span class="badge text-bg-primary">Propietario</span>
+                                            {% endif %}
+                                        </h6>
+                                        <div class="d-flex justify-content-around">
+                                            <div>
+                                                <strong>Total:</strong> {{ stat.total }}
+                                            </div>
+                                            <div>
+                                                <strong>Activos:</strong> {{ stat.activos }}
+                                            </div>
+                                            {% if stat.inactivos > 0 %}
+                                            <div>
+                                                <strong>Inactivos:</strong> {{ stat.inactivos }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                        </div>
+                        <!-- Filtros de residentes -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="filtroTipoResidente" class="form-label">Filtrar por Tipo</label>
+                                <select id="filtroTipoResidente" class="form-select">
+                                    <option value="todos">Todos los tipos</option>
+                                    {% for residente in vivienda.residentes.all %}
+                                        <option value="{{ residente.tipo_residente.nombre }}" class="tipo-option" data-tipo="{{ residente.tipo_residente.nombre }}">
+                                            {{ residente.tipo_residente.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="mostrarInactivosVivienda">
+                                    <label class="form-check-label" for="mostrarInactivosVivienda">Mostrar inactivos</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                        <th>Fecha Ingreso</th>
+                                        <th>Vehículos</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for residente in vivienda.residentes.all %}
+                                    <tr class="{% if not residente.activo %}residente-inactivo-vivienda d-none{% endif %} fila-residente" data-tipo="{{ residente.tipo_residente.nombre }}">
+                                        <td>{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</td>
+                                        <td>
+                                            {{ residente.tipo_residente.nombre }}
+                                            {% if residente.tipo_residente.es_propietario %}
+                                                <span class="badge text-bg-primary">Propietario</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
+                                        <td>{{ residente.vehiculos }}</td>
+                                        <td>
+                                            {% if residente.activo %}
+                                                <span class="badge text-bg-success">Activo</span>
+                                            {% else %}
+                                                <span class="badge text-bg-danger">Inactivo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'residente-detail' residente.id %}" class="btn btn-info">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{% url 'usuario-change-state' residente.usuario.id %}" class="btn {% if residente.activo %}btn-danger{% else %}btn-success{% endif %}">
+                                                    <i class="fas {% if residente.activo %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No hay residentes en esta vivienda</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="mt-4 d-flex justify-content-between">
                     <a href="{% url 'vivienda-list' %}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Volver
                     </a>
+                    {% if vivienda.activo %}
                     <div>
                         <a href="{% url 'vivienda-update' vivienda.id %}" class="btn btn-warning">
                             <i class="fas fa-edit"></i> Editar
                         </a>
-                        <a href="{% url 'vivienda-delete' vivienda.id %}" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Eliminar
+                        <a href="{% url 'vivienda-baja' vivienda.id %}" class="btn btn-danger">
+                            <i class="fas fa-archive"></i> Dar de Baja
                         </a>
                     </div>
+                    {% else %}
+                    <div>
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button class="btn btn-secondary" disabled>
+                            <i class="fas fa-archive"></i> Dar de Baja
+                        </button>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Eliminar opciones duplicadas en el selector de filtro
+        const filtroTipoResidente = document.getElementById('filtroTipoResidente');
+        const tipoOptions = document.getElementsByClassName('tipo-option');
+        
+        // Crear un conjunto para almacenar tipos ya mostrados
+        const tiposYaMostrados = new Set();
+        
+        // Verificar cada opción
+        Array.from(tipoOptions).forEach(option => {
+            const tipo = option.getAttribute('data-tipo');
+            if (tiposYaMostrados.has(tipo)) {
+                // Si ya existe, eliminar esta opción
+                option.remove();
+            } else {
+                // Si no existe, agregarlo al conjunto
+                tiposYaMostrados.add(tipo);
+            }
+        });
+        
+        // Control para mostrar/ocultar residentes inactivos
+        const checkboxInactivos = document.getElementById('mostrarInactivosVivienda');
+        const residentesInactivos = document.querySelectorAll('.residente-inactivo-vivienda');
+        
+        checkboxInactivos.addEventListener('change', function() {
+            residentesInactivos.forEach(function(residente) {
+                if (checkboxInactivos.checked) {
+                    residente.classList.remove('d-none');
+                } else {
+                    residente.classList.add('d-none');
+                }
+            });
+        });
+        
+        // Filtro por tipo de residente
+        filtroTipoResidente.addEventListener('change', function() {
+            const tipoSeleccionado = this.value;
+            const filas = document.querySelectorAll('.fila-residente');
+            
+            filas.forEach(fila => {
+                if (tipoSeleccionado === 'todos' || fila.getAttribute('data-tipo') === tipoSeleccionado) {
+                    // Mostrar la fila si corresponde al tipo seleccionado o se seleccionó "todos"
+                    if (fila.classList.contains('residente-inactivo-vivienda') && !checkboxInactivos.checked) {
+                        // Pero mantener ocultos los inactivos si el checkbox no está marcado
+                        fila.classList.add('d-none');
+                    } else {
+                        fila.classList.remove('d-none');
+                    }
+                } else {
+                    // Ocultar la fila si no corresponde al tipo seleccionado
+                    fila.classList.add('d-none');
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

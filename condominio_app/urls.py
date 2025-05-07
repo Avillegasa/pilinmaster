@@ -18,12 +18,34 @@ urlpatterns = [
          name='password_change'),
     path('password-change/done/', auth_views.PasswordChangeDoneView.as_view(template_name='password_change_done.html'), 
          name='password_change_done'),
+
+    # Agregar estas URLs para el restablecimiento de contraseña
+    path('password-reset/', 
+         auth_views.PasswordResetView.as_view(template_name='password_reset.html'), 
+         name='password_reset'),
+    path('password-reset/done/', 
+         auth_views.PasswordResetDoneView.as_view(template_name='password_reset_done.html'),
+         name='password_reset_done'),
+    path('password-reset/<uidb64>/<token>/', 
+         auth_views.PasswordResetConfirmView.as_view(template_name='password_reset_confirm.html'),
+         name='password_reset_confirm'),
+    path('password-reset/complete/', 
+         auth_views.PasswordResetCompleteView.as_view(template_name='password_reset_complete.html'),
+         name='password_reset_complete'),
     
     # Incluir URLs de las aplicaciones
     path('usuarios/', include('usuarios.urls')),
     path('viviendas/', include('viviendas.urls')),
     path('accesos/', include('accesos.urls')),
     path('reportes/', include('reportes.urls')),
+    path('personal/', include('personal.urls')),  # Nueva aplicación de personal
+    
+    # OAuth URLs para autenticación con Gmail (implementación futura)
+    path('accounts/', include('allauth.urls')),
+    
+    # API endpoints
+    path('api/visitas/historial/', include('accesos.urls')),
+    path('api/viviendas/<int:vivienda_id>/residentes/', include('accesos.urls')),
 ]
 
 # Servir archivos estáticos y media en modo de desarrollo

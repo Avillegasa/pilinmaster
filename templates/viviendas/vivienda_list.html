@@ -4,8 +4,88 @@
 {% block header %}Gestión de Viviendas{% endblock %}
 
 {% block content %}
-<div class="mb-4 d-flex justify-content-between align-items-center">
-    <p class="text-muted">Total: {{ viviendas.count }} viviendas</p>
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
+    </div>
+    <div class="card-body">
+        <form method="get" id="filtroForm" class="row g-3">
+            <!-- Filtro por edificio -->
+            <div class="col-md-2">
+                <label for="edificio" class="form-label">Edificio</label>
+                <select name="edificio" id="edificio" class="form-select">
+                    <option value="">Todos los edificios</option>
+                    {% for edificio in edificios %}
+                        <option value="{{ edificio.id }}" {% if filtro_edificio == edificio.id|stringformat:"i" %}selected{% endif %}>
+                            {{ edificio.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Filtro por piso -->
+            <div class="col-md-2">
+                <label for="piso" class="form-label">Piso</label>
+                <select name="piso" id="piso" class="form-select">
+                    <option value="">Todos los pisos</option>
+                    {% for piso in pisos %}
+                        <option value="{{ piso }}" {% if filtro_piso == piso|stringformat:"i" %}selected{% endif %}>
+                            {{ piso }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Filtro por estado -->
+            <div class="col-md-2">
+                <label for="estado" class="form-label">Estado</label>
+                <select name="estado" id="estado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    {% for estado in estados %}
+                        <option value="{{ estado }}" {% if filtro_estado == estado %}selected{% endif %}>
+                            {% if estado == 'OCUPADO' %}Ocupado
+                            {% elif estado == 'DESOCUPADO' %}Desocupado
+                            {% elif estado == 'MANTENIMIENTO' %}En mantenimiento
+                            {% elif estado == 'BAJA' %}Dado de baja
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Filtro por activo/inactivo -->
+            <div class="col-md-2">
+                <label for="activo" class="form-label">Situación</label>
+                <select name="activo" id="activo" class="form-select">
+                    <option value="true" {% if filtro_activo == 'true' %}selected{% endif %}>Activas</option>
+                    <option value="false" {% if filtro_activo == 'false' %}selected{% endif %}>Dadas de baja</option>
+                    <option value="" {% if filtro_activo == '' %}selected{% endif %}>Todas</option>
+                </select>
+            </div>
+            
+            <!-- Botones de acción -->
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-filter"></i> Filtrar
+                </button>
+                <a href="{% url 'vivienda-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-broom"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Información de totales -->
+<div class="alert alert-info mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <strong>Total viviendas:</strong> {{ viviendas.count }} 
+        {% if filtro_activo == 'true' or filtro_activo == '' %}
+        (de {{ total_activas }} activas)
+        {% elif filtro_activo == 'false' %}
+        (de {{ total_inactivas }} dadas de baja)
+        {% endif %}
+    </div>
     <a href="{% url 'vivienda-create' %}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Nueva Vivienda
     </a>
@@ -29,7 +109,7 @@
                 </thead>
                 <tbody>
                     {% for vivienda in viviendas %}
-                    <tr>
+                    <tr {% if not vivienda.activo %}class="table-secondary"{% endif %}>
                         <td>{{ vivienda.id }}</td>
                         <td>{{ vivienda.edificio.nombre }}</td>
                         <td>{{ vivienda.numero }}</td>
@@ -40,8 +120,13 @@
                                 <span class="badge text-bg-success">Ocupado</span>
                             {% elif vivienda.estado == 'DESOCUPADO' %}
                                 <span class="badge text-bg-secondary">Desocupado</span>
-                            {% else %}
+                            {% elif vivienda.estado == 'MANTENIMIENTO' %}
                                 <span class="badge text-bg-warning">Mantenimiento</span>
+                            {% elif vivienda.estado == 'BAJA' %}
+                                <span class="badge text-bg-danger">Dado de baja</span>
+                            {% endif %}
+                            {% if not vivienda.activo %}
+                                <i class="fas fa-archive ms-1" title="Vivienda dada de baja"></i>
                             {% endif %}
                         </td>
                         <td>{{ vivienda.residentes.count }}</td>
@@ -50,12 +135,21 @@
                                 <a href="{% url 'vivienda-detail' vivienda.id %}" class="btn btn-info">
                                     <i class="fas fa-eye"></i>
                                 </a>
+                                {% if vivienda.activo %}
                                 <a href="{% url 'vivienda-update' vivienda.id %}" class="btn btn-warning">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'vivienda-delete' vivienda.id %}" class="btn btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                <a href="{% url 'vivienda-baja' vivienda.id %}" class="btn btn-danger">
+                                    <i class="fas fa-archive"></i>
                                 </a>
+                                {% else %}
+                                <button class="btn btn-secondary" disabled title="Vivienda dada de baja">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-secondary" disabled title="Vivienda dada de baja">
+                                    <i class="fas fa-archive"></i>
+                                </button>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -69,4 +163,19 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-submit del formulario al cambiar los filtros
+        const formInputs = document.querySelectorAll('#filtroForm select');
+        
+        formInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                document.getElementById('filtroForm').submit();
+            });
+        });
+    });
+</script>
 {% endblock %}

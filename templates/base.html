@@ -25,7 +25,9 @@
                 {% include 'sidebar.html' %}
                 
                 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                    <div class="pt-3 pb-2 mb-3 border-bottom">
+                    <div class="pt-3 pb-2 mb-3 border-bottom d-flex align-items-center">
+                        <!-- Agregar el logo -->
+                        <img src="{% static 'img/logo_ofi.png' %}" alt="Logo" style="height: 40px; margin-right: 10px;">
                         <h1 class="h2">{% block header %}{% endblock %}</h1>
                     </div>
                     

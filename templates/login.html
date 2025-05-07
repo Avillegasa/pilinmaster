@@ -1,40 +1,89 @@
 {% extends 'base.html' %}
+{% load socialaccount %}
 {% load crispy_forms_tags %}
+{% load static %}
 
-{% block title %}Iniciar Sesión | Sistema de Administración de Condominios{% endblock %}
+{% block title %}Iniciar Sesión | Bienvenido a Torre Segura{% endblock %}
 
 {% block auth_content %}
-<div class="container">
-    <div class="row justify-content-center vh-100 align-items-center">
+<div style="background: linear-gradient(135deg, #001f3f, #0066cc); min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <div class="row justify-content-center align-items-center min-vh-100 m-0">
         <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</h4>
+            <div class="text-center mb-4">
+                <img src="{% static 'img/logo_ofi.png' %}" alt="Torre Segura Logo" style="max-height: 120px; border-radius: 50%; border: 3px solid white;" class="mb-3">
+                <h2 class="text-white fw-bold">Torre Segura</h2>
+                <p class="text-white-50">Sistema de Administración de Condominios</p>
+            </div>
+
+            <div class="card shadow border-0" style="background-color: rgba(255, 255, 255, 0.9); border-radius: 15px;">
+                <div class="card-header text-center" style="background-color: #ffcc00; border-radius: 15px 15px 0 0;">
+                    <h4 class="text-dark fw-bold mb-0"><i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
                     <form method="post">
                         {% csrf_token %}
                         <div class="mb-3">
-                            <label for="id_username" class="form-label">Usuario</label>
+                            <label for="id_username" class="form-label">Usuario o Email</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <span class="input-group-text" style="background-color: #001f3f; color: white;"><i class="fas fa-user"></i></span>
                                 <input type="text" name="username" id="id_username" class="form-control" required>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="id_password" class="form-label">Contraseña</label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <span class="input-group-text" style="background-color: #001f3f; color: white;"><i class="fas fa-lock"></i></span>
                                 <input type="password" name="password" id="id_password" class="form-control" required>
                             </div>
                         </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember-me" name="remember">
+                            <label class="form-check-label" for="remember-me">Recordarme</label>
+                            <a href="{% url 'password_reset' %}" class="float-end" style="color: #0066cc;">¿Olvidaste tu contraseña?</a>
+                        </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-sign-in-alt"></i> Acceder
+                            <button type="submit" class="btn" style="background-color: #ffcc00; color: #001f3f; font-weight: bold;">
+                                <i class="fas fa-sign-in-alt me-2"></i> Acceder
                             </button>
                         </div>
                     </form>
+
+                    <div class="my-3 text-center position-relative">
+                        <hr style="color: #ccc;">
+                        <span class="position-absolute top-50 start-50 translate-middle px-3">o inicia sesión con</span>
+                    </div>
+
+                    <div class="d-grid">
+                        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger">
+                            <i class="fab fa-google me-2"></i> Iniciar sesión con Google
+                        </a>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Al acceder, aceptas nuestros <a href="#" style="color: #0066cc;">Términos y Condiciones</a>
+                        </small>
+                    </div>
                 </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <small class="text-white-50">
+                    © 2025 Torre Segura - Sistema de Administración de Condominios
+                </small>
+            </div>
+
+            <div class="text-center mt-2">
+                <p class="text-white fw-bold">EQUIPO TECHFORGE</p>
             </div>
         </div>
     </div>

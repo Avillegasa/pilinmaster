@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ residente.usuario.first_name }} {{ residente.usuario.last_name }} | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Detalles del Residente{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5>{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    {% if residente.usuario.foto %}
+                        <img src="{{ residente.usuario.foto.url }}" alt="{{ residente.usuario }}" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-5x text-secondary"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if not residente.activo %}
+                <div class="alert alert-danger mb-4">
+                    <i class="fas fa-exclamation-triangle"></i> Este residente está actualmente inactivo. Para activarlo, necesitas reactivar su usuario asociado.
+                </div>
+                {% endif %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre de usuario</label>
+                        <p class="form-control">{{ residente.usuario.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Correo electrónico</label>
+                        <p class="form-control">{{ residente.usuario.email }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Vivienda</label>
+                        <p class="form-control">
+                            {% if residente.vivienda %}
+                                {{ residente.vivienda.edificio.nombre }} - {{ residente.vivienda }}
+                            {% else %}
+                                <span class="text-muted">No asignada</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Tipo de Residente</label>
+                        <p class="form-control">
+                            {{ residente.tipo_residente.nombre }}
+                            {% if residente.tipo_residente.es_propietario %}
+                                <span class="badge text-bg-primary ms-2">Propietario</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha de Ingreso</label>
+                        <p class="form-control">{{ residente.fecha_ingreso|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Vehículos</label>
+                        <p class="form-control">{{ residente.vehiculos }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Estado</label>
+                        <p class="form-control">
+                            {% if residente.activo %}
+                                <span class="badge text-bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge text-bg-danger">Inactivo</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono</label>
+                        <p class="form-control">{{ residente.usuario.telefono|default:"No especificado" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Documento</label>
+                        <p class="form-control">{{ residente.usuario.tipo_documento }}: {{ residente.usuario.numero_documento|default:"No especificado" }}</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 d-flex justify-content-between">
+                    <a href="{% url 'residente-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                    <div>
+                        <a href="{% url 'residente-update' residente.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'usuario-change-state' residente.usuario.id %}" class="btn {% if residente.activo %}btn-danger{% else %}btn-success{% endif %}">
+                            <i class="fas {% if residente.activo %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                            {% if residente.activo %}Desactivar{% else %}Activar{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
