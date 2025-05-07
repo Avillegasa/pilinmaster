@@ -6,7 +6,6 @@ env/
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyc
 *.sqlite3
 
 # Archivos de configuración personales
