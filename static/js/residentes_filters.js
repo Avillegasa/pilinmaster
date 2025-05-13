@@ -10,7 +10,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function actualizarViviendas() {
         if (!edificioSelect || !viviendaSelect) return;
         
-        const edificioId = edificioSelect.value;
+        const edificioId = edificioSelect.value || 0;
+        
+        // Guardar la vivienda seleccionada actualmente
+        const viviendaSeleccionada = viviendaSelect.value;
         
         // Limpiar viviendas actuales
         viviendaSelect.innerHTML = '<option value="">Todas las viviendas</option>';
@@ -28,7 +31,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Hacer la petición para obtener las viviendas del edificio seleccionado
         fetch(`/viviendas/api/edificio/${edificioId}/viviendas/`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error de red: ' + response.status);
+                }
+                return response.json();
+            })
             .then(data => {
                 // Limpiar las opciones actuales
                 viviendaSelect.innerHTML = '<option value="">Todas las viviendas</option>';
@@ -40,10 +48,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     option.textContent = `${vivienda.numero} (Piso ${vivienda.piso})`;
                     viviendaSelect.appendChild(option);
                 });
+                
+                // Intentar restaurar la vivienda seleccionada previamente
+                if (viviendaSeleccionada) {
+                    viviendaSelect.value = viviendaSeleccionada;
+                }
+                
+                // Habilitar el select de viviendas
+                viviendaSelect.disabled = false;
             })
             .catch(error => {
                 console.error('Error al cargar viviendas:', error);
                 viviendaSelect.innerHTML = '<option value="">Error al cargar viviendas</option>';
+                viviendaSelect.disabled = false;
             });
     }
     
@@ -52,6 +69,10 @@ document.addEventListener('DOMContentLoaded', function() {
         edificioSelect.addEventListener('change', function() {
             actualizarViviendas();
             // No enviamos el formulario automáticamente para permitir seleccionar la vivienda
+            // Si se desea autoenvío, se puede configurar con data-attribute
+            if (this.dataset.autosubmit === "true") {
+                filtroForm.submit();
+            }
         });
     }
     

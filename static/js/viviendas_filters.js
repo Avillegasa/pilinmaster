@@ -10,11 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function actualizarPisos() {
         if (!edificioSelect || !pisoSelect) return;
         
-        const edificioId = edificioSelect.value;
-        if (!edificioId) {
-            // Si no hay edificio seleccionado, mostrar todos los pisos
-            return;
-        }
+        const edificioId = edificioSelect.value || 0;
         
         // Guardar el piso seleccionado actualmente
         const pisoSeleccionado = pisoSelect.value;
@@ -24,7 +20,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Hacer la petición para obtener los pisos del edificio seleccionado
         fetch(`/viviendas/api/edificio/${edificioId}/pisos/`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error de red: ' + response.status);
+                }
+                return response.json();
+            })
             .then(data => {
                 // Limpiar las opciones actuales
                 pisoSelect.innerHTML = '<option value="">Todos los pisos</option>';
@@ -72,7 +73,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (edificioSelect) {
         edificioSelect.addEventListener('change', function() {
             actualizarPisos();
-            filtroForm.submit();
+            // Solo enviamos el formulario si el usuario ha terminado de seleccionar
+            // Esto permite tiempo para seleccionar también el piso
+            if (this.dataset.autosubmit === "true") {
+                filtroForm.submit();
+            }
         });
     }
     
@@ -98,4 +103,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicializar
     sincronizarEstadoActivo();
+    
+    // Cargar pisos si hay un edificio seleccionado
+    if (edificioSelect && edificioSelect.value) {
+        actualizarPisos();
+    }
 });

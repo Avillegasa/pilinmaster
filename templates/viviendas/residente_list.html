@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Residentes | Sistema de Administración de Condominios{% endblock %}
 {% block header %}Gestión de Residentes{% endblock %}
@@ -13,7 +14,7 @@
             <!-- Filtro por edificio -->
             <div class="col-md-3">
                 <label for="edificio" class="form-label">Edificio</label>
-                <select name="edificio" id="edificio" class="form-select">
+                <select name="edificio" id="edificio" class="form-select" data-autosubmit="false">
                     <option value="">Todos los edificios</option>
                     {% for edificio in edificios %}
                         <option value="{{ edificio.id }}" {% if filtro_edificio == edificio.id|stringformat:"i" %}selected{% endif %}>
@@ -147,49 +148,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-submit del formulario al cambiar los filtros
-        const formSelects = document.querySelectorAll('#filtroForm select');
-        
-        formSelects.forEach(select => {
-            select.addEventListener('change', function() {
-                document.getElementById('filtroForm').submit();
-            });
-        });
-        
-        // Funcionalidad para filtrar viviendas según el edificio seleccionado
-        const edificioSelect = document.getElementById('edificio');
-        const viviendaSelect = document.getElementById('vivienda');
-        
-        edificioSelect.addEventListener('change', function() {
-            // Limpiar el select de vivienda
-            viviendaSelect.innerHTML = '<option value="">Todas las viviendas</option>';
-            
-            if (this.value === '') {
-                viviendaSelect.disabled = true;
-                return;
-            }
-            
-            // Habilitar el select de vivienda
-            viviendaSelect.disabled = false;
-            
-            // Cargar las viviendas del edificio seleccionado
-            fetch(`/viviendas/api/edificio/${this.value}/viviendas/`)
-                .then(response => response.json())
-                .then(data => {
-                    data.forEach(vivienda => {
-                        const option = document.createElement('option');
-                        option.value = vivienda.id;
-                        option.textContent = `${vivienda.numero} (Piso ${vivienda.piso})`;
-                        viviendaSelect.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error al cargar viviendas:', error);
-                });
-        });
-    });
-</script>
+<!-- Asegúrate de incluir el JavaScript estático correctamente -->
 <script src="{% static 'js/residentes_filters.js' %}"></script>
 {% endblock %}

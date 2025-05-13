@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const edificioId = edificioSelect.value;
         
+        // Guardar la vivienda seleccionada actualmente
+        const viviendaSeleccionada = viviendaSelect.value;
+        
         // Limpiar viviendas actuales
         viviendaSelect.innerHTML = '<option value="">Todas las viviendas</option>';
         
@@ -26,8 +29,13 @@ document.addEventListener('DOMContentLoaded', function() {
         viviendaSelect.innerHTML = '<option value="">Cargando viviendas...</option>';
         
         // Hacer la petición para obtener las viviendas del edificio seleccionado
-        fetch(`/personal/api/edificio/${edificioId}/viviendas/`)
-            .then(response => response.json())
+        fetch(`/viviendas/api/edificio/${edificioId}/viviendas/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error de red: ' + response.status);
+                }
+                return response.json();
+            })
             .then(data => {
                 // Limpiar las opciones actuales
                 viviendaSelect.innerHTML = '<option value="">Todas las viviendas</option>';
@@ -39,6 +47,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     option.textContent = `${vivienda.numero} (Piso ${vivienda.piso})`;
                     viviendaSelect.appendChild(option);
                 });
+                
+                // Intentar restaurar la vivienda seleccionada previamente
+                if (viviendaSeleccionada) {
+                    viviendaSelect.value = viviendaSeleccionada;
+                }
             })
             .catch(error => {
                 console.error('Error al cargar viviendas:', error);
@@ -65,6 +78,42 @@ document.addEventListener('DOMContentLoaded', function() {
     if (edificioSelect) {
         edificioSelect.addEventListener('change', function() {
             actualizarViviendas();
+            // Si se desea autoenvío, se puede configurar con data-attribute
+            if (this.dataset.autosubmit === "true") {
+                filtroForm.submit();
+            }
+        });
+    }
+    
+    if (viviendaSelect) {
+        viviendaSelect.addEventListener('change', function() {
+            if (this.dataset.autosubmit !== "false") {
+                filtroForm.submit();
+            }
+        });
+    }
+    
+    if (empleadoSelect) {
+        empleadoSelect.addEventListener('change', function() {
+            if (this.dataset.autosubmit !== "false") {
+                filtroForm.submit();
+            }
+        });
+    }
+    
+    if (tipoSelect) {
+        tipoSelect.addEventListener('change', function() {
+            if (this.dataset.autosubmit !== "false") {
+                filtroForm.submit();
+            }
+        });
+    }
+    
+    if (estadoSelect) {
+        estadoSelect.addEventListener('change', function() {
+            if (this.dataset.autosubmit !== "false") {
+                filtroForm.submit();
+            }
         });
     }
     

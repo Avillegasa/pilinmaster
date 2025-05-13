@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Viviendas | Sistema de Administración de Condominios{% endblock %}
 {% block header %}Gestión de Viviendas{% endblock %}
@@ -13,7 +14,7 @@
             <!-- Filtro por edificio -->
             <div class="col-md-2">
                 <label for="edificio" class="form-label">Edificio</label>
-                <select name="edificio" id="edificio" class="form-select">
+                <select name="edificio" id="edificio" class="form-select" data-autosubmit="false">
                     <option value="">Todos los edificios</option>
                     {% for edificio in edificios %}
                         <option value="{{ edificio.id }}" {% if filtro_edificio == edificio.id|stringformat:"i" %}selected{% endif %}>
@@ -30,7 +31,7 @@
                     <option value="">Todos los pisos</option>
                     {% for piso in pisos %}
                         <option value="{{ piso }}" {% if filtro_piso == piso|stringformat:"i" %}selected{% endif %}>
-                            {{ piso }}
+                            Piso {{ piso }}
                         </option>
                     {% endfor %}
                 </select>
@@ -166,17 +167,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-submit del formulario al cambiar los filtros
-        const formInputs = document.querySelectorAll('#filtroForm select');
-        
-        formInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                document.getElementById('filtroForm').submit();
-            });
-        });
-    });
-</script>
+<!-- Asegúrate de incluir el JavaScript estático correctamente -->
 <script src="{% static 'js/viviendas_filters.js' %}"></script>
 {% endblock %}

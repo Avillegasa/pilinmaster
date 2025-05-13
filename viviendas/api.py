@@ -1,4 +1,3 @@
-# viviendas/api.py
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import Edificio, Vivienda, Residente
@@ -20,7 +19,7 @@ def viviendas_por_edificio(request, edificio_id):
         if not incluir_inactivas:
             query = query.filter(activo=True)
         
-        if edificio_id == 0:
+        if int(edificio_id) == 0:
             # Devolver todas las viviendas (activas por defecto)
             viviendas = query.all().order_by('edificio__nombre', 'piso', 'numero')
         else:
@@ -44,11 +43,34 @@ def viviendas_por_edificio(request, edificio_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
+def pisos_por_edificio(request, edificio_id):
+    """API endpoint para obtener los pisos disponibles en un edificio específico"""
+    try:
+        # Si edificio_id es 0, devolver todos los pisos del sistema
+        if int(edificio_id) == 0:
+            pisos = Vivienda.objects.values_list('piso', flat=True).distinct().order_by('piso')
+        else:
+            pisos = Vivienda.objects.filter(
+                edificio_id=edificio_id
+            ).values_list('piso', flat=True).distinct().order_by('piso')
+        
+        return JsonResponse(list(pisos), safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
 def residentes_por_vivienda(request, vivienda_id):
     """API endpoint para obtener los residentes de una vivienda específica"""
     try:
         vivienda = Vivienda.objects.get(pk=vivienda_id)
-        residentes = Residente.objects.filter(vivienda=vivienda).select_related('usuario')
+        
+        # Por defecto solo muestra residentes activos, a menos que se solicite mostrar todos
+        mostrar_todos = request.GET.get('mostrar_todos', '0') == '1'
+        
+        if mostrar_todos:
+            residentes = Residente.objects.filter(vivienda=vivienda).select_related('usuario')
+        else:
+            residentes = Residente.objects.filter(vivienda=vivienda, activo=True).select_related('usuario')
         
         data = []
         for residente in residentes:
@@ -66,4 +88,3 @@ def residentes_por_vivienda(request, vivienda_id):
         return JsonResponse({'error': 'Vivienda no encontrada'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-

@@ -241,17 +241,6 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-submit del formulario al cambiar los selects
-        const selectInputs = document.querySelectorAll('#filtroForm select');
-        
-        selectInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                document.getElementById('filtroForm').submit();
-            });
-        });
-    });
-</script>
+<!-- Asegúrate de incluir el JavaScript estático correctamente -->
 <script src="{% static 'js/asignaciones_filters.js' %}"></script>
 {% endblock %}
