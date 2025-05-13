@@ -66,3 +66,4 @@ def residentes_por_vivienda(request, vivienda_id):
         return JsonResponse({'error': 'Vivienda no encontrada'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+

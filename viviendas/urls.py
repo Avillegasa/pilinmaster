@@ -28,4 +28,5 @@ urlpatterns = [
     # API endpoints
     path('api/edificio/<int:edificio_id>/viviendas/', api.viviendas_por_edificio, name='api-viviendas-por-edificio'),
     path('api/vivienda/<int:vivienda_id>/residentes/', api.residentes_por_vivienda, name='api-residentes-por-vivienda'),
+    path('api/edificio/<int:edificio_id>/pisos/', api.pisos_por_edificio, name='api-pisos-por-edificio'),
 ]

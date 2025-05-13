@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import api
 
 urlpatterns = [
     # URLs para Puestos
@@ -24,4 +25,5 @@ urlpatterns = [
     
     # API URLs
     path('api/viviendas-por-edificio/', views.viviendas_por_edificio_api, name='api-viviendas-por-edificio'),
+    path('api/edificio/<int:edificio_id>/viviendas/', api.viviendas_por_edificio, name='api-viviendas-por-edificio-personal'),
 ]
