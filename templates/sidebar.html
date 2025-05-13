@@ -1,22 +1,30 @@
 {% load static %}
 <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block text-white sidebar collapse" style="background-color: #001f3f;">
     <div class="position-sticky pt-3">
-        <!-- Logo y título -->
+        <!-- Logo y título - optimizado para móviles -->
         <div class="text-center mb-4">
-            <img src="{% static 'img/logo_ofi.png' %}" alt="Logo" style="height: 60px; margin-bottom: 10px;">
-            <h5 class="fw-bold">Condominio App</h5>
+            <img src="{% static 'img/logo_ofi.png' %}" alt="Logo" style="height: 60px; margin-bottom: 10px;" class="d-none d-md-inline">
+            <h5 class="fw-bold">Torre Segura</h5>
         </div>
         
         <!-- Búsqueda rápida en versión móvil -->
         <div class="d-md-none px-3 mb-3">
-            <input type="text" class="form-control" placeholder="Buscar..." style="border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background-color: rgba(255,255,255,0.1); color: white;">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Buscar..." style="border-radius: 20px 0 0 20px; border: 1px solid rgba(255,255,255,0.2); background-color: rgba(255,255,255,0.1); color: white;">
+                <button class="btn btn-sm btn-outline-light" style="border-radius: 0 20px 20px 0; border: 1px solid rgba(255,255,255,0.2);">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
         </div>
         
         <!-- Sección principal -->
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-1 mb-1 text-white-50">
             <span>Principal</span>
+            <span class="d-md-none" data-bs-toggle="collapse" data-bs-target="#principalNav" style="cursor: pointer;">
+                <i class="fas fa-chevron-down"></i>
+            </span>
         </h6>
-        <ul class="nav flex-column">
+        <ul class="nav flex-column collapse show" id="principalNav">
             <li class="nav-item">
                 <a class="nav-link text-white {% if request.path == '/dashboard/' %}active bg-primary{% endif %}" href="{% url 'dashboard' %}">
                     <i class="fas fa-tachometer-alt me-2"></i> Dashboard
@@ -37,8 +45,11 @@
         <!-- Sección de control de acceso -->
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-white-50">
             <span>Control de Acceso</span>
+            <span class="d-md-none" data-bs-toggle="collapse" data-bs-target="#accesoNav" style="cursor: pointer;">
+                <i class="fas fa-chevron-down"></i>
+            </span>
         </h6>
-        <ul class="nav flex-column">
+        <ul class="nav flex-column collapse show" id="accesoNav">
             <li class="nav-item">
                 <a class="nav-link text-white {% if '/accesos/visitas/' in request.path %}active bg-primary{% endif %}" href="{% url 'visita-list' %}">
                     <i class="fas fa-clipboard-list me-2"></i> Visitas
@@ -51,11 +62,14 @@
             </li>
         </ul>
         
-        <!-- Sección de personal (nueva) -->
+        <!-- Sección de personal -->
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-white-50">
             <span>Personal</span>
+            <span class="d-md-none" data-bs-toggle="collapse" data-bs-target="#personalNav" style="cursor: pointer;">
+                <i class="fas fa-chevron-down"></i>
+            </span>
         </h6>
-        <ul class="nav flex-column">
+        <ul class="nav flex-column collapse show" id="personalNav">
             <li class="nav-item">
                 <a class="nav-link text-white {% if '/personal/empleados/' in request.path %}active bg-primary{% endif %}" href="{% url 'empleado-list' %}">
                     <i class="fas fa-id-badge me-2"></i> Empleados
@@ -68,11 +82,14 @@
             </li>
         </ul>
         
-        <!-- Sección de utilidades -->
+        <!-- Sección de utilidades - colapsable en móviles -->
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-white-50">
             <span>Utilidades</span>
+            <span class="d-md-none" data-bs-toggle="collapse" data-bs-target="#utilidadesNav" style="cursor: pointer;">
+                <i class="fas fa-chevron-down"></i>
+            </span>
         </h6>
-        <ul class="nav flex-column">
+        <ul class="nav flex-column collapse show" id="utilidadesNav">
             <li class="nav-item">
                 <a class="nav-link text-white {% if '/perfil/' in request.path %}active bg-primary{% endif %}" href="{% url 'perfil' %}">
                     <i class="fas fa-user-circle me-2"></i> Mi Perfil
@@ -81,11 +98,14 @@
         </ul>
         
         {% if user.rol.nombre == 'Administrador' %}
-        <!-- Sección de administración -->
+        <!-- Sección de administración - colapsable en móviles -->
         <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-white-50">
             <span>Administración</span>
+            <span class="d-md-none" data-bs-toggle="collapse" data-bs-target="#adminNav" style="cursor: pointer;">
+                <i class="fas fa-chevron-down"></i>
+            </span>
         </h6>
-        <ul class="nav flex-column mb-2">
+        <ul class="nav flex-column collapse show" id="adminNav">
             <li class="nav-item">
                 <a class="nav-link text-white {% if '/usuarios/' in request.path and not '/perfil/' in request.path %}active bg-primary{% endif %}" href="{% url 'usuario-list' %}">
                     <i class="fas fa-users me-2"></i> Usuarios
@@ -109,10 +129,16 @@
         </ul>
         {% endif %}
         
-        <!-- Versión y ayuda -->
-        <div class="px-3 mt-4 mb-2 text-center">
+        <!-- Versión y ayuda - responsive -->
+        <div class="px-3 mt-4 mb-2 text-center d-none d-md-block">
             <div class="small text-white-50">Versión 1.2.0</div>
             <a href="#" class="small text-decoration-none text-white-50 hover-text-white" data-bs-toggle="modal" data-bs-target="#helpModal">Ayuda</a>
+        </div>
+        
+        <!-- Versión móvil de versión y ayuda -->
+        <div class="d-md-none d-flex justify-content-around px-3 mt-4 mb-2 text-white-50">
+            <span class="small">v1.2.0</span>
+            <a href="#" class="small text-decoration-none text-white-50" data-bs-toggle="modal" data-bs-target="#helpModal">Ayuda</a>
         </div>
     </div>
 </nav>

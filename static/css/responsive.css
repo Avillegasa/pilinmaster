@@ -1,0 +1,277 @@
+/* responsive.css - Estilos complementarios para mejorar la responsividad */
+
+/* Mejoras generales para dispositivos móviles */
+@media (max-width: 767.98px) {
+    /* Reducir padding en dispositivos móviles */
+    .container-fluid, .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    /* Ajustar tamaño de textos */
+    h1, .h1 {
+        font-size: 1.75rem;
+    }
+    
+    h2, .h2 {
+        font-size: 1.5rem;
+    }
+    
+    /* Hacer que los botones de acción se vean mejor en móviles */
+    .btn-group-sm {
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 5px;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Mejoras para tarjetas en móviles */
+    .stat-card {
+        margin-bottom: 15px;
+    }
+    
+    /* Reducir padding en las cards */
+    .card-body {
+        padding: 0.75rem;
+    }
+    
+    /* Ajustar filtros para mejor visualización */
+    #filtroForm .col-md-2,
+    #filtroForm .col-md-3,
+    #filtroForm .col-md-4 {
+        margin-bottom: 10px;
+    }
+    
+    /* Ajustar dashboard en móviles */
+    .row > [class*="col-"] {
+        margin-bottom: 15px;
+    }
+}
+
+/* Mejoras para tablas responsivas */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* En pantallas muy pequeñas, convertir tablas a formato de tarjetas */
+@media (max-width: 575.98px) {
+    .table-responsive-card thead {
+        display: none;
+    }
+    
+    .table-responsive-card tr {
+        display: block;
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        margin-bottom: 0.75rem;
+        background-color: #fff;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .table-responsive-card td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .table-responsive-card td:last-child {
+        border-bottom: none;
+    }
+    
+    .table-responsive-card td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        margin-right: 1rem;
+    }
+    
+    .table-responsive-card td .btn-group {
+        margin-left: auto;
+    }
+}
+
+/* Estilos consistentes para badges */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    letter-spacing: 0.025em;
+}
+
+/* Estilo consistente para los filtros */
+.filter-card {
+    margin-bottom: 1.5rem;
+}
+
+.filter-card .card-header {
+    padding: 0.75rem 1.25rem;
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.filter-card .card-body {
+    padding: 1.25rem;
+}
+
+/* Mejora de la apariencia de los formularios en todos los dispositivos */
+.form-control, .form-select {
+    font-size: 0.875rem;
+    height: calc(1.5em + 0.75rem + 2px);
+}
+
+label.form-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+}
+
+/* Mejora visual de botones */
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Mejoras de espaciado consistente */
+.content-header {
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (max-width: 767.98px) {
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .content-header .btn {
+        margin-top: 0.75rem;
+        align-self: flex-end;
+    }
+}
+
+/* Mejora de transiciones para mejorar la experiencia de usuario */
+.btn, .card, .nav-link, .form-control, .form-select {
+    transition: all 0.2s ease;
+}
+
+/* Mejoras de accesibilidad */
+.btn:focus, .form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    outline: 0;
+}
+
+/* Optimizaciones para sidebar en móviles */
+@media (max-width: 767.98px) {
+    .sidebar {
+        width: 100%;
+        position: static;
+        height: auto;
+        background-color: #001f3f;
+    }
+    
+    .sidebar .nav-link {
+        padding: 0.75rem 1rem;
+    }
+    
+    .sidebar .sidebar-heading {
+        margin-top: 1rem;
+    }
+    
+    .sidebar-sticky {
+        height: auto;
+        max-height: 75vh;
+        position: static;
+    }
+}
+
+/* Mejora para modales en dispositivos móviles */
+@media (max-width: 767.98px) {
+    .modal-dialog {
+        margin: 0.5rem auto;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+}
+
+/* Optimizaciones especiales para listados de viviendas, residentes y empleados */
+.list-filters {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.list-filters label {
+    font-weight: 500;
+}
+
+/* Mejoras para detalles de viviendas, residentes y empleados */
+.detail-image {
+    max-width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+}
+
+.detail-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .detail-image {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Fix para formularios con crispy forms */
+.crispy-form label {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.crispy-form .asteriskField {
+    color: #dc3545;
+    margin-left: 2px;
+}
+
+.crispy-form .form-text {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Estilos mejorados para el dashboard */
+.dashboard-stat {
+    transition: transform 0.2s;
+}
+
+.dashboard-stat:hover {
+    transform: translateY(-5px);
+}
+
+.dashboard-shortcut {
+    transition: all 0.2s;
+    border-radius: 0.5rem;
+}
+
+.dashboard-shortcut:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.05);
+}
