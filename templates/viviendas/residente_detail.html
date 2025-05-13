@@ -50,11 +50,12 @@
                         </p>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Tipo de Residente</label>
+                        <label class="form-label">Tipo</label>
                         <p class="form-control">
-                            {{ residente.tipo_residente.nombre }}
-                            {% if residente.tipo_residente.es_propietario %}
-                                <span class="badge text-bg-primary ms-2">Propietario</span>
+                            {% if residente.es_propietario %}
+                                <span class="badge text-bg-primary">Propietario</span>
+                            {% else %}
+                                <span class="badge text-bg-secondary">Inquilino</span>
                             {% endif %}
                         </p>
                     </div>

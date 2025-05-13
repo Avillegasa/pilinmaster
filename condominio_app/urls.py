@@ -37,7 +37,6 @@ urlpatterns = [
     path('usuarios/', include('usuarios.urls')),
     path('viviendas/', include('viviendas.urls')),
     path('accesos/', include('accesos.urls')),
-    path('reportes/', include('reportes.urls')),
     path('personal/', include('personal.urls')),  # Nueva aplicación de personal
     
     # OAuth URLs para autenticación con Gmail (implementación futura)

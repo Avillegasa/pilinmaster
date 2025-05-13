@@ -8,4 +8,3 @@ aplicaciones específicas: usuarios, viviendas, accesos y reportes.
 # No es necesario definir modelos en el módulo principal
 # del proyecto, solo se mantiene este archivo para evitar
 # errores de importación.
-from reportes.models import Reporte

@@ -4,12 +4,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Configuración para WeasyPrint en Windows - solo configuramos el PATH, sin cargar WeasyPrint
-if os.name == 'nt':  # Solo en Windows
-    # En lugar de cargar directamente, solo configuramos el entorno
-    os.environ['PATH'] = r"C:\Program Files\GTK3-Runtime Win64\bin" + os.pathsep + os.environ['PATH']
-    # No importar WeasyPrint aquí ni generar PDFs durante la inicialización
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -45,7 +39,6 @@ INSTALLED_APPS = [
     'usuarios',
     'viviendas',
     'accesos',
-    'reportes',
     'personal',  # Nueva aplicación de gestión de personal
 ]
 

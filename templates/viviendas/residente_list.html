@@ -36,16 +36,13 @@
                 </select>
             </div>
             
-            <!-- Filtro por tipo de residente -->
+            <!-- Filtro por propietario/inquilino -->
             <div class="col-md-3">
-                <label for="tipo" class="form-label">Tipo de Residente</label>
-                <select name="tipo" id="tipo" class="form-select">
-                    <option value="">Todos los tipos</option>
-                    {% for tipo in tipos_residentes %}
-                        <option value="{{ tipo.id }}" {% if filtro_tipo == tipo.id|stringformat:"i" %}selected{% endif %}>
-                            {{ tipo.nombre }} {% if tipo.es_propietario %}(Propietario){% endif %}
-                        </option>
-                    {% endfor %}
+                <label for="es_propietario" class="form-label">Tipo</label>
+                <select name="es_propietario" id="es_propietario" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="true" {% if filtro_es_propietario == 'true' %}selected{% endif %}>Propietarios</option>
+                    <option value="false" {% if filtro_es_propietario == 'false' %}selected{% endif %}>Inquilinos</option>
                 </select>
             </div>
             
@@ -108,9 +105,10 @@
                             {% endif %}
                         </td>
                         <td>
-                            {{ residente.tipo_residente.nombre }}
-                            {% if residente.tipo_residente.es_propietario %}
+                            {% if residente.es_propietario %}
                                 <span class="badge text-bg-primary">Propietario</span>
+                            {% else %}
+                                <span class="badge text-bg-secondary">Inquilino</span>
                             {% endif %}
                         </td>
                         <td>{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>

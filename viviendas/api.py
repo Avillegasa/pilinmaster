@@ -48,15 +48,14 @@ def residentes_por_vivienda(request, vivienda_id):
     """API endpoint para obtener los residentes de una vivienda específica"""
     try:
         vivienda = Vivienda.objects.get(pk=vivienda_id)
-        residentes = Residente.objects.filter(vivienda=vivienda).select_related('usuario', 'tipo_residente')
+        residentes = Residente.objects.filter(vivienda=vivienda).select_related('usuario')
         
         data = []
         for residente in residentes:
             data.append({
                 'id': residente.id,
                 'nombre': f"{residente.usuario.first_name} {residente.usuario.last_name}",
-                'tipo': residente.tipo_residente.nombre,
-                'es_propietario': residente.tipo_residente.es_propietario,
+                'es_propietario': residente.es_propietario,
                 'vehiculos': residente.vehiculos,
                 'activo': residente.activo,
                 'fecha_ingreso': residente.fecha_ingreso.strftime('%d/%m/%Y')
