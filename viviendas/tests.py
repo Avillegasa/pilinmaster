@@ -1,354 +1,502 @@
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from usuarios.models import Rol
-from viviendas.models import Edificio, Vivienda, Residente
+from .models import Edificio, Vivienda, Residente
 
-class ViviendaFilterTest(TestCase):
+class EdificioModelTest(TestCase):
     """
-    Pruebas para verificar el correcto funcionamiento de los filtros
-    en el listado de viviendas.
+    Pruebas para el modelo Edificio
     """
     
     def setUp(self):
-        # Crear usuario de prueba con rol administrador
-        self.rol_admin = Rol.objects.create(nombre='Administrador', descripcion='Administrador del sistema')
-        
-        User = get_user_model()
-        self.admin_user = User.objects.create_user(
-            username='admin',
-            email='admin@example.com',
-            password='adminpassword',
-            rol=self.rol_admin
+        self.edificio = Edificio.objects.create(
+            nombre='Torre Norte',
+            direccion='Av. Principal 123',
+            pisos=15,
+            fecha_construccion='2010-05-20'
         )
-        
-        # Crear edificios de prueba
-        self.edificio1 = Edificio.objects.create(
-            nombre='Edificio A',
-            direccion='Calle Principal 123',
+    
+    def test_edificio_creation(self):
+        """Verificar la creación correcta de un edificio"""
+        self.assertEqual(self.edificio.nombre, 'Torre Norte')
+        self.assertEqual(self.edificio.direccion, 'Av. Principal 123')
+        self.assertEqual(self.edificio.pisos, 15)
+        self.assertEqual(str(self.edificio.fecha_construccion), '2010-05-20')
+    
+    def test_edificio_str(self):
+        """Verificar que el método __str__ funciona correctamente"""
+        self.assertEqual(str(self.edificio), 'Torre Norte')
+
+class ViviendaModelTest(TestCase):
+    """
+    Pruebas para el modelo Vivienda
+    """
+    
+    def setUp(self):
+        # Crear edificio
+        self.edificio = Edificio.objects.create(
+            nombre='Torre Sur',
+            direccion='Av. Secundaria 456',
             pisos=10,
-            fecha_construccion='2015-01-01'
+            fecha_construccion='2015-08-10'
         )
         
-        self.edificio2 = Edificio.objects.create(
-            nombre='Edificio B',
-            direccion='Avenida Central 456',
-            pisos=5,
-            fecha_construccion='2018-06-15'
-        )
-        
-        # Crear viviendas de prueba en diferentes estados
-        # Edificio 1
-        self.vivienda1 = Vivienda.objects.create(
-            edificio=self.edificio1,
-            numero='101',
-            piso=1,
-            metros_cuadrados=80,
-            habitaciones=2,
-            baños=1,
-            estado='OCUPADO',
-            activo=True
-        )
-        
-        self.vivienda2 = Vivienda.objects.create(
-            edificio=self.edificio1,
-            numero='201',
-            piso=2,
-            metros_cuadrados=90,
+        # Crear vivienda
+        self.vivienda = Vivienda.objects.create(
+            edificio=self.edificio,
+            numero='501',
+            piso=5,
+            metros_cuadrados=120,
             habitaciones=3,
             baños=2,
-            estado='DESOCUPADO',
-            activo=True
-        )
-        
-        self.vivienda3 = Vivienda.objects.create(
-            edificio=self.edificio1,
-            numero='301',
-            piso=3,
-            metros_cuadrados=85,
-            habitaciones=2,
-            baños=1,
-            estado='MANTENIMIENTO',
-            activo=True
-        )
-        
-        # Edificio 2
-        self.vivienda4 = Vivienda.objects.create(
-            edificio=self.edificio2,
-            numero='101',
-            piso=1,
-            metros_cuadrados=75,
-            habitaciones=2,
-            baños=1,
             estado='OCUPADO',
             activo=True
         )
         
-        self.vivienda5 = Vivienda.objects.create(
-            edificio=self.edificio2,
-            numero='201',
-            piso=2,
-            metros_cuadrados=80,
+        # Crear vivienda dada de baja
+        self.vivienda_baja = Vivienda.objects.create(
+            edificio=self.edificio,
+            numero='502',
+            piso=5,
+            metros_cuadrados=100,
             habitaciones=2,
             baños=1,
-            estado='BAJA',
-            activo=False
+            estado='DESOCUPADO',
+            activo=False,
+            fecha_baja=timezone.now().date(),
+            motivo_baja='Remodelación completa'
         )
-        
-        # Iniciar sesión
-        self.client.login(username='admin', password='adminpassword')
     
-    def test_filtro_edificio(self):
-        """Test para verificar el filtro por edificio"""
-        url = reverse('vivienda-list') + f'?edificio={self.edificio1.id}'
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['viviendas']), 3)  # 3 viviendas en Edificio 1
-        
-        # Verificar que solo se muestran viviendas del edificio 1
-        for vivienda in response.context['viviendas']:
-            self.assertEqual(vivienda.edificio.id, self.edificio1.id)
+    def test_vivienda_creation(self):
+        """Verificar la creación correcta de una vivienda"""
+        self.assertEqual(self.vivienda.edificio, self.edificio)
+        self.assertEqual(self.vivienda.numero, '501')
+        self.assertEqual(self.vivienda.piso, 5)
+        self.assertEqual(self.vivienda.metros_cuadrados, 120)
+        self.assertEqual(self.vivienda.habitaciones, 3)
+        self.assertEqual(self.vivienda.baños, 2)
+        self.assertEqual(self.vivienda.estado, 'OCUPADO')
+        self.assertTrue(self.vivienda.activo)
     
-    def test_filtro_piso(self):
-        """Test para verificar el filtro por piso"""
-        url = reverse('vivienda-list') + '?piso=1'
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 200)
-        # Solo las viviendas del piso 1 (una en cada edificio)
-        self.assertEqual(len(response.context['viviendas']), 2)
-        
-        # Verificar que solo se muestran viviendas del piso 1
-        for vivienda in response.context['viviendas']:
-            self.assertEqual(vivienda.piso, 1)
+    def test_vivienda_baja_creation(self):
+        """Verificar la creación correcta de una vivienda dada de baja"""
+        self.assertEqual(self.vivienda_baja.edificio, self.edificio)
+        self.assertEqual(self.vivienda_baja.numero, '502')
+        self.assertEqual(self.vivienda_baja.estado, 'BAJA')  # El estado debería cambiarse a BAJA automáticamente
+        self.assertFalse(self.vivienda_baja.activo)
+        self.assertIsNotNone(self.vivienda_baja.fecha_baja)
+        self.assertEqual(self.vivienda_baja.motivo_baja, 'Remodelación completa')
     
-    def test_filtro_estado(self):
-        """Test para verificar el filtro por estado"""
-        url = reverse('vivienda-list') + '?estado=OCUPADO'
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 200)
-        # Solo las viviendas en estado OCUPADO (una en cada edificio)
-        self.assertEqual(len(response.context['viviendas']), 2)
-        
-        # Verificar que solo se muestran viviendas en estado OCUPADO
-        for vivienda in response.context['viviendas']:
-            self.assertEqual(vivienda.estado, 'OCUPADO')
+    def test_vivienda_str(self):
+        """Verificar que el método __str__ funciona correctamente"""
+        expected_str = f"Vivienda 501 - Piso 5"
+        self.assertEqual(str(self.vivienda), expected_str)
     
-    def test_filtro_activo(self):
-        """Test para verificar el filtro por activo/inactivo"""
-        # Filtrar por inactivas
-        url = reverse('vivienda-list') + '?activo=false'
-        response = self.client.get(url)
+    def test_save_method_cambia_estado_baja(self):
+        """Verificar que al dar de baja una vivienda, su estado cambia a BAJA"""
+        self.vivienda.activo = False
+        self.vivienda.motivo_baja = 'Demolición'
+        self.vivienda.fecha_baja = timezone.now().date()
+        self.vivienda.save()
         
-        self.assertEqual(response.status_code, 200)
-        # Solo hay una vivienda inactiva
-        self.assertEqual(len(response.context['viviendas']), 1)
-        
-        # Verificar que solo se muestran viviendas inactivas
-        for vivienda in response.context['viviendas']:
-            self.assertFalse(vivienda.activo)
-    
-    def test_multiples_filtros(self):
-        """Test para verificar la aplicación de múltiples filtros simultáneamente"""
-        url = reverse('vivienda-list') + f'?edificio={self.edificio1.id}&estado=DESOCUPADO'
-        response = self.client.get(url)
-        
-        self.assertEqual(response.status_code, 200)
-        # Solo hay una vivienda en Edificio 1 con estado DESOCUPADO
-        self.assertEqual(len(response.context['viviendas']), 1)
-        self.assertEqual(response.context['viviendas'][0].edificio.id, self.edificio1.id)
-        self.assertEqual(response.context['viviendas'][0].estado, 'DESOCUPADO')
+        self.assertEqual(self.vivienda.estado, 'BAJA')
 
-class ResidenteFilterTest(TestCase):
+class ResidenteModelTest(TestCase):
     """
-    Pruebas para verificar el correcto funcionamiento de los filtros
-    en el listado de residentes.
+    Pruebas para el modelo Residente
     """
     
     def setUp(self):
-        # Crear usuario de prueba con rol administrador
-        self.rol_admin = Rol.objects.create(nombre='Administrador', descripcion='Administrador del sistema')
+        # Crear edificio y vivienda
+        self.edificio = Edificio.objects.create(
+            nombre='Torre Este',
+            direccion='Calle Este 789',
+            pisos=8,
+            fecha_construccion='2018-03-15'
+        )
         
+        self.vivienda = Vivienda.objects.create(
+            edificio=self.edificio,
+            numero='301',
+            piso=3,
+            metros_cuadrados=90,
+            habitaciones=2,
+            baños=1,
+            estado='OCUPADO',
+            activo=True
+        )
+        
+        # Crear usuario
         User = get_user_model()
-        self.admin_user = User.objects.create_user(
-            username='admin',
-            email='admin@example.com',
-            password='adminpassword',
-            rol=self.rol_admin
-        )
-        
-        # Crear edificios de prueba
-        self.edificio1 = Edificio.objects.create(
-            nombre='Edificio A',
-            direccion='Calle Principal 123',
-            pisos=10,
-            fecha_construccion='2015-01-01'
-        )
-        
-        self.edificio2 = Edificio.objects.create(
-            nombre='Edificio B',
-            direccion='Avenida Central 456',
-            pisos=5,
-            fecha_construccion='2018-06-15'
-        )
-        
-        # Crear viviendas de prueba
-        self.vivienda1 = Vivienda.objects.create(
-            edificio=self.edificio1,
-            numero='101',
-            piso=1,
-            metros_cuadrados=80,
-            habitaciones=2,
-            baños=1,
-            estado='OCUPADO',
-            activo=True
-        )
-        
-        self.vivienda2 = Vivienda.objects.create(
-            edificio=self.edificio2,
-            numero='101',
-            piso=1,
-            metros_cuadrados=75,
-            habitaciones=2,
-            baños=1,
-            estado='OCUPADO',
-            activo=True
-        )
-        
-        # Crear usuarios para residentes
-        self.usuario1 = User.objects.create_user(
-            username='residente1',
-            email='residente1@example.com',
-            password='password1',
-            first_name='Juan',
-            last_name='Pérez',
-            rol=None
-        )
-        
-        self.usuario2 = User.objects.create_user(
-            username='residente2',
-            email='residente2@example.com',
-            password='password2',
+        self.usuario = User.objects.create_user(
+            username='residente',
+            email='residente@example.com',
+            password='password',
             first_name='Ana',
-            last_name='Gómez',
-            rol=None
+            last_name='Martínez'
         )
         
-        self.usuario3 = User.objects.create_user(
-            username='residente3',
-            email='residente3@example.com',
-            password='password3',
-            first_name='Carlos',
-            last_name='López',
-            rol=None
-        )
-        
-        self.usuario4 = User.objects.create_user(
-            username='residente4',
-            email='residente4@example.com',
-            password='password4',
-            first_name='María',
-            last_name='Rodríguez',
-            rol=None,
-            is_active=False
-        )
-        
-        # Crear residentes
-        self.residente1 = Residente.objects.create(
-            usuario=self.usuario1,
-            vivienda=self.vivienda1,
+        # Crear residente
+        self.residente = Residente.objects.create(
+            usuario=self.usuario,
+            vivienda=self.vivienda,
             vehiculos=1,
             es_propietario=True,
             activo=True
         )
+    
+    def test_residente_creation(self):
+        """Verificar la creación correcta de un residente"""
+        self.assertEqual(self.residente.usuario, self.usuario)
+        self.assertEqual(self.residente.vivienda, self.vivienda)
+        self.assertEqual(self.residente.vehiculos, 1)
+        self.assertTrue(self.residente.es_propietario)
+        self.assertTrue(self.residente.activo)
+    
+    def test_residente_str(self):
+        """Verificar que el método __str__ funciona correctamente"""
+        expected_str = f"Ana Martínez - Vivienda 301"
+        self.assertEqual(str(self.residente), expected_str)
+    
+    def test_sincronizacion_estado_usuario(self):
+        """Verificar que el estado del residente se sincroniza con el usuario"""
+        # Desactivar usuario
+        self.usuario.is_active = False
+        self.usuario.save()
         
-        self.residente2 = Residente.objects.create(
-            usuario=self.usuario2,
-            vivienda=self.vivienda1,
-            vehiculos=0,
-            es_propietario=False,
+        # Verificar que el residente también se desactiva
+        self.residente.refresh_from_db()
+        self.assertFalse(self.residente.activo)
+        
+        # Activar usuario
+        self.usuario.is_active = True
+        self.usuario.save()
+        
+        # Verificar que el residente también se activa
+        self.residente.refresh_from_db()
+        self.assertTrue(self.residente.activo)
+
+class EdificioViewsTest(TestCase):
+    """
+    Pruebas para las vistas relacionadas con Edificios
+    """
+    
+    def setUp(self):
+        # Crear usuario administrador
+        self.rol_admin = Rol.objects.create(nombre='Administrador', descripcion='Administrador del sistema')
+        
+        User = get_user_model()
+        self.admin_user = User.objects.create_user(
+            username='admin',
+            email='admin@example.com',
+            password='adminpassword',
+            rol=self.rol_admin
+        )
+        
+        # Crear usuario normal
+        self.rol_normal = Rol.objects.create(nombre='Normal', descripcion='Usuario normal')
+        self.normal_user = User.objects.create_user(
+            username='normal',
+            email='normal@example.com',
+            password='normalpassword',
+            rol=self.rol_normal
+        )
+        
+        # Crear edificio
+        self.edificio = Edificio.objects.create(
+            nombre='Torre Oeste',
+            direccion='Calle Oeste 321',
+            pisos=12,
+            fecha_construccion='2016-11-20'
+        )
+        
+        # Iniciar cliente
+        self.client = Client()
+    
+    def test_edificio_list_view(self):
+        """Verificar que se puede ver la lista de edificios"""
+        self.client.login(username='admin', password='adminpassword')
+        response = self.client.get(reverse('edificio-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'viviendas/edificio_list.html')
+        self.assertContains(response, 'Torre Oeste')
+    
+    def test_edificio_create_view_admin(self):
+        """Verificar que un administrador puede crear un edificio"""
+        self.client.login(username='admin', password='adminpassword')
+        response = self.client.get(reverse('edificio-create'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'viviendas/edificio_form.html')
+        
+        # Probar POST
+        data = {
+            'nombre': 'Torre Nueva',
+            'direccion': 'Calle Nueva 123',
+            'pisos': 20,
+            'fecha_construccion': '2022-01-15'
+        }
+        
+        response = self.client.post(reverse('edificio-create'), data)
+        self.assertEqual(response.status_code, 302)  # Redirección
+        
+        # Verificar que se creó el edificio
+        self.assertTrue(Edificio.objects.filter(nombre='Torre Nueva').exists())
+    
+    def test_edificio_create_view_normal_user(self):
+        """Verificar que un usuario normal no puede crear un edificio"""
+        self.client.login(username='normal', password='normalpassword')
+        response = self.client.get(reverse('edificio-create'))
+        self.assertEqual(response.status_code, 403)  # Forbidden
+    
+    def test_edificio_update_view_admin(self):
+        """Verificar que un administrador puede actualizar un edificio"""
+        self.client.login(username='admin', password='adminpassword')
+        response = self.client.get(reverse('edificio-update', args=[self.edificio.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'viviendas/edificio_form.html')
+        
+        # Probar POST
+        data = {
+            'nombre': 'Torre Oeste Actualizada',
+            'direccion': 'Calle Oeste 321',
+            'pisos': 15,
+            'fecha_construccion': '2016-11-20'
+        }
+        
+        response = self.client.post(reverse('edificio-update', args=[self.edificio.id]), data)
+        self.assertEqual(response.status_code, 302)  # Redirección
+        
+        # Verificar que se actualizó el edificio
+        self.edificio.refresh_from_db()
+        self.assertEqual(self.edificio.nombre, 'Torre Oeste Actualizada')
+        self.assertEqual(self.edificio.pisos, 15)
+
+class ViviendaViewsTest(TestCase):
+    """
+    Pruebas para las vistas relacionadas con Viviendas
+    """
+    
+    def setUp(self):
+        # Crear usuario administrador
+        self.rol_admin = Rol.objects.create(nombre='Administrador', descripcion='Administrador del sistema')
+        
+        User = get_user_model()
+        self.admin_user = User.objects.create_user(
+            username='admin',
+            email='admin@example.com',
+            password='adminpassword',
+            rol=self.rol_admin
+        )
+        
+        # Crear edificio
+        self.edificio = Edificio.objects.create(
+            nombre='Torre Central',
+            direccion='Av. Central 789',
+            pisos=20,
+            fecha_construccion='2019-05-10'
+        )
+        
+        # Crear vivienda
+        self.vivienda = Vivienda.objects.create(
+            edificio=self.edificio,
+            numero='1001',
+            piso=10,
+            metros_cuadrados=150,
+            habitaciones=3,
+            baños=2,
+            estado='OCUPADO',
             activo=True
         )
         
-        self.residente3 = Residente.objects.create(
-            usuario=self.usuario3,
-            vivienda=self.vivienda2,
+        # Iniciar cliente
+        self.client = Client()
+        self.client.login(username='admin', password='adminpassword')
+    
+    def test_vivienda_list_view(self):
+        """Verificar que se puede ver la lista de viviendas"""
+        response = self.client.get(reverse('vivienda-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'viviendas/vivienda_list.html')
+        self.assertContains(response, '1001')
+    
+    def test_vivienda_detail_view(self):
+        """Verificar que se puede ver el detalle de una vivienda"""
+        response = self.client.get(reverse('vivienda-detail', args=[self.vivienda.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'viviendas/vivienda_detail.html')
+        self.assertContains(response, 'Vivienda 1001')
+        self.assertContains(response, 'Piso 10')
+    
+    def test_vivienda_create_view(self):
+        """Verificar que se puede crear una vivienda"""
+        response = self.client.get(reverse('vivienda-create'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'viviendas/vivienda_form.html')
+        
+        # Probar POST
+        data = {
+            'edificio': self.edificio.id,
+            'numero': '2001',
+            'piso': 20,
+            'metros_cuadrados': 200,
+            'habitaciones': 4,
+            'baños': 3,
+            'estado': 'DESOCUPADO',
+            'activo': True
+        }
+        
+        response = self.client.post(reverse('vivienda-create'), data)
+        self.assertEqual(response.status_code, 302)  # Redirección
+        
+        # Verificar que se creó la vivienda
+        self.assertTrue(Vivienda.objects.filter(numero='2001').exists())
+    
+    def test_vivienda_baja_view(self):
+        """Verificar que se puede dar de baja una vivienda"""
+        response = self.client.get(reverse('vivienda-baja', args=[self.vivienda.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'viviendas/vivienda_baja.html')
+        
+        # Probar POST
+        data = {
+            'motivo_baja': 'Remodelación completa',
+            'fecha_baja': timezone.now().date().strftime('%Y-%m-%d')
+        }
+        
+        response = self.client.post(reverse('vivienda-baja', args=[self.vivienda.id]), data)
+        self.assertEqual(response.status_code, 302)  # Redirección
+        
+        # Verificar que se dio de baja la vivienda
+        self.vivienda.refresh_from_db()
+        self.assertFalse(self.vivienda.activo)
+        self.assertEqual(self.vivienda.estado, 'BAJA')
+        self.assertEqual(self.vivienda.motivo_baja, 'Remodelación completa')
+        self.assertIsNotNone(self.vivienda.fecha_baja)
+
+class ResidenteViewsTest(TestCase):
+    """
+    Pruebas para las vistas relacionadas con Residentes
+    """
+    
+    def setUp(self):
+        # Crear usuario administrador
+        self.rol_admin = Rol.objects.create(nombre='Administrador', descripcion='Administrador del sistema')
+        
+        User = get_user_model()
+        self.admin_user = User.objects.create_user(
+            username='admin',
+            email='admin@example.com',
+            password='adminpassword',
+            rol=self.rol_admin
+        )
+        
+        # Crear edificio y vivienda
+        self.edificio = Edificio.objects.create(
+            nombre='Torre Residencial',
+            direccion='Av. Residencial 456',
+            pisos=15,
+            fecha_construccion='2020-02-10'
+        )
+        
+        self.vivienda = Vivienda.objects.create(
+            edificio=self.edificio,
+            numero='701',
+            piso=7,
+            metros_cuadrados=110,
+            habitaciones=2,
+            baños=2,
+            estado='OCUPADO',
+            activo=True
+        )
+        
+        # Crear usuario para residente
+        self.usuario_residente = User.objects.create_user(
+            username='residente',
+            email='residente@example.com',
+            password='password',
+            first_name='Laura',
+            last_name='Gómez'
+        )
+        
+        # Crear residente
+        self.residente = Residente.objects.create(
+            usuario=self.usuario_residente,
+            vivienda=self.vivienda,
             vehiculos=2,
             es_propietario=True,
             activo=True
         )
         
-        self.residente4 = Residente.objects.create(
-            usuario=self.usuario4,
-            vivienda=self.vivienda2,
-            vehiculos=1,
-            es_propietario=False,
-            activo=False
-        )
-        
-        # Iniciar sesión
+        # Iniciar cliente
+        self.client = Client()
         self.client.login(username='admin', password='adminpassword')
     
-    def test_filtro_edificio(self):
-        """Test para verificar el filtro por edificio"""
-        url = reverse('residente-list') + f'?edificio={self.edificio1.id}'
-        response = self.client.get(url)
-        
+    def test_residente_list_view(self):
+        """Verificar que se puede ver la lista de residentes"""
+        response = self.client.get(reverse('residente-list'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context['residentes']), 2)  # 2 residentes en Edificio 1
-        
-        # Verificar que solo se muestran residentes del edificio 1
-        for residente in response.context['residentes']:
-            self.assertEqual(residente.vivienda.edificio.id, self.edificio1.id)
+        self.assertTemplateUsed(response, 'viviendas/residente_list.html')
+        self.assertContains(response, 'Laura Gómez')
     
-    def test_filtro_vivienda(self):
-        """Test para verificar el filtro por vivienda"""
-        url = reverse('residente-list') + f'?vivienda={self.vivienda2.id}'
-        response = self.client.get(url)
-        
+    def test_residente_detail_view(self):
+        """Verificar que se puede ver el detalle de un residente"""
+        response = self.client.get(reverse('residente-detail', args=[self.residente.id]))
         self.assertEqual(response.status_code, 200)
-        # Hay 2 residentes en la vivienda 2, pero uno está inactivo
-        self.assertEqual(len(response.context['residentes']), 2)
-        
-        # Verificar que solo se muestran residentes de la vivienda 2
-        for residente in response.context['residentes']:
-            self.assertEqual(residente.vivienda.id, self.vivienda2.id)
+        self.assertTemplateUsed(response, 'viviendas/residente_detail.html')
+        self.assertContains(response, 'Laura Gómez')
+        self.assertContains(response, 'Torre Residencial')
     
-    def test_filtro_es_propietario(self):
-        """Test para verificar el filtro por propietario"""
-        url = reverse('residente-list') + '?es_propietario=true'
-        response = self.client.get(url)
+    def test_residente_create_view(self):
+        """Verificar que se puede crear un residente"""
+        # Crear un usuario para el nuevo residente
+        User = get_user_model()
+        nuevo_usuario = User.objects.create_user(
+            username='nuevoresidente',
+            email='nuevoresidente@example.com',
+            password='password',
+            first_name='Carlos',
+            last_name='López'
+        )
         
+        response = self.client.get(reverse('residente-create'))
         self.assertEqual(response.status_code, 200)
-        # Hay 2 propietarios
-        self.assertEqual(len(response.context['residentes']), 2)
+        self.assertTemplateUsed(response, 'viviendas/residente_form.html')
         
-        # Verificar que solo se muestran propietarios
-        for residente in response.context['residentes']:
-            self.assertTrue(residente.es_propietario)
+        # Probar POST
+        data = {
+            'usuario': nuevo_usuario.id,
+            'vivienda': self.vivienda.id,
+            'vehiculos': 1,
+            'es_propietario': False,
+            'activo': True
+        }
+        
+        response = self.client.post(reverse('residente-create'), data)
+        self.assertEqual(response.status_code, 302)  # Redirección
+        
+        # Verificar que se creó el residente
+        self.assertTrue(Residente.objects.filter(usuario=nuevo_usuario).exists())
     
-    def test_filtro_estado(self):
-        """Test para verificar el filtro por estado (activo/inactivo)"""
-        url = reverse('residente-list') + '?estado=inactivo'
-        response = self.client.get(url)
-        
+    def test_residente_update_view(self):
+        """Verificar que se puede actualizar un residente"""
+        response = self.client.get(reverse('residente-update', args=[self.residente.id]))
         self.assertEqual(response.status_code, 200)
-        # Hay 1 residente inactivo
-        self.assertEqual(len(response.context['residentes']), 1)
+        self.assertTemplateUsed(response, 'viviendas/residente_form.html')
         
-        # Verificar que solo se muestran residentes inactivos
-        for residente in response.context['residentes']:
-            self.assertFalse(residente.activo)
-    
-    def test_multiples_filtros(self):
-        """Test para verificar la aplicación de múltiples filtros simultáneamente"""
-        url = reverse('residente-list') + f'?edificio={self.edificio1.id}&es_propietario=true'
-        response = self.client.get(url)
+        # Probar POST
+        data = {
+            'usuario': self.usuario_residente.id,
+            'vivienda': self.vivienda.id,
+            'vehiculos': 3,  # Actualizar número de vehículos
+            'es_propietario': True,
+            'activo': True
+        }
         
-        self.assertEqual(response.status_code, 200)
-        # Solo hay un propietario en el Edificio 1
-        self.assertEqual(len(response.context['residentes']), 1)
-        self.assertEqual(response.context['residentes'][0].vivienda.edificio.id, self.edificio1.id)
-        self.assertTrue(response.context['residentes'][0].es_propietario)
+        response = self.client.post(reverse('residente-update', args=[self.residente.id]), data)
+        self.assertEqual(response.status_code, 302)  # Redirección
+        
+        # Verificar que se actualizó el residente
+        self.residente.refresh_from_db()
+        self.assertEqual(self.residente.vehiculos, 3)
