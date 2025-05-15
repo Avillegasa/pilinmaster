@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Cambiar Estado de Asignación | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Cambiar Estado de Asignación{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="fas fa-exchange-alt"></i> Cambiar Estado de Asignación</h5>
+            </div>
+            <div class="card-body">
+                <h5 class="mb-3">{{ asignacion.titulo }}</h5>
+                <p><strong>Empleado:</strong> {{ asignacion.empleado.usuario.first_name }} {{ asignacion.empleado.usuario.last_name }}</p>
+                <p><strong>Estado actual:</strong> 
+                    {% if asignacion.estado == 'PENDIENTE' %}
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                    {% elif asignacion.estado == 'EN_PROGRESO' %}
+                        <span class="badge bg-info text-dark">En Progreso</span>
+                    {% elif asignacion.estado == 'COMPLETADA' %}
+                        <span class="badge bg-success">Completada</span>
+                    {% else %}
+                        <span class="badge bg-danger">Cancelada</span>
+                    {% endif %}
+                </p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Nuevo estado:</label>
+                        <select name="estado" id="estado" class="form-select">
+                            {% for estado_value, estado_name in estados %}
+                                <option value="{{ estado_value }}" {% if asignacion.estado == estado_value %}selected{% endif %}>
+                                    {{ estado_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'asignacion-detail' asignacion.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar Cambio
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

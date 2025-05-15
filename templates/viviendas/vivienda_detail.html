@@ -85,11 +85,11 @@
                                                 <strong>Total:</strong> {{ propietarios_count }}
                                             </div>
                                             <div>
-                                                <strong>Activos:</strong> {{ propietarios.filter.activo=True.count }}
+                                                <strong>Activos:</strong> {{ propietarios_activos_count }}
                                             </div>
-                                            {% if propietarios.filter.activo=False.count > 0 %}
+                                            {% if propietarios_inactivos_count > 0 %}
                                             <div>
-                                                <strong>Inactivos:</strong> {{ propietarios.filter.activo=False.count }}
+                                                <strong>Inactivos:</strong> {{ propietarios_inactivos_count }}
                                             </div>
                                             {% endif %}
                                         </div>
@@ -105,11 +105,11 @@
                                                 <strong>Total:</strong> {{ inquilinos_count }}
                                             </div>
                                             <div>
-                                                <strong>Activos:</strong> {{ inquilinos.filter.activo=True.count }}
+                                                <strong>Activos:</strong> {{ inquilinos_activos_count }}
                                             </div>
-                                            {% if inquilinos.filter.activo=False.count > 0 %}
+                                            {% if inquilinos_inactivos_count > 0 %}
                                             <div>
-                                                <strong>Inactivos:</strong> {{ inquilinos.filter.activo=False.count }}
+                                                <strong>Inactivos:</strong> {{ inquilinos_inactivos_count }}
                                             </div>
                                             {% endif %}
                                         </div>

@@ -120,6 +120,7 @@ class ViviendaDetailView(LoginRequiredMixin, DetailView):
     template_name = 'viviendas/vivienda_detail.html'
     context_object_name = 'vivienda'
     
+    # En la vista ViviendaDetailView
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
@@ -134,6 +135,10 @@ class ViviendaDetailView(LoginRequiredMixin, DetailView):
         context['inquilinos'] = inquilinos
         context['propietarios_count'] = propietarios.count()
         context['inquilinos_count'] = inquilinos.count()
+        context['propietarios_activos_count'] = propietarios.filter(activo=True).count()
+        context['propietarios_inactivos_count'] = propietarios.filter(activo=False).count()
+        context['inquilinos_activos_count'] = inquilinos.filter(activo=True).count()
+        context['inquilinos_inactivos_count'] = inquilinos.filter(activo=False).count()
         
         return context
 

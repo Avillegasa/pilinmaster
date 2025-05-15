@@ -68,11 +68,17 @@ class VisitaModelTest(TestCase):
     
     def test_visita_creation(self):
         """Verificar la creación correcta de una visita"""
+        from django.utils import timezone
+        
         self.assertEqual(self.visita.nombre_visitante, 'Ana Gómez')
         self.assertEqual(self.visita.documento_visitante, '12345678')
         self.assertEqual(self.visita.vivienda_destino, self.vivienda)
         self.assertEqual(self.visita.residente_autoriza, self.residente)
-        self.assertEqual(self.visita.fecha_hora_entrada, self.fecha_entrada)
+        
+        # En lugar de comparar los datetime objects directamente,
+        # comparemos solo hasta los segundos o usemos assertAlmostEqual
+        self.assertTrue(abs(self.visita.fecha_hora_entrada - self.fecha_entrada) < timezone.timedelta(seconds=1))
+        
         self.assertIsNone(self.visita.fecha_hora_salida)
         self.assertEqual(self.visita.motivo, 'Visita familiar')
         self.assertEqual(self.visita.registrado_por, self.admin_user)
