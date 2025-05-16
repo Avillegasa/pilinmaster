@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import timezone
-from .models import Edificio, Vivienda, Residente, TipoResidente
+from .models import Edificio, Vivienda, Residente
 
 class EdificioForm(forms.ModelForm):
     class Meta:
@@ -48,11 +48,6 @@ class ViviendaBajaForm(forms.ModelForm):
         model = Vivienda
         fields = ['fecha_baja', 'motivo_baja']
 
-class TipoResidenteForm(forms.ModelForm):
-    class Meta:
-        model = TipoResidente
-        fields = '__all__'
-
 class ResidenteForm(forms.ModelForm):
     edificio = forms.ModelChoiceField(
         queryset=Edificio.objects.all().order_by('nombre'),
@@ -63,9 +58,8 @@ class ResidenteForm(forms.ModelForm):
     
     class Meta:
         model = Residente
-        fields = ['usuario', 'edificio', 'vivienda', 'tipo_residente', 'vehiculos', 'activo']
+        fields = ['usuario', 'edificio', 'vivienda', 'es_propietario', 'vehiculos', 'activo']
         widgets = {
-            'tipo_residente': forms.Select(attrs={'class': 'form-select'}),
             'vivienda': forms.Select(attrs={'class': 'form-select'}),
             'usuario': forms.Select(attrs={'class': 'form-select'}),
             'vehiculos': forms.NumberInput(attrs={'min': 0, 'max': 10}),
@@ -73,9 +67,6 @@ class ResidenteForm(forms.ModelForm):
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Añadir clases o atributos adicionales a los campos si es necesario
-        self.fields['tipo_residente'].queryset = TipoResidente.objects.all().order_by('nombre')
-        self.fields['tipo_residente'].empty_label = None  # Requiere que se seleccione un tipo
         
         # Si es un formulario de edición (instancia existente)
         if self.instance and self.instance.pk:
@@ -103,10 +94,6 @@ class ResidenteForm(forms.ModelForm):
     
     def save(self, commit=True):
         instance = super().save(commit=False)
-        # Asegurarse de que el campo es_propietario se alinee con el tipo de residente
-        if instance.tipo_residente:
-            instance.es_propietario = instance.tipo_residente.es_propietario
-        
         if commit:
             instance.save()
         return instance

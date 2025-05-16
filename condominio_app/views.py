@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.db.models import Count, Q, Sum
-from viviendas.models import Edificio, Vivienda, Residente, TipoResidente
+from viviendas.models import Edificio, Vivienda, Residente
 from accesos.models import Visita, MovimientoResidente
 from personal.models import Empleado, Asignacion
 
@@ -49,23 +49,6 @@ def dashboard(request):
     propietarios_count = residentes.filter(es_propietario=True).count()
     inquilinos_count = residentes.filter(es_propietario=False).count()
     
-    # Estadísticas por tipo de residente
-    tipos_residentes = TipoResidente.objects.all()
-    estadisticas_tipos = []
-    
-    for tipo in tipos_residentes:
-        if edificio_id:
-            cantidad = Residente.objects.filter(tipo_residente=tipo, vivienda__edificio_id=edificio_id, activo=True).count()
-        else:
-            cantidad = Residente.objects.filter(tipo_residente=tipo, activo=True).count()
-        
-        if cantidad > 0:
-            estadisticas_tipos.append({
-                'nombre': tipo.nombre,
-                'cantidad': cantidad,
-                'es_propietario': tipo.es_propietario
-            })
-    
     # Estadísticas de visitas
     if edificio_id:
         visitas_activas = Visita.objects.filter(vivienda_destino__edificio_id=edificio_id, fecha_hora_salida__isnull=True).count()
@@ -103,7 +86,6 @@ def dashboard(request):
         'total_residentes': total_residentes,
         'propietarios_count': propietarios_count,
         'inquilinos_count': inquilinos_count,
-        'estadisticas_tipos': estadisticas_tipos,
         'visitas_activas': visitas_activas,
         'ultimas_visitas': ultimas_visitas,
         'ultimos_movimientos': ultimos_movimientos,

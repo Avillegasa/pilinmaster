@@ -4,12 +4,6 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-os.add_dll_directory(r"C:\Program Files\GTK3-Runtime Win64\bin")
-
-from weasyprint import HTML
-
-HTML('https://weasyprint.org/').write_pdf('weasyprint-website.pdf')
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 

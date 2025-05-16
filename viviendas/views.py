@@ -6,8 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from usuarios.views import AdminRequiredMixin
-from .models import Edificio, Vivienda, Residente, TipoResidente
-from .forms import EdificioForm, ViviendaForm, ResidenteForm, TipoResidenteForm, ViviendaBajaForm
+from .models import Edificio, Vivienda, Residente
+from .forms import EdificioForm, ViviendaForm, ResidenteForm, ViviendaBajaForm
 
 # Vistas de Edificios
 class EdificioListView(LoginRequiredMixin, ListView):
@@ -120,62 +120,27 @@ class ViviendaDetailView(LoginRequiredMixin, DetailView):
     template_name = 'viviendas/vivienda_detail.html'
     context_object_name = 'vivienda'
     
+    # En la vista ViviendaDetailView
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Obtener todos los tipos de residentes presentes en esta vivienda
+        # Obtener estadísticas de residentes
         vivienda = self.get_object()
-        tipos_residentes = set()
-        for residente in vivienda.residentes.all():
-            tipos_residentes.add(residente.tipo_residente.nombre)
         
-        context['tipos_residentes'] = list(tipos_residentes)
+        # Estadísticas de propietarios e inquilinos
+        propietarios = vivienda.residentes.filter(es_propietario=True)
+        inquilinos = vivienda.residentes.filter(es_propietario=False)
         
-        # Estadísticas de residentes por tipo
-        stats_por_tipo = {}
-        for residente in vivienda.residentes.all():
-            tipo_nombre = residente.tipo_residente.nombre
-            if tipo_nombre not in stats_por_tipo:
-                stats_por_tipo[tipo_nombre] = {
-                    'nombre': tipo_nombre,
-                    'total': 0,
-                    'activos': 0,
-                    'inactivos': 0,
-                    'es_propietario': residente.tipo_residente.es_propietario
-                }
-            
-            stats_por_tipo[tipo_nombre]['total'] += 1
-            if residente.activo:
-                stats_por_tipo[tipo_nombre]['activos'] += 1
-            else:
-                stats_por_tipo[tipo_nombre]['inactivos'] += 1
-        
-        context['stats_por_tipo'] = stats_por_tipo.values()
+        context['propietarios'] = propietarios
+        context['inquilinos'] = inquilinos
+        context['propietarios_count'] = propietarios.count()
+        context['inquilinos_count'] = inquilinos.count()
+        context['propietarios_activos_count'] = propietarios.filter(activo=True).count()
+        context['propietarios_inactivos_count'] = propietarios.filter(activo=False).count()
+        context['inquilinos_activos_count'] = inquilinos.filter(activo=True).count()
+        context['inquilinos_inactivos_count'] = inquilinos.filter(activo=False).count()
         
         return context
-
-# Vistas de Tipos de Residentes
-class TipoResidenteListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
-    model = TipoResidente
-    template_name = 'viviendas/tipo_residente_list.html'
-    context_object_name = 'tipos_residentes'
-
-class TipoResidenteCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
-    model = TipoResidente
-    form_class = TipoResidenteForm
-    template_name = 'viviendas/tipo_residente_form.html'
-    success_url = reverse_lazy('tipo-residente-list')
-
-class TipoResidenteUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
-    model = TipoResidente
-    form_class = TipoResidenteForm
-    template_name = 'viviendas/tipo_residente_form.html'
-    success_url = reverse_lazy('tipo-residente-list')
-
-class TipoResidenteDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
-    model = TipoResidente
-    template_name = 'viviendas/tipo_residente_confirm_delete.html'
-    success_url = reverse_lazy('tipo-residente-list')
 
 # Vistas de Residentes
 class ResidenteListView(LoginRequiredMixin, ListView):
@@ -196,10 +161,11 @@ class ResidenteListView(LoginRequiredMixin, ListView):
         if vivienda_id:
             queryset = queryset.filter(vivienda_id=vivienda_id)
             
-        # Filtrar por tipo de residente si se proporciona
-        tipo_id = self.request.GET.get('tipo')
-        if tipo_id:
-            queryset = queryset.filter(tipo_residente_id=tipo_id)
+        # Filtrar por propietario/inquilino
+        es_propietario = self.request.GET.get('es_propietario')
+        if es_propietario:
+            es_propietario_bool = es_propietario == 'true'
+            queryset = queryset.filter(es_propietario=es_propietario_bool)
             
         # Filtrar por estado (activo/inactivo)
         estado = self.request.GET.get('estado')
@@ -222,13 +188,10 @@ class ResidenteListView(LoginRequiredMixin, ListView):
         else:
             context['viviendas'] = Vivienda.objects.all()
         
-        # Añadir lista de tipos de residentes para el selector
-        context['tipos_residentes'] = TipoResidente.objects.all()
-        
         # Añadir los valores actuales del filtro
         context['filtro_edificio'] = self.request.GET.get('edificio', '')
         context['filtro_vivienda'] = self.request.GET.get('vivienda', '')
-        context['filtro_tipo'] = self.request.GET.get('tipo', '')
+        context['filtro_es_propietario'] = self.request.GET.get('es_propietario', '')
         context['filtro_estado'] = self.request.GET.get('estado', '')
         
         return context
@@ -254,8 +217,6 @@ class ResidenteDetailView(LoginRequiredMixin, DetailView):
     model = Residente
     template_name = 'viviendas/residente_detail.html'
     context_object_name = 'residente'
-
-
 
 class ViviendaBajaView(LoginRequiredMixin, AdminRequiredMixin, View):
     """

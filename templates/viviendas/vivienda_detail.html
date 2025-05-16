@@ -74,47 +74,58 @@
                         <h5 class="mb-0">Residentes</h5>
                     </div>
                     <div class="card-body">
-                        <!-- Estadísticas de tipos de residentes -->
+                        <!-- Estadísticas de residentes -->
                         <div class="row mb-4">
-                            {% for stat in stats_por_tipo %}
-                            <div class="col-md-4 mb-2">
+                            <div class="col-md-6 mb-2">
                                 <div class="card h-100">
                                     <div class="card-body text-center p-3">
-                                        <h6>
-                                            {{ stat.nombre }}
-                                            {% if stat.es_propietario %}
-                                                <span class="badge text-bg-primary">Propietario</span>
-                                            {% endif %}
-                                        </h6>
+                                        <h6>Propietarios</h6>
                                         <div class="d-flex justify-content-around">
                                             <div>
-                                                <strong>Total:</strong> {{ stat.total }}
+                                                <strong>Total:</strong> {{ propietarios_count }}
                                             </div>
                                             <div>
-                                                <strong>Activos:</strong> {{ stat.activos }}
+                                                <strong>Activos:</strong> {{ propietarios_activos_count }}
                                             </div>
-                                            {% if stat.inactivos > 0 %}
+                                            {% if propietarios_inactivos_count > 0 %}
                                             <div>
-                                                <strong>Inactivos:</strong> {{ stat.inactivos }}
+                                                <strong>Inactivos:</strong> {{ propietarios_inactivos_count }}
                                             </div>
                                             {% endif %}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            {% endfor %}
+                            <div class="col-md-6 mb-2">
+                                <div class="card h-100">
+                                    <div class="card-body text-center p-3">
+                                        <h6>Inquilinos</h6>
+                                        <div class="d-flex justify-content-around">
+                                            <div>
+                                                <strong>Total:</strong> {{ inquilinos_count }}
+                                            </div>
+                                            <div>
+                                                <strong>Activos:</strong> {{ inquilinos_activos_count }}
+                                            </div>
+                                            {% if inquilinos_inactivos_count > 0 %}
+                                            <div>
+                                                <strong>Inactivos:</strong> {{ inquilinos_inactivos_count }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+                        
                         <!-- Filtros de residentes -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="filtroTipoResidente" class="form-label">Filtrar por Tipo</label>
                                 <select id="filtroTipoResidente" class="form-select">
                                     <option value="todos">Todos los tipos</option>
-                                    {% for residente in vivienda.residentes.all %}
-                                        <option value="{{ residente.tipo_residente.nombre }}" class="tipo-option" data-tipo="{{ residente.tipo_residente.nombre }}">
-                                            {{ residente.tipo_residente.nombre }}
-                                        </option>
-                                    {% endfor %}
+                                    <option value="propietario">Propietarios</option>
+                                    <option value="inquilino">Inquilinos</option>
                                 </select>
                             </div>
                             <div class="col-md-6 d-flex align-items-end">
@@ -139,12 +150,13 @@
                                 </thead>
                                 <tbody>
                                     {% for residente in vivienda.residentes.all %}
-                                    <tr class="{% if not residente.activo %}residente-inactivo-vivienda d-none{% endif %} fila-residente" data-tipo="{{ residente.tipo_residente.nombre }}">
+                                    <tr class="{% if not residente.activo %}residente-inactivo-vivienda d-none{% endif %} fila-residente" data-tipo="{% if residente.es_propietario %}propietario{% else %}inquilino{% endif %}">
                                         <td>{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</td>
                                         <td>
-                                            {{ residente.tipo_residente.nombre }}
-                                            {% if residente.tipo_residente.es_propietario %}
+                                            {% if residente.es_propietario %}
                                                 <span class="badge text-bg-primary">Propietario</span>
+                                            {% else %}
+                                                <span class="badge text-bg-secondary">Inquilino</span>
                                             {% endif %}
                                         </td>
                                         <td>{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
@@ -211,25 +223,6 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Eliminar opciones duplicadas en el selector de filtro
-        const filtroTipoResidente = document.getElementById('filtroTipoResidente');
-        const tipoOptions = document.getElementsByClassName('tipo-option');
-        
-        // Crear un conjunto para almacenar tipos ya mostrados
-        const tiposYaMostrados = new Set();
-        
-        // Verificar cada opción
-        Array.from(tipoOptions).forEach(option => {
-            const tipo = option.getAttribute('data-tipo');
-            if (tiposYaMostrados.has(tipo)) {
-                // Si ya existe, eliminar esta opción
-                option.remove();
-            } else {
-                // Si no existe, agregarlo al conjunto
-                tiposYaMostrados.add(tipo);
-            }
-        });
-        
         // Control para mostrar/ocultar residentes inactivos
         const checkboxInactivos = document.getElementById('mostrarInactivosVivienda');
         const residentesInactivos = document.querySelectorAll('.residente-inactivo-vivienda');
@@ -245,6 +238,8 @@
         });
         
         // Filtro por tipo de residente
+        const filtroTipoResidente = document.getElementById('filtroTipoResidente');
+        
         filtroTipoResidente.addEventListener('change', function() {
             const tipoSeleccionado = this.value;
             const filas = document.querySelectorAll('.fila-residente');
