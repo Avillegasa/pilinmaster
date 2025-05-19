@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'viviendas',
     'accesos',
     'personal',  # Nueva aplicación de gestión de personal
+    'financiero',  # Nueva aplicación de gestión financiera
 ]
 
 MIDDLEWARE = [
