@@ -1,0 +1,40 @@
+<!-- templates/financiero/categoria_gasto_confirm_delete.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Categoría de Gasto | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Eliminar Categoría de Gasto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">Confirmar Eliminación</h5>
+            </div>
+            <div class="card-body">
+                <p class="fs-5 mb-4">¿Estás seguro de que deseas eliminar la categoría <strong>{{ categoria.nombre }}</strong>?</p>
+                
+                {% if tiene_gastos %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Atención:</strong> Esta categoría tiene {{ numero_gastos }} gastos asociados. Si eliminas esta categoría, todos los gastos quedarán sin categoría asignada.
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'categoria-gasto-detail' categoria.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmar Eliminación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

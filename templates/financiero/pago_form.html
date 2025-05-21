@@ -1,0 +1,202 @@
+<!-- templates/financiero/pago_form.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.id %}Editar{% else %}Nuevo{% endif %} Pago | Sistema de Administración de Condominios{% endblock %}
+{% block header %}{% if form.instance.id %}Editar{% else %}Registrar{% endif %} Pago{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">{% if form.instance.id %}Editar{% else %}Registrar{% endif %} Pago</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.vivienda|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.residente|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.monto|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.fecha_pago|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.metodo_pago|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.referencia|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.comprobante|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.notas|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <!-- Selección de cuotas -->
+                    <div class="row mb-3" id="cuotasSection">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Aplicar a Cuotas Pendientes:</label>
+                            {% if form.aplicar_a_cuotas.choices %}
+                            <div class="card">
+                                <div class="card-body">
+                                    {% for choice in form.aplicar_a_cuotas.field.choices %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input cuota-checkbox" type="checkbox" name="aplicar_a_cuotas" value="{{ choice.0 }}" id="cuota_{{ choice.0 }}" {% if choice.0 in form.aplicar_a_cuotas.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="cuota_{{ choice.0 }}">
+                                            {{ choice.1 }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <p class="mb-0">Primero seleccione una vivienda para ver sus cuotas pendientes.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'pago-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const viviendaSelect = document.getElementById('id_vivienda');
+        const residenteSelect = document.getElementById('id_residente');
+        const montoInput = document.getElementById('id_monto');
+        
+        // Función para actualizar las cuotas pendientes cuando cambia la vivienda
+        function actualizarCuotas() {
+            const viviendaId = viviendaSelect.value;
+            const cuotasSection = document.getElementById('cuotasSection');
+            
+            if (!viviendaId) {
+                return;
+            }
+            
+            // Actualizar residentes
+            fetch(`/api/viviendas/${viviendaId}/residentes/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpiar opciones actuales
+                    residenteSelect.innerHTML = '<option value="">---------</option>';
+                    
+                    // Agregar opciones de residentes
+                    data.forEach(residente => {
+                        if (residente.activo) {
+                            const option = document.createElement('option');
+                            option.value = residente.id;
+                            option.textContent = residente.nombre;
+                            residenteSelect.appendChild(option);
+                        }
+                    });
+                })
+                .catch(error => console.error('Error al cargar residentes:', error));
+            
+            // Actualizar cuotas pendientes
+            fetch(`/financiero/api/cuotas-por-vivienda/${viviendaId}/?estado=pendientes`)
+                .then(response => response.json())
+                .then(data => {
+                    const cuotasContainer = cuotasSection.querySelector('.card-body');
+                    
+                    // Si no hay contenedor, crear uno
+                    if (!cuotasContainer) {
+                        cuotasSection.innerHTML = '<div class="col-md-12"><label class="form-label fw-bold">Aplicar a Cuotas Pendientes:</label><div class="card"><div class="card-body"></div></div></div>';
+                        cuotasContainer = cuotasSection.querySelector('.card-body');
+                    }
+                    
+                    if (data.cuotas && data.cuotas.length > 0) {
+                        let html = '';
+                        data.cuotas.forEach(cuota => {
+                            html += `
+                            <div class="form-check mb-2">
+                                <input class="form-check-input cuota-checkbox" type="checkbox" name="aplicar_a_cuotas" value="${cuota.id}" id="cuota_${cuota.id}">
+                                <label class="form-check-label" for="cuota_${cuota.id}">
+                                    ${cuota.concepto} - Vence: ${cuota.fecha_vencimiento} - $${cuota.total.toFixed(2)}
+                                </label>
+                            </div>`;
+                        });
+                        cuotasContainer.innerHTML = html;
+                        
+                        // Agregar event listeners a los checkboxes
+                        const checkboxes = document.querySelectorAll('.cuota-checkbox');
+                        checkboxes.forEach(checkbox => {
+                            checkbox.addEventListener('change', actualizarMontoTotal);
+                        });
+                    } else {
+                        cuotasContainer.innerHTML = '<div class="alert alert-info mb-0">No hay cuotas pendientes para esta vivienda.</div>';
+                    }
+                })
+                .catch(error => console.error('Error al cargar cuotas:', error));
+        }
+        
+        // Función para actualizar el monto total basado en las cuotas seleccionadas
+        function actualizarMontoTotal() {
+            const checkboxes = document.querySelectorAll('.cuota-checkbox:checked');
+            let montoTotal = 0;
+            
+            if (checkboxes.length > 0) {
+                // Sumar montos de cuotas seleccionadas
+                checkboxes.forEach(checkbox => {
+                    const label = checkbox.nextElementSibling.textContent;
+                    const montoStr = label.split('$')[1];
+                    if (montoStr) {
+                        montoTotal += parseFloat(montoStr);
+                    }
+                });
+                
+                // Actualizar el campo de monto
+                montoInput.value = montoTotal.toFixed(2);
+            }
+        }
+        
+        // Event listeners
+        if (viviendaSelect) {
+            viviendaSelect.addEventListener('change', actualizarCuotas);
+            
+            // Si ya hay una vivienda seleccionada al cargar la página
+            if (viviendaSelect.value) {
+                actualizarCuotas();
+            }
+        }
+    });
+</script>
+{% endblock %}

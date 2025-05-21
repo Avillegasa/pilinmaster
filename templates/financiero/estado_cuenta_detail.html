@@ -1,0 +1,186 @@
+<!-- templates/financiero/estado_cuenta_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalle de Estado de Cuenta | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Estado de Cuenta{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Vivienda: {{ estado_cuenta.vivienda.numero }} - {{ estado_cuenta.vivienda.edificio.nombre }}</h5>
+                <div>
+                    <a href="{% url 'estado-cuenta-pdf' estado_cuenta.id %}" class="btn btn-sm btn-light">
+                        <i class="fas fa-file-pdf"></i> Descargar PDF
+                    </a>
+                    {% if not estado_cuenta.enviado %}
+                    <a href="{% url 'estado-cuenta-enviar' estado_cuenta.id %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-envelope"></i> Enviar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Período:</h6>
+                        <p>{{ estado_cuenta.fecha_inicio|date:"d/m/Y" }} al {{ estado_cuenta.fecha_fin|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="fw-bold">Fecha de Generación:</h6>
+                        <p>{{ estado_cuenta.fecha_generacion|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="fw-bold">Estado:</h6>
+                        <p>
+                            {% if estado_cuenta.enviado %}
+                            <span class="badge bg-success">Enviado</span>
+                            <small class="text-muted d-block">{{ estado_cuenta.fecha_envio|date:"d/m/Y H:i" }}</small>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Pendiente de envío</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Resumen de saldos -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>Saldo Anterior</th>
+                                        <th>Cuotas del Período</th>
+                                        <th>Recargos</th>
+                                        <th>Pagos Recibidos</th>
+                                        <th>Saldo Final</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="fw-bold text-center">
+                                        <td>${{ estado_cuenta.saldo_anterior|floatformat:2 }}</td>
+                                        <td>${{ estado_cuenta.total_cuotas|floatformat:2 }}</td>
+                                        <td>${{ estado_cuenta.total_recargos|floatformat:2 }}</td>
+                                        <td>${{ estado_cuenta.total_pagos|floatformat:2 }}</td>
+                                        <td class="{% if estado_cuenta.saldo_final > 0 %}table-danger{% else %}table-success{% endif %}">
+                                            ${{ estado_cuenta.saldo_final|floatformat:2 }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Detalle de cuotas -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5 class="border-bottom pb-2">Detalle de Cuotas</h5>
+                        {% if cuotas %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Concepto</th>
+                                        <th>Fecha Emisión</th>
+                                        <th>Fecha Vencimiento</th>
+                                        <th>Monto</th>
+                                        <th>Recargo</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cuota in cuotas %}
+                                    <tr>
+                                        <td>{{ cuota.concepto.nombre }}</td>
+                                        <td>{{ cuota.fecha_emision|date:"d/m/Y" }}</td>
+                                        <td>{{ cuota.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                        <td>${{ cuota.monto|floatformat:2 }}</td>
+                                        <td>${{ cuota.recargo|floatformat:2 }}</td>
+                                        <td>${{ cuota.total_a_pagar|floatformat:2 }}</td>
+                                        <td>
+                                            {% if cuota.pagada %}
+                                            <span class="badge bg-success">Pagada</span>
+                                            {% else %}
+                                                {% if cuota.fecha_vencimiento < today %}
+                                                <span class="badge bg-danger">Vencida</span>
+                                                {% else %}
+                                                <span class="badge bg-warning text-dark">Pendiente</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <p class="mb-0">No hay cuotas registradas en este período</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Detalle de pagos -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <h5 class="border-bottom pb-2">Detalle de Pagos</h5>
+                        {% if pagos %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Monto</th>
+                                        <th>Método</th>
+                                        <th>Referencia</th>
+                                        <th>Registrado por</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pago in pagos %}
+                                    <tr>
+                                        <td>{{ pago.fecha_pago|date:"d/m/Y" }}</td>
+                                        <td>${{ pago.monto|floatformat:2 }}</td>
+                                        <td>{{ pago.get_metodo_pago_display }}</td>
+                                        <td>{{ pago.referencia|default:"-" }}</td>
+                                        <td>{{ pago.registrado_por.first_name }} {{ pago.registrado_por.last_name }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <p class="mb-0">No hay pagos registrados en este período</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'estado-cuenta-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                    <div>
+                        {% if not estado_cuenta.enviado %}
+                        <a href="{% url 'estado-cuenta-enviar' estado_cuenta.id %}" class="btn btn-success">
+                            <i class="fas fa-envelope"></i> Enviar Estado de Cuenta
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'pago-create' %}?vivienda={{ estado_cuenta.vivienda.id }}" class="btn btn-primary">
+                            <i class="fas fa-money-bill-wave"></i> Registrar Pago
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

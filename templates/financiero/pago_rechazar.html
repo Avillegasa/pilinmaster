@@ -1,0 +1,64 @@
+<!-- templates/financiero/pago_rechazar.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rechazar Pago | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Rechazar Pago #{{ pago.id }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">Confirmar Rechazo de Pago</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Atención:</strong> Esta acción no puede deshacerse. Al rechazar el pago, se revertirán todas las cuotas asociadas a este pago.
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Monto:</h6>
+                        <p>${{ pago.monto|floatformat:2 }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Fecha:</h6>
+                        <p>{{ pago.fecha_pago|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Vivienda:</h6>
+                        <p>{{ pago.vivienda.numero }} - {{ pago.vivienda.edificio.nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Método:</h6>
+                        <p>{{ pago.get_metodo_pago_display }}</p>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="motivo" class="form-label fw-bold">Motivo del rechazo:</label>
+                        <textarea class="form-control" id="motivo" name="motivo" rows="3" required></textarea>
+                        <div class="form-text">Indique el motivo por el cual se rechaza este pago. Esta información será registrada.</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'pago-detail' pago.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Confirmar Rechazo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
