@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'accesos',
     'personal',  # Nueva aplicación de gestión de personal
     'financiero',  # Nueva aplicación de gestión financiera
+    'reportes',
 ]
 
 MIDDLEWARE = [
@@ -201,4 +202,4 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desarro
 # EMAIL_PORT = 587
 # EMAIL_USE_TLS = True
 # EMAIL_HOST_USER = 'tu@email.com'
-# EMAIL_HOST_PASSWORD = 'tu_contraseña'     
+# EMAIL_HOST_PASSWORD = 'tu_contraseña'

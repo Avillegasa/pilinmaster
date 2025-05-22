@@ -7,7 +7,13 @@
 <body>
     <!-- Encabezado del reporte -->
     <div class="header">
-        <div class="titulo">{{ reporte.nombre }}</div>
+        <div style="display: flex; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 30px;">
+            <img src="file://{{ logo_path }}" alt="Logo" style="height: 60px; margin-right: 20px;">
+            <div>
+                <h1 style="margin: 0; color: #007bff;">{{ reporte.nombre }}</h1>
+                <span style="font-size: 1.2em; color: #555;">{{ reporte.get_tipo_display }}</span>
+            </div>
+        </div>
         <div class="subtitulo">Reporte de Viviendas</div>
         <div class="fecha">
             Período: {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}<br>
@@ -90,6 +96,11 @@
             <div class="grafico-placeholder">Gráfico de barras: Viviendas por piso</div>
         </div>
         {% endif %}
+        
+        <div style="text-align:center; margin-bottom: 30px;">
+            <img src="{{ grafico1 }}" style="max-width: 350px; margin: 0 10px;">
+            <img src="{{ grafico2 }}" style="max-width: 350px; margin: 0 10px;">
+        </div>
     </div>
     {% endif %}
     
@@ -101,17 +112,17 @@
     <!-- Tabla de datos detallados -->
     <div class="datos">
         <h3>Detalle de Viviendas</h3>
-        <table>
+        <table style="width:100%; border-collapse:collapse; margin-bottom: 30px;">
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Edificio</th>
-                    <th>Número</th>
-                    <th>Piso</th>
-                    <th>Metros²</th>
-                    <th>Habitaciones</th>
-                    <th>Baños</th>
-                    <th>Estado</th>
+                <tr style="background: #007bff; color: #fff;">
+                    <th style="padding: 8px;">ID</th>
+                    <th style="padding: 8px;">Edificio</th>
+                    <th style="padding: 8px;">Número</th>
+                    <th style="padding: 8px;">Piso</th>
+                    <th style="padding: 8px;">Metros²</th>
+                    <th style="padding: 8px;">Habitaciones</th>
+                    <th style="padding: 8px;">Baños</th>
+                    <th style="padding: 8px;">Estado</th>
                 </tr>
             </thead>
             <tbody>

@@ -39,6 +39,7 @@ urlpatterns = [
     path('accesos/', include('accesos.urls')),
     path('personal/', include('personal.urls')),  # Nueva aplicación de personal
     path('financiero/', include('financiero.urls')),  # Nueva aplicación de gestión financiera
+    path('reportes/', include('reportes.urls')),  # <--- AGREGA ESTA LÍNEA
     
     # OAuth URLs para autenticación con Gmail (implementación futura)
     path('accounts/', include('allauth.urls')),
