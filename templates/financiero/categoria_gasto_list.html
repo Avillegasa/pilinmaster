@@ -74,7 +74,7 @@
                             <div class="progress" style="height: 8px; width: 100%;">
                                 <div class="progress-bar {% if categoria.porcentaje_presupuesto_utilizado > 100 %}bg-danger{% elif categoria.porcentaje_presupuesto_utilizado > 80 %}bg-warning{% else %}bg-success{% endif %}" 
                                      role="progressbar" 
-                                     style="width: {{ categoria.porcentaje_presupuesto_utilizado|min:100 }}%;" 
+                                     style="width: {% if categoria.porcentaje_presupuesto_utilizado > 100 %}100{% else %}{{ categoria.porcentaje_presupuesto_utilizado|floatformat:0 }}{% endif %}%;" 
                                      aria-valuenow="{{ categoria.porcentaje_presupuesto_utilizado|floatformat:0 }}" 
                                      aria-valuemin="0" 
                                      aria-valuemax="100"></div>
