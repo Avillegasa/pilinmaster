@@ -15,6 +15,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Para producción, cambiar a:
+# SECRET_KEY = 'nueva-clave-secreta-aleatoria'
+# DEBUG = False
+# ALLOWED_HOSTS = ['tu-dominio.com']
+
 
 # Application definition
 

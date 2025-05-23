@@ -192,8 +192,15 @@ class CuotaListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         
         # Calcular totales
         cuotas = self.object_list
-        context['total_monto'] = cuotas.aggregate(total=Coalesce(Sum('monto'), 0))['total']
-        context['total_recargo'] = cuotas.aggregate(total=Coalesce(Sum('recargo'), 0))['total']
+        # CÓDIGO CORREGIDO
+        from django.db.models import DecimalField
+
+        context['total_monto'] = cuotas.aggregate(
+            total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
+        )['total']
+        context['total_recargo'] = cuotas.aggregate(
+            total=Coalesce(Sum('recargo', output_field=DecimalField()), Decimal('0'))
+        )['total']
         context['total_general'] = context['total_monto'] + context['total_recargo']
         
         return context
@@ -346,9 +353,16 @@ class PagoListView(LoginRequiredMixin, ListView):
         
         # Calcular totales
         pagos = self.object_list
-        context['total_pagos'] = pagos.aggregate(total=Coalesce(Sum('monto'), 0))['total']
-        context['total_verificados'] = pagos.filter(estado='VERIFICADO').aggregate(total=Coalesce(Sum('monto'), 0))['total']
-        context['total_pendientes'] = pagos.filter(estado='PENDIENTE').aggregate(total=Coalesce(Sum('monto'), 0))['total']
+        # CÓDIGO CORREGIDO
+        context['total_pagos'] = pagos.aggregate(
+            total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
+        )['total']
+        context['total_verificados'] = pagos.filter(estado='VERIFICADO').aggregate(
+            total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
+        )['total']
+        context['total_pendientes'] = pagos.filter(estado='PENDIENTE').aggregate(
+            total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
+        )['total']
         
         return context
 
@@ -471,7 +485,7 @@ class CategoriaGastoListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
             categoria.total_gastos = Gasto.objects.filter(
                 categoria=categoria, 
                 estado='PAGADO'
-            ).aggregate(total=Coalesce(Sum('monto'), Decimal('0')))['total']
+            ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
         
         return context
 
@@ -617,9 +631,16 @@ class GastoListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         
         # Calcular totales
         gastos = self.object_list
-        context['total_monto'] = gastos.aggregate(total=Coalesce(Sum('monto'), 0))['total']
-        context['total_pagados'] = gastos.filter(estado='PAGADO').aggregate(total=Coalesce(Sum('monto'), 0))['total']
-        context['total_pendientes'] = gastos.filter(estado='PENDIENTE').aggregate(total=Coalesce(Sum('monto'), 0))['total']
+        # CÓDIGO CORREGIDO
+        context['total_monto'] = gastos.aggregate(
+            total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
+        )['total']
+        context['total_pagados'] = gastos.filter(estado='PAGADO').aggregate(
+            total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
+        )['total']
+        context['total_pendientes'] = gastos.filter(estado='PENDIENTE').aggregate(
+            total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
+        )['total']
         
         return context
 
@@ -1121,26 +1142,28 @@ def dashboard_financiero(request):
         fecha_pago__gte=inicio_mes_actual,
         fecha_pago__lte=fin_mes_actual,
         **filters_pagos
-    ).aggregate(total=Coalesce(Sum('monto'), Decimal('0')))['total']
+    ).aggregate(
+        total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
+    )['total']
     
     ingresos_mes_anterior = Pago.objects.filter(
         fecha_pago__gte=inicio_mes_anterior,
         fecha_pago__lte=fin_mes_anterior,
         **filters_pagos
-    ).aggregate(total=Coalesce(Sum('monto'), Decimal('0')))['total']
+    ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
     
     # Gastos del mes actual y anterior
     gastos_mes_actual = Gasto.objects.filter(
         fecha__gte=inicio_mes_actual,
         fecha__lte=fin_mes_actual,
         **filters_gastos
-    ).aggregate(total=Coalesce(Sum('monto'), Decimal('0')))['total']
+    ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
     
     gastos_mes_anterior = Gasto.objects.filter(
         fecha__gte=inicio_mes_anterior,
         fecha__lte=fin_mes_anterior,
         **filters_gastos
-    ).aggregate(total=Coalesce(Sum('monto'), Decimal('0')))['total']
+    ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
     
     # Balance
     balance_mes_actual = ingresos_mes_actual - gastos_mes_actual
@@ -1180,13 +1203,13 @@ def dashboard_financiero(request):
             fecha_pago__gte=inicio_mes,
             fecha_pago__lte=fin_mes,
             **filters_pagos
-        ).aggregate(total=Coalesce(Sum('monto'), Decimal('0')))['total']
+        ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
         
         gastos_mes = Gasto.objects.filter(
             fecha__gte=inicio_mes,
             fecha__lte=fin_mes,
             **filters_gastos
-        ).aggregate(total=Coalesce(Sum('monto'), Decimal('0')))['total']
+        ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
         
         nombre_mes = inicio_mes.strftime('%b %Y')
         datos_meses.append({
@@ -1220,7 +1243,7 @@ def dashboard_financiero(request):
         fecha__lte=fin_mes_actual,
         estado='PAGADO'
     ).values('categoria__nombre', 'categoria__color').annotate(
-        total=Sum('monto')
+        total=Sum('monto', output_field=DecimalField())
     ).order_by('-total')
     
     # Convertir a formato para gráficos
@@ -1362,7 +1385,7 @@ def api_resumen_financiero(request):
         fecha_pago__gte=inicio_mes,
         fecha_pago__lte=fin_mes,
         **filters_pagos
-    ).aggregate(total=Coalesce(Sum('monto'), Decimal('0')))['total']
+    ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
     
     # Calcular gastos del mes (solo para administradores)
     gastos_mes = Decimal('0')
@@ -1371,7 +1394,7 @@ def api_resumen_financiero(request):
             fecha__gte=inicio_mes,
             fecha__lte=fin_mes,
             estado='PAGADO'
-        ).aggregate(total=Coalesce(Sum('monto'), Decimal('0')))['total']
+        ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
     
     # Calcular balance
     balance_mes = ingresos_mes - gastos_mes

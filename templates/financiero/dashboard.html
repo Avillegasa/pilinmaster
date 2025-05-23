@@ -112,7 +112,20 @@
                     <i class="fas fa-balance-scale fa-3x"></i>
                 </div>
                 <div class="progress mt-2" style="height: 8px;">
-                    <div class="progress-bar bg-light" role="progressbar" style="width: {% if ingresos_mes_actual > 0 %}{{ balance_mes_actual|div:ingresos_mes_actual|mul:100|floatformat:0 }}%{% else %}0%{% endif %}"></div>
+
+                {% comment %}   <div class="progress-bar bg-light" role="progressbar" style="width: {% if ingresos_mes_actual > 0 %}{{ balance_mes_actual|div:ingresos_mes_actual|mul:100|floatformat:0 }}%{% else %}0%{% endif %}"></div>
+                <!-- SOLUCIÓN MÁS LIMPIA -->
+                    <div class="progress-bar bg-light" role="progressbar" style="width: {{ porcentaje_balance }}%"></div>
+                {% endcomment %}  
+                    <div class="progress mt-2" style="height: 8px;">
+                        {% if balance_mes_actual >= 0 %}
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                        {% else %}
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 100%"></div>
+                        {% endif %}
+                    </div>
+                
+                    
                 </div>
                 <div class="small mt-1">
                     {% if balance_mes_actual > 0 %}

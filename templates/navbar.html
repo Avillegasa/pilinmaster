@@ -22,8 +22,15 @@
             <li><a class="dropdown-item" href="{% url 'movimiento-entrada' %}"><i class="fas fa-sign-in-alt me-2"></i> Registrar Entrada</a></li>
             <li><a class="dropdown-item" href="{% url 'movimiento-salida' %}"><i class="fas fa-sign-out-alt me-2"></i> Registrar Salida</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user-circle me-2"></i> Mi Perfil</a></li>
-            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión</a></li>
+            <li><a class="dropdown-item" href="{% url 'password_change' %}">
+                <i class="fas fa-key me-2"></i> Cambiar Contraseña
+            </a></li>
+            <li><a class="dropdown-item" href="{% url 'perfil' %}">
+                <i class="fas fa-user-circle me-2"></i> Mi Perfil
+            </a></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
+            </a></li>
         </ul>
     </div>
     
