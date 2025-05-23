@@ -9,23 +9,31 @@ from .models import Usuario, Rol
 from .forms import UsuarioCreationForm, UsuarioChangeForm, RolForm
 
 # Función auxiliar para comprobar si es administrador
-def es_admin(user):
-    return (user.is_authenticated and 
-            hasattr(user, 'rol') and 
-            user.rol is not None and 
-            user.rol.nombre == 'Administrador')
+def tiene_acceso_web(user):
+    return (
+        user.is_authenticated and
+        hasattr(user, 'rol') and
+        user.rol is not None and
+        user.rol.nombre in ['Administrador', 'Gerente']
+    )
 
-class AdminRequiredMixin(UserPassesTestMixin):
+
+class AccesoWebPermitidoMixin(UserPassesTestMixin):
     def test_func(self):
-        return es_admin(self.request.user)
+        return tiene_acceso_web(self.request.user)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "Debe ingresar desde la aplicación móvil.")
+        return redirect('login')  # Puedes redirigir a otra vista si lo deseas
+
 
 # Vistas de Usuarios
-class UsuarioListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class UsuarioListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = Usuario
     template_name = 'usuarios/usuario_list.html'
     context_object_name = 'usuarios'
 
-class UsuarioCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Usuario
     form_class = UsuarioCreationForm
     template_name = 'usuarios/usuario_form.html'
@@ -39,14 +47,14 @@ class UsuarioCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         return super().form_valid(form)
 
  
-class UsuarioUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class UsuarioUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Usuario
     form_class = UsuarioChangeForm
     template_name = 'usuarios/usuario_form.html'
     success_url = reverse_lazy('usuario-list')
 
 # Reemplazo de la vista DeleteView por una vista personalizada para cambiar estado
-class UsuarioChangeStateView(LoginRequiredMixin, AdminRequiredMixin, View):
+class UsuarioChangeStateView(LoginRequiredMixin, AccesoWebPermitidoMixin, View):
     def get(self, request, pk):
         usuario = get_object_or_404(Usuario, pk=pk)
         return render(request, 'usuarios/usuario_change_state.html', {'usuario': usuario})
@@ -73,24 +81,24 @@ class UsuarioDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'usuario'
 
 # Vistas de Roles
-class RolListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class RolListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = Rol
     template_name = 'usuarios/rol_list.html'
     context_object_name = 'roles'
 
-class RolCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class RolCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Rol
     form_class = RolForm
     template_name = 'usuarios/rol_form.html'
     success_url = reverse_lazy('rol-list')
 
-class RolUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class RolUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Rol
     form_class = RolForm
     template_name = 'usuarios/rol_form.html'
     success_url = reverse_lazy('rol-list')
 
-class RolDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class RolDeleteView(LoginRequiredMixin, AccesoWebPermitidoMixin, DeleteView):
     model = Rol
     template_name = 'usuarios/rol_confirm_delete.html'
     success_url = reverse_lazy('rol-list')

@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from usuarios.views import AdminRequiredMixin
+from usuarios.views import AccesoWebPermitidoMixin
 from .models import Edificio, Vivienda, Residente
 from .forms import EdificioForm, ViviendaForm, ResidenteForm, ViviendaBajaForm
 
@@ -15,19 +15,19 @@ class EdificioListView(LoginRequiredMixin, ListView):
     template_name = 'viviendas/edificio_list.html'
     context_object_name = 'edificios'
 
-class EdificioCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class EdificioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Edificio
     form_class = EdificioForm
     template_name = 'viviendas/edificio_form.html'
     success_url = reverse_lazy('edificio-list')
 
-class EdificioUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class EdificioUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Edificio
     form_class = EdificioForm
     template_name = 'viviendas/edificio_form.html'
     success_url = reverse_lazy('edificio-list')
 
-class EdificioDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class EdificioDeleteView(LoginRequiredMixin, AccesoWebPermitidoMixin, DeleteView):
     model = Edificio
     template_name = 'viviendas/edificio_confirm_delete.html'
     success_url = reverse_lazy('edificio-list')
@@ -98,19 +98,19 @@ class ViviendaListView(LoginRequiredMixin, ListView):
         
         return context
 
-class ViviendaCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class ViviendaCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Vivienda
     form_class = ViviendaForm
     template_name = 'viviendas/vivienda_form.html'
     success_url = reverse_lazy('vivienda-list')
 
-class ViviendaUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class ViviendaUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Vivienda
     form_class = ViviendaForm
     template_name = 'viviendas/vivienda_form.html'
     success_url = reverse_lazy('vivienda-list')
 
-class ViviendaDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class ViviendaDeleteView(LoginRequiredMixin, AccesoWebPermitidoMixin, DeleteView):
     model = Vivienda
     template_name = 'viviendas/vivienda_confirm_delete.html'
     success_url = reverse_lazy('vivienda-list')
@@ -196,19 +196,19 @@ class ResidenteListView(LoginRequiredMixin, ListView):
         
         return context
 
-class ResidenteCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class ResidenteCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Residente
     form_class = ResidenteForm
     template_name = 'viviendas/residente_form.html'
     success_url = reverse_lazy('residente-list')
 
-class ResidenteUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class ResidenteUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Residente
     form_class = ResidenteForm
     template_name = 'viviendas/residente_form.html'
     success_url = reverse_lazy('residente-list')
 
-class ResidenteDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class ResidenteDeleteView(LoginRequiredMixin, AccesoWebPermitidoMixin, DeleteView):
     model = Residente
     template_name = 'viviendas/residente_confirm_delete.html'
     success_url = reverse_lazy('residente-list')
@@ -218,7 +218,7 @@ class ResidenteDetailView(LoginRequiredMixin, DetailView):
     template_name = 'viviendas/residente_detail.html'
     context_object_name = 'residente'
 
-class ViviendaBajaView(LoginRequiredMixin, AdminRequiredMixin, View):
+class ViviendaBajaView(LoginRequiredMixin, AccesoWebPermitidoMixin, View):
     """
     Vista para dar de baja una vivienda en lugar de eliminarla.
     Esta vista permite establecer un motivo de baja y la fecha.

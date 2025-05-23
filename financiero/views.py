@@ -18,7 +18,7 @@ import tempfile
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
-from usuarios.views import AdminRequiredMixin
+from usuarios.views import AccesoWebPermitidoMixin
 from .models import (
     ConceptoCuota, Cuota, Pago, PagoCuota, 
     CategoriaGasto, Gasto, EstadoCuenta
@@ -30,7 +30,7 @@ from .forms import (
 from viviendas.models import Vivienda, Edificio, Residente
 
 # Vistas para ConceptoCuota
-class ConceptoCuotaListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class ConceptoCuotaListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = ConceptoCuota
     template_name = 'financiero/concepto_list.html'
     context_object_name = 'conceptos'
@@ -60,7 +60,7 @@ class ConceptoCuotaListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         context['activo'] = self.request.GET.get('activo', '')
         return context
 
-class ConceptoCuotaCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class ConceptoCuotaCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = ConceptoCuota
     form_class = ConceptoCuotaForm
     template_name = 'financiero/concepto_form.html'
@@ -70,7 +70,7 @@ class ConceptoCuotaCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView
         messages.success(self.request, 'Concepto de cuota creado exitosamente.')
         return super().form_valid(form)
 
-class ConceptoCuotaDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class ConceptoCuotaDetailView(LoginRequiredMixin, AccesoWebPermitidoMixin, DetailView):
     model = ConceptoCuota
     template_name = 'financiero/concepto_detail.html'
     context_object_name = 'concepto'
@@ -89,7 +89,7 @@ class ConceptoCuotaDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView
         
         return context
 
-class ConceptoCuotaUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class ConceptoCuotaUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = ConceptoCuota
     form_class = ConceptoCuotaForm
     template_name = 'financiero/concepto_form.html'
@@ -99,7 +99,7 @@ class ConceptoCuotaUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView
         messages.success(self.request, 'Concepto de cuota actualizado exitosamente.')
         return super().form_valid(form)
 
-class ConceptoCuotaDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class ConceptoCuotaDeleteView(LoginRequiredMixin, AccesoWebPermitidoMixin, DeleteView):
     model = ConceptoCuota
     template_name = 'financiero/concepto_confirm_delete.html'
     success_url = reverse_lazy('concepto-list')
@@ -118,7 +118,7 @@ class ConceptoCuotaDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView
         return context
 
 # Vistas para Cuota
-class CuotaListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class CuotaListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = Cuota
     template_name = 'financiero/cuota_list.html'
     context_object_name = 'cuotas'
@@ -210,7 +210,7 @@ class CuotaListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         
         return context
 
-class CuotaCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class CuotaCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Cuota
     form_class = CuotaForm
     template_name = 'financiero/cuota_form.html'
@@ -220,7 +220,7 @@ class CuotaCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         messages.success(self.request, 'Cuota creada exitosamente.')
         return super().form_valid(form)
 
-class CuotaDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class CuotaDetailView(LoginRequiredMixin, AccesoWebPermitidoMixin, DetailView):
     model = Cuota
     template_name = 'financiero/cuota_detail.html'
     context_object_name = 'cuota'
@@ -232,7 +232,7 @@ class CuotaDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
         context['pagos_cuota'] = PagoCuota.objects.filter(cuota=cuota)
         return context
 
-class CuotaUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class CuotaUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Cuota
     form_class = CuotaForm
     template_name = 'financiero/cuota_form.html'
@@ -456,7 +456,7 @@ def rechazar_pago(request, pk):
     return render(request, 'financiero/pago_rechazar.html', {'pago': pago})
 
 # Vistas para CategoriaGasto
-class CategoriaGastoListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class CategoriaGastoListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = CategoriaGasto
     template_name = 'financiero/categoria_gasto_list.html'
     context_object_name = 'categorias'
@@ -494,7 +494,7 @@ class CategoriaGastoListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         
         return context
 
-class CategoriaGastoCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class CategoriaGastoCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = CategoriaGasto
     form_class = CategoriaGastoForm
     template_name = 'financiero/categoria_gasto_form.html'
@@ -504,7 +504,7 @@ class CategoriaGastoCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateVie
         messages.success(self.request, 'Categoría de gasto creada exitosamente.')
         return super().form_valid(form)
 
-class CategoriaGastoDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class CategoriaGastoDetailView(LoginRequiredMixin, AccesoWebPermitidoMixin, DetailView):
     model = CategoriaGasto
     template_name = 'financiero/categoria_gasto_detail.html'
     context_object_name = 'categoria'
@@ -527,7 +527,7 @@ class CategoriaGastoDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailVie
         
         return context
 
-class CategoriaGastoUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class CategoriaGastoUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = CategoriaGasto
     form_class = CategoriaGastoForm
     template_name = 'financiero/categoria_gasto_form.html'
@@ -537,7 +537,7 @@ class CategoriaGastoUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateVie
         messages.success(self.request, 'Categoría de gasto actualizada exitosamente.')
         return super().form_valid(form)
 
-class CategoriaGastoDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class CategoriaGastoDeleteView(LoginRequiredMixin, AccesoWebPermitidoMixin, DeleteView):
     model = CategoriaGasto
     template_name = 'financiero/categoria_gasto_confirm_delete.html'
     success_url = reverse_lazy('categoria-gasto-list')
@@ -556,7 +556,7 @@ class CategoriaGastoDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteVie
         return context
 
 # Vistas para Gasto
-class GastoListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class GastoListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = Gasto
     template_name = 'financiero/gasto_list.html'
     context_object_name = 'gastos'
@@ -649,7 +649,7 @@ class GastoListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
         
         return context
 
-class GastoCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class GastoCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Gasto
     form_class = GastoForm
     template_name = 'financiero/gasto_form.html'
@@ -664,12 +664,12 @@ class GastoCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         messages.success(self.request, 'Gasto registrado exitosamente.')
         return super().form_valid(form)
 
-class GastoDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView):
+class GastoDetailView(LoginRequiredMixin, AccesoWebPermitidoMixin, DetailView):
     model = Gasto
     template_name = 'financiero/gasto_detail.html'
     context_object_name = 'gasto'
 
-class GastoUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class GastoUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Gasto
     form_class = GastoForm
     template_name = 'financiero/gasto_form.html'
@@ -799,7 +799,7 @@ class EstadoCuentaListView(LoginRequiredMixin, ListView):
         
         return context
 
-class EstadoCuentaCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class EstadoCuentaCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = EstadoCuenta
     form_class = EstadoCuentaForm
     template_name = 'financiero/estado_cuenta_form.html'

@@ -8,17 +8,17 @@ from django.db.models import Q
 from django.utils import timezone
 from django.http import JsonResponse
 
-from usuarios.views import AdminRequiredMixin
+from usuarios.views import AccesoWebPermitidoMixin
 from .models import Puesto, Empleado, Asignacion, ComentarioAsignacion, Vivienda
 from .forms import PuestoForm, EmpleadoForm, AsignacionForm, ComentarioAsignacionForm, AsignacionFiltroForm
 
 # Vistas para Puestos
-class PuestoListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class PuestoListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = Puesto
     template_name = 'personal/puesto_list.html'
     context_object_name = 'puestos'
 
-class PuestoCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class PuestoCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Puesto
     form_class = PuestoForm
     template_name = 'personal/puesto_form.html'
@@ -28,7 +28,7 @@ class PuestoCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         messages.success(self.request, 'Puesto creado exitosamente.')
         return super().form_valid(form)
 
-class PuestoUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class PuestoUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Puesto
     form_class = PuestoForm
     template_name = 'personal/puesto_form.html'
@@ -38,7 +38,7 @@ class PuestoUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
         messages.success(self.request, 'Puesto actualizado exitosamente.')
         return super().form_valid(form)
 
-class PuestoDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
+class PuestoDeleteView(LoginRequiredMixin, AccesoWebPermitidoMixin, DeleteView):
     model = Puesto
     template_name = 'personal/puesto_confirm_delete.html'
     success_url = reverse_lazy('puesto-list')
@@ -90,7 +90,7 @@ class EmpleadoListView(LoginRequiredMixin, ListView):
         context['query'] = self.request.GET.get('q', '')
         return context
 
-class EmpleadoCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class EmpleadoCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Empleado
     form_class = EmpleadoForm
     template_name = 'personal/empleado_form.html'
@@ -100,7 +100,7 @@ class EmpleadoCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         messages.success(self.request, 'Empleado creado exitosamente.')
         return super().form_valid(form)
 
-class EmpleadoUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class EmpleadoUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Empleado
     form_class = EmpleadoForm
     template_name = 'personal/empleado_form.html'
@@ -212,7 +212,7 @@ class AsignacionListView(LoginRequiredMixin, ListView):
         
         return context
 
-class AsignacionCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class AsignacionCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Asignacion
     form_class = AsignacionForm
     template_name = 'personal/asignacion_form.html'
@@ -227,7 +227,7 @@ class AsignacionCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
         messages.success(self.request, 'Asignación creada exitosamente.')
         return super().form_valid(form)
 
-class AsignacionUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+class AsignacionUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Asignacion
     form_class = AsignacionForm
     template_name = 'personal/asignacion_form.html'
