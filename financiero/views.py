@@ -82,6 +82,11 @@ class ConceptoCuotaDetailView(LoginRequiredMixin, AdminRequiredMixin, DetailView
         context['cuotas'] = Cuota.objects.filter(concepto=concepto).order_by('-fecha_emision')[:10]
         context['total_cuotas'] = Cuota.objects.filter(concepto=concepto).count()
         context['cuotas_pendientes'] = Cuota.objects.filter(concepto=concepto, pagada=False).count()
+        
+        # Calcular cuotas pagadas
+        cuotas_pagadas = context['total_cuotas'] - context['cuotas_pendientes']
+        context['cuotas_pagadas'] = cuotas_pagadas
+        
         return context
 
 class ConceptoCuotaUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):

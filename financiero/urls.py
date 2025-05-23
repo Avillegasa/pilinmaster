@@ -2,9 +2,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Estos URLs serán implementados en la Etapa 2, pero los definimos ahora
-    # para tener la estructura preparada
-    
     # ConceptoCuota URLS
     path('conceptos/', views.ConceptoCuotaListView.as_view(), name='concepto-list'),
     path('conceptos/crear/', views.ConceptoCuotaCreateView.as_view(), name='concepto-create'),
