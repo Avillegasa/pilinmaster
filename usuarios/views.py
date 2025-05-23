@@ -28,6 +28,14 @@ class UsuarioCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
     template_name = 'usuarios/usuario_form.html'
     success_url = reverse_lazy('usuario-list')
 
+    def form_valid(self, form):
+        usuario = form.save(commit=False)
+        usuario.is_active = True  # Bloquea el acceso hasta confirmar
+        usuario.save()
+        messages.success(self.request, "Usuario creado. Podrá activar su cuenta al intentar iniciar sesión desde la app móvil.")
+        return super().form_valid(form)
+
+ 
 class UsuarioUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
     model = Usuario
     form_class = UsuarioChangeForm

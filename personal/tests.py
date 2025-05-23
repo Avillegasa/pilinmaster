@@ -18,7 +18,6 @@ class PuestoModelTest(TestCase):
             descripcion='Encargado de la limpieza y vigilancia',
             requiere_especializacion=False
         )
-    
     def test_puesto_creation(self):
         """Verificar la creación correcta de un puesto"""
         self.assertEqual(self.puesto.nombre, 'Conserje')

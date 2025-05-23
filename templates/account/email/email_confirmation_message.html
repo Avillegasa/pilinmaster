@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    .button {
+      background-color: #0d6efd;
+      color: white;
+      padding: 12px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      display: inline-block;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <p>Hola {{ user.get_full_name }},</p>
+
+  <p>Gracias por registrarte en <strong>TorreSegura</strong>. Por favor, confirma tu correo electrónico haciendo clic en el siguiente botón:</p>
+
+  <p>
+  <a href="{{ activate_url }}" style="
+    background-color: #0d6efd;
+    color: #ffffff !important;
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    display: inline-block;
+    font-weight: bold;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  ">
+    Confirmar correo
+  </a>
+</p>
+
+  <p>Este enlace expirará en unas horas. Si tú no realizaste esta solicitud, puedes ignorar este correo.</p>
+
+  <p>Atentamente,<br>
+  El equipo de TorreSegura.</p>
+</body>
+</html>
