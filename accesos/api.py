@@ -2,7 +2,16 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import Visita, MovimientoResidente
 from viviendas.models import Residente, Vivienda
-
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+import qrcode
+import io
+import base64
+from django.views.decorators.http import require_GET, require_POST
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 @login_required
 def historial_visitas(request):
     """API endpoint para obtener el historial de visitas completadas (con salida registrada)"""
@@ -46,3 +55,82 @@ def residentes_por_vivienda(request, vivienda_id):
         return JsonResponse({'error': 'Vivienda no encontrada'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+@require_GET
+@login_required
+def generar_qr_visita(request, visita_id):
+    try:
+        visita = Visita.objects.get(pk=visita_id, residente_autoriza__usuario=request.user)
+
+        datos_qr = {
+            "id": visita.id,
+            "nombre_visitante": visita.nombre_visitante,
+            "documento_visitante": visita.documento_visitante,
+            "vivienda": str(visita.vivienda_destino),
+            "autorizado_por": str(visita.residente_autoriza),
+            "fecha": visita.fecha_hora_entrada.strftime("%Y-%m-%d %H:%M"),
+        }
+
+        qr = qrcode.make(datos_qr)
+        buffer = io.BytesIO()
+        qr.save(buffer, format='PNG')
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+        return JsonResponse({"qr_base64": qr_base64})
+    
+    except Visita.DoesNotExist:
+        return JsonResponse({"error": "Visita no encontrada o no autorizada para este usuario"}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def crear_visita(request):
+    try:
+        data = request.data
+        nombre = data.get('nombre_visitante')
+        documento = data.get('documento_visitante')
+        vivienda_id = data.get('vivienda_destino_id')
+        motivo = data.get('motivo', '')
+
+        if not all([nombre, documento, vivienda_id]):
+            return Response({'error': 'Faltan datos obligatorios'}, status=status.HTTP_400_BAD_REQUEST)
+
+        vivienda = Vivienda.objects.get(pk=vivienda_id)
+        residente = Residente.objects.get(usuario=request.user)
+
+        visita = Visita.objects.create(
+            nombre_visitante=nombre,
+            documento_visitante=documento,
+            vivienda_destino=vivienda,
+            residente_autoriza=residente,
+            motivo=motivo,
+            registrado_por=request.user,
+            fecha_hora_entrada=timezone.now()
+        )
+        # 📦 Generar el QR
+        datos_qr = {
+            "id": visita.id,
+            "nombre_visitante": visita.nombre_visitante,
+            "documento_visitante": visita.documento_visitante,
+            "vivienda": str(visita.vivienda_destino),
+            "autorizado_por": str(visita.residente_autoriza),
+            "fecha": visita.fecha_hora_entrada.strftime("%Y-%m-%d %H:%M"),
+        }
+        qr = qrcode.make(datos_qr)
+        buffer = io.BytesIO()
+        qr.save(buffer, format='PNG')
+        qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+        return Response({
+            'mensaje': 'Visita registrada correctamente',
+            'id': visita.id,
+            'qr_base64': qr_base64
+        })
+
+    except Vivienda.DoesNotExist:
+        return Response({'error': 'Vivienda no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+    except Residente.DoesNotExist:
+        return Response({'error': 'Residente no autorizado'}, status=status.HTTP_403_FORBIDDEN)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

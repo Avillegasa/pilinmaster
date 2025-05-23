@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from .models import Usuario, Rol
 from .forms import UsuarioCreationForm, UsuarioChangeForm, RolForm
-
+from django.contrib.auth.views import LoginView
 # Función auxiliar para comprobar si es administrador
 def tiene_acceso_web(user):
     return (
@@ -46,7 +46,20 @@ class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView)
         messages.success(self.request, "Usuario creado. Podrá activar su cuenta al intentar iniciar sesión desde la app móvil.")
         return super().form_valid(form)
 
- 
+class CustomLoginView(LoginView):
+    template_name = 'login.html'
+
+    def form_valid(self, form):
+        user = form.get_user()
+        if user.rol is None or user.rol.nombre not in ['Administrador', 'Gerente']:
+            messages.add_message(
+            self.request, messages.ERROR,
+            "Debe ingresar desde la aplicación móvil.",
+            extra_tags='danger'
+            )
+            return redirect(reverse_lazy('login'))
+        return super().form_valid(form)
+
 class UsuarioUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Usuario
     form_class = UsuarioChangeForm
