@@ -10,7 +10,10 @@ from .forms import UsuarioCreationForm, UsuarioChangeForm, RolForm
 
 # Función auxiliar para comprobar si es administrador
 def es_admin(user):
-    return user.is_authenticated and user.rol and user.rol.nombre == 'Administrador'
+    return (user.is_authenticated and 
+            hasattr(user, 'rol') and 
+            user.rol is not None and 
+            user.rol.nombre == 'Administrador')
 
 class AdminRequiredMixin(UserPassesTestMixin):
     def test_func(self):

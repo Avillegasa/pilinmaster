@@ -20,53 +20,91 @@
                     <h4 class="text-dark fw-bold mb-0"><i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión</h4>
                 </div>
                 <div class="card-body p-4">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
+                {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <strong>Error de autenticación:</strong>
+                        {% if form.non_field_errors %}
+                            {{ form.non_field_errors|first }}
+                        {% else %}
+                            Por favor, introduce un nombre de usuario y contraseña correctos. Ten en cuenta que ambos campos pueden ser sensibles a mayúsculas y minúsculas.
+                        {% endif %}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
 
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="id_username" class="form-label">Usuario o Email</label>
-                            <div class="input-group">
-                                <span class="input-group-text" style="background-color: #001f3f; color: white;"><i class="fas fa-user"></i></span>
-                                <input type="text" name="username" id="id_username" class="form-control" required>
-                            </div>
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                        <div class="mb-3">
-                            <label for="id_password" class="form-label">Contraseña</label>
-                            <div class="input-group">
-                                <span class="input-group-text" style="background-color: #001f3f; color: white;"><i class="fas fa-lock"></i></span>
-                                <input type="password" name="password" id="id_password" class="form-control" required>
-                            </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">Usuario o Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background-color: #001f3f; color: white;">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" name="username" id="id_username" 
+                                class="form-control{% if form.username.errors %} is-invalid{% endif %}" 
+                                value="{{ form.username.value|default:'' }}" required>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.username.errors|first }}
+                                </div>
+                            {% endif %}
                         </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="remember-me" name="remember">
-                            <label class="form-check-label" for="remember-me">Recordarme</label>
-                            <a href="{% url 'password_reset' %}" class="float-end" style="color: #0066cc;">¿Olvidaste tu contraseña?</a>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background-color: #001f3f; color: white;">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" name="password" id="id_password" 
+                                class="form-control{% if form.password.errors %} is-invalid{% endif %}" required>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.password.errors|first }}
+                                </div>
+                            {% endif %}
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn" style="background-color: #ffcc00; color: #001f3f; font-weight: bold;">
-                                <i class="fas fa-sign-in-alt me-2"></i> Acceder
-                            </button>
-                        </div>
-                    </form>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember-me" name="remember">
+                        <label class="form-check-label" for="remember-me">Recordarme</label>
+                        <a href="{% url 'password_reset' %}" class="float-end" style="color: #0066cc;">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn" style="background-color: #ffcc00; color: #001f3f; font-weight: bold;">
+                            <i class="fas fa-sign-in-alt me-2"></i> Acceder
+                        </button>
+                    </div>
+                </form>
 
                     <div class="my-3 text-center position-relative">
                         <hr style="color: #ccc;">
                         <span class="position-absolute top-50 start-50 translate-middle px-3">o inicia sesión con</span>
                     </div>
 
+<<<<<<< HEAD
                    <div class="d-grid">
+=======
+                    {% comment %} <div class="d-grid">
+>>>>>>> main
                         <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger">
                             <i class="fab fa-google me-2"></i> Iniciar sesión con Google
                         </a>
-                    </div>
+                    </div> {% endcomment %}
 
                     <div class="text-center mt-3">
                         <small class="text-muted">

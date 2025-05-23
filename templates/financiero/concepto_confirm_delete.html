@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Concepto | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Eliminar Concepto de Cuota{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                </div>
+                
+                <p class="fs-5 mb-4">¿Estás seguro de que deseas eliminar el concepto de cuota <strong>"{{ object.nombre }}"</strong>?</p>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Concepto:</h6>
+                        <p>{{ object.nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Monto Base:</h6>
+                        <p>${{ object.monto_base|floatformat:2 }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Periodicidad:</h6>
+                        <p>{{ object.get_periodicidad_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Estado:</h6>
+                        <p>
+                            {% if object.activo %}
+                            <span class="badge bg-success">Activo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if tiene_cuotas %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Impacto de la eliminación:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Este concepto tiene <strong>{{ numero_cuotas }} cuotas asociadas</strong></li>
+                        <li>Al eliminar este concepto, todas las cuotas asociadas <strong>perderán su referencia</strong></li>
+                        <li>Esto puede afectar reportes y estados de cuenta históricos</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Alternativa recomendada:</strong> En lugar de eliminar, considera <strong>desactivar</strong> el concepto editándolo y marcándolo como inactivo.
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    Este concepto no tiene cuotas asociadas, por lo que es seguro eliminarlo.
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if tiene_cuotas %}
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmarEliminacion" required>
+                        <label class="form-check-label" for="confirmarEliminacion">
+                            <strong>Confirmo que entiendo las consecuencias</strong> de eliminar este concepto con cuotas asociadas
+                        </label>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'concepto-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <div>
+                            {% if tiene_cuotas %}
+                            <a href="{% url 'concepto-update' object.id %}" class="btn btn-warning me-2">
+                                <i class="fas fa-edit"></i> Desactivar en su lugar
+                            </a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-danger" {% if tiene_cuotas %}id="btnEliminar" disabled{% endif %}>
+                                <i class="fas fa-trash"></i> Confirmar Eliminación
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if tiene_cuotas %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkbox = document.getElementById('confirmarEliminacion');
+        const btnEliminar = document.getElementById('btnEliminar');
+        
+        if (checkbox && btnEliminar) {
+            checkbox.addEventListener('change', function() {
+                btnEliminar.disabled = !this.checked;
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

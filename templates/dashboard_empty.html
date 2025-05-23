@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg border-0">
+            <div class="card-body text-center p-5">
+                <i class="fas fa-building fa-5x text-muted mb-4"></i>
+                <h2 class="text-muted mb-4">¡Bienvenido a Torre Segura!</h2>
+                <p class="lead text-muted mb-4">
+                    Para comenzar a usar el sistema, necesitas registrar al menos un edificio.
+                </p>
+                
+                <div class="row mt-5">
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-building fa-3x text-primary mb-3"></i>
+                                <h5>Registrar Edificio</h5>
+                                <p class="small text-muted">Crea tu primer edificio para empezar</p>
+                                <a href="{% url 'edificio-create' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Crear Edificio
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-light h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-3x text-success mb-3"></i>
+                                <h5>Registrar Usuarios</h5>
+                                <p class="small text-muted">Añade usuarios al sistema</p>
+                                <a href="{% url 'usuario-create' %}" class="btn btn-success">
+                                    <i class="fas fa-user-plus"></i> Crear Usuario
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h6 class="text-muted">¿Necesitas ayuda?</h6>
+                    <p class="small text-muted">
+                        Consulta nuestra <a href="#" class="text-primary">documentación</a> o 
+                        contacta al <a href="#" class="text-primary">soporte técnico</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

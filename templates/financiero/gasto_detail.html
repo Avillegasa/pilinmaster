@@ -1,0 +1,204 @@
+<!-- templates/financiero/gasto_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalle de Gasto | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Detalle de Gasto{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">Información del Gasto</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Concepto:</h6>
+                        <p>{{ gasto.concepto }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Categoría:</h6>
+                        <p>
+                            <span style="display: inline-block; width: 15px; height: 15px; background-color: {{ gasto.categoria.color }}; margin-right: 5px; border-radius: 3px;"></span>
+                            {{ gasto.categoria.nombre }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Tipo:</h6>
+                        <p>{{ gasto.get_tipo_gasto_display }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Monto:</h6>
+                        <p class="fs-5 fw-bold">${{ gasto.monto|floatformat:2 }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Fecha:</h6>
+                        <p>{{ gasto.fecha|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Estado:</h6>
+                        <p>
+                            {% if gasto.estado == 'PAGADO' %}
+                            <span class="badge bg-success">Pagado</span>
+                            {% if gasto.fecha_pago %}
+                            <small class="text-muted d-block">Pagado el {{ gasto.fecha_pago|date:"d/m/Y" }}</small>
+                            {% endif %}
+                            {% elif gasto.estado == 'PENDIENTE' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% else %}
+                            <span class="badge bg-danger">Cancelado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Proveedor:</h6>
+                        <p>{{ gasto.proveedor|default:"---" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Factura/Recibo:</h6>
+                        <p>{{ gasto.factura|default:"---" }}</p>
+                    </div>
+                </div>
+                
+                {% if gasto.descripcion %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Descripción:</h6>
+                        <p>{{ gasto.descripcion }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Características:</h6>
+                        <p>
+                            {% if gasto.presupuestado %}
+                            <span class="badge bg-success me-1">Presupuestado</span>
+                            {% else %}
+                            <span class="badge bg-secondary me-1">No Presupuestado</span>
+                            {% endif %}
+                            
+                            {% if gasto.recurrente %}
+                            <span class="badge bg-info">Recurrente</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No Recurrente</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Registrado por:</h6>
+                        <p>{{ gasto.registrado_por.first_name }} {{ gasto.registrado_por.last_name }}</p>
+                    </div>
+                </div>
+                
+                {% if gasto.notas %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Notas:</h6>
+                        <p>{{ gasto.notas }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if gasto.comprobante %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Comprobante:</h6>
+                        <p>
+                            <a href="{{ gasto.comprobante.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-file"></i> Ver Comprobante
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'gasto-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                    <div>
+                        {% if gasto.estado == 'PENDIENTE' %}
+                        <a href="{% url 'gasto-update' gasto.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'gasto-marcar-pagado' gasto.id %}" class="btn btn-success">
+                            <i class="fas fa-check"></i> Marcar como Pagado
+                        </a>
+                        <a href="{% url 'gasto-cancelar' gasto.id %}" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header" style="background-color: {{ gasto.categoria.color }}; color: white;">
+                <h5 class="card-title mb-0">Categoría: {{ gasto.categoria.nombre }}</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Presupuesto Mensual:</h6>
+                <p>${{ gasto.categoria.presupuesto_mensual|floatformat:2 }}</p>
+                
+                <h6 class="fw-bold">Gasto Mensual Actual:</h6>
+                <p>${{ gasto.categoria.total_gastado_mes_actual|floatformat:2 }}</p>
+                
+                <div class="progress mb-3" style="height: 8px;">
+                    {% with porcentaje=gasto.categoria.porcentaje_presupuesto_utilizado %}
+                    <div class="progress-bar {% if porcentaje > 100 %}bg-danger{% elif porcentaje > 80 %}bg-warning{% else %}bg-success{% endif %}" 
+                         role="progressbar" 
+                         style="width: {{ porcentaje|min:100 }}%;" 
+                         aria-valuenow="{{ porcentaje|floatformat:0 }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100"></div>
+                    {% endwith %}
+                </div>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'categoria-gasto-detail' gasto.categoria.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i> Ver Categoría
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        {% if gastos_similares %}
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Gastos Similares</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for similar in gastos_similares %}
+                    <a href="{% url 'gasto-detail' similar.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ similar.concepto|truncatechars:25 }}</h6>
+                            <small>${{ similar.monto|floatformat:2 }}</small>
+                        </div>
+                        <small class="text-muted">{{ similar.fecha|date:"d/m/Y" }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
