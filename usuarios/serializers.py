@@ -1,6 +1,6 @@
 from rest_framework import serializers 
 from .models import Usuario, Rol
-from viviendas.models import Residente  # ✅ necesario para acceder al residente
+from viviendas.models import Residente
 
 class RolSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,7 +9,7 @@ class RolSerializer(serializers.ModelSerializer):
 
 class UsuarioSerializer(serializers.ModelSerializer):
     rol = RolSerializer(read_only=True)
-    vivienda_id = serializers.SerializerMethodField()  # 🔑 nuevo campo personalizado
+    vivienda_id = serializers.SerializerMethodField() 
 
     class Meta:
         model = Usuario

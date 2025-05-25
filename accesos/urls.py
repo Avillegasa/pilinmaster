@@ -20,5 +20,6 @@ urlpatterns = [
     # API MOVILES
     path('api/visitas/<int:visita_id>/qr/', api.generar_qr_visita, name='api-generar-qr-visita'),
     path('api/visitas/crear/', api.crear_visita, name='api-crear-visita'),
+    path('api/visitas/verificar_qr/', api.verificar_qr_visita, name='verificar-qr-visita'),
 
 ]
