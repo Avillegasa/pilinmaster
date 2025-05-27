@@ -149,11 +149,6 @@ def crear_visita(request):
         # 📦 Generar el QR
         datos_qr = {
             "id": visita.id,
-            # "nombre_visitante": visita.nombre_visitante,
-            # "documento_visitante": visita.documento_visitante,
-            # "vivienda": str(visita.vivienda_destino),
-            # "autorizado_por": str(visita.residente_autoriza),
-            # "fecha": visita.fecha_hora_entrada.strftime("%Y-%m-%d %H:%M"),
             "firma": generar_firma_qr(visita.id)
         }
         qr = qrcode.make(json.dumps(datos_qr))
@@ -174,3 +169,4 @@ def crear_visita(request):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# vehiculo? crear visita para usuarios con vehiculo.
