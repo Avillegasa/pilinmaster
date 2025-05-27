@@ -1,0 +1,73 @@
+<!-- templates/financiero/pago_confirm_delete.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Pago | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Eliminar Pago{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">Confirmar Eliminación de Pago</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Atención:</strong> Esta acción no puede deshacerse. Al eliminar el pago se revertirán todas las cuotas asociadas.
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Monto:</h6>
+                        <p class="fs-5 fw-bold">${{ object.monto|floatformat:2 }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Fecha:</h6>
+                        <p>{{ object.fecha_pago|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Vivienda:</h6>
+                        <p>{{ object.vivienda.numero }} - {{ object.vivienda.edificio.nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Estado:</h6>
+                        <p>
+                            {% if object.estado == 'VERIFICADO' %}
+                            <span class="badge bg-success">Verificado</span>
+                            {% elif object.estado == 'PENDIENTE' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rechazado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if object.estado == 'VERIFICADO' %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Advertencia:</strong> Este pago ya ha sido verificado y puede tener cuotas asociadas. Al eliminarlo se afectarán los registros contables.
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'pago-detail' object.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmar Eliminación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

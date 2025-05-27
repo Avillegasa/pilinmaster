@@ -1,0 +1,76 @@
+<!-- templates/financiero/estado_cuenta_confirm_delete.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Estado de Cuenta | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Eliminar Estado de Cuenta{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">Confirmar Eliminación de Estado de Cuenta</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Atención:</strong> Esta acción no puede deshacerse. Al eliminar el estado de cuenta se perderá toda la información histórica.
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Vivienda:</h6>
+                        <p>{{ object.vivienda.numero }} - {{ object.vivienda.edificio.nombre }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Período:</h6>
+                        <p>{{ object.fecha_inicio|date:"d/m/Y" }} al {{ object.fecha_fin|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Saldo Final:</h6>
+                        <p class="fs-5 fw-bold {% if object.saldo_final > 0 %}text-danger{% else %}text-success{% endif %}">
+                            ${{ object.saldo_final|floatformat:2 }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Estado:</h6>
+                        <p>
+                            {% if object.enviado %}
+                            <span class="badge bg-success">Enviado</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if object.enviado %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Advertencia:</strong> Este estado de cuenta ya ha sido enviado al residente. Al eliminarlo se perderá el registro histórico.
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'estado-cuenta-detail' object.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmar Eliminación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

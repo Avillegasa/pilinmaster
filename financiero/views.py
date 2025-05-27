@@ -396,6 +396,18 @@ class PagoDetailView(LoginRequiredMixin, DetailView):
         # Obtener cuotas asociadas a este pago
         pago = self.object
         context['cuotas_pago'] = PagoCuota.objects.filter(pago=pago)
+        
+        # Calcular cuotas pendientes de la vivienda
+        cuotas_pendientes = Cuota.objects.filter(
+            vivienda=pago.vivienda,
+            pagada=False
+        )
+        context['cuotas_pendientes_count'] = cuotas_pendientes.count()
+        
+        # Calcular monto pendiente total
+        monto_total = sum(cuota.total_a_pagar() for cuota in cuotas_pendientes)
+        context['monto_pendiente_total'] = Decimal(str(monto_total))
+        
         return context
 
 class PagoUpdateView(LoginRequiredMixin, UpdateView):
