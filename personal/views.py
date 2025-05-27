@@ -9,8 +9,10 @@ from django.utils import timezone
 from django.http import JsonResponse
 
 from usuarios.views import AdminRequiredMixin
-from .models import Puesto, Empleado, Asignacion, ComentarioAsignacion, Vivienda
+from .models import Puesto, Empleado, Asignacion, ComentarioAsignacion
 from .forms import PuestoForm, EmpleadoForm, AsignacionForm, ComentarioAsignacionForm, AsignacionFiltroForm
+# ✅ CORRECCIÓN: Import agregado para el modelo Vivienda
+from viviendas.models import Vivienda
 
 # Vistas para Puestos
 class PuestoListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
@@ -59,11 +61,15 @@ class EmpleadoListView(LoginRequiredMixin, ListView):
     context_object_name = 'empleados'
     
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related('usuario', 'puesto')
+        
         # Filtrar por puesto si se especifica
         puesto_id = self.request.GET.get('puesto')
         if puesto_id:
-            queryset = queryset.filter(puesto_id=puesto_id)
+            try:
+                queryset = queryset.filter(puesto_id=int(puesto_id))
+            except (ValueError, TypeError):
+                pass
         
         # Filtrar por estado (activo/inactivo)
         estado = self.request.GET.get('estado')
@@ -115,25 +121,23 @@ class EmpleadoDetailView(LoginRequiredMixin, DetailView):
     template_name = 'personal/empleado_detail.html'
     context_object_name = 'empleado'
     
+    def get_queryset(self):
+        return super().get_queryset().select_related('usuario', 'puesto')
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Obtener las asignaciones del empleado
+        # Obtener las asignaciones del empleado con optimización
         empleado = self.get_object()
         context['asignaciones'] = Asignacion.objects.filter(
             empleado=empleado
-        ).order_by('-fecha_asignacion')[:10]  # Mostrar las 10 más recientes
+        ).select_related('edificio', 'vivienda').order_by('-fecha_asignacion')[:10]
         
-        # Estadísticas
-        context['total_asignaciones'] = Asignacion.objects.filter(empleado=empleado).count()
-        context['asignaciones_pendientes'] = Asignacion.objects.filter(
-            empleado=empleado, estado='PENDIENTE'
-        ).count()
-        context['asignaciones_en_progreso'] = Asignacion.objects.filter(
-            empleado=empleado, estado='EN_PROGRESO'
-        ).count()
-        context['asignaciones_completadas'] = Asignacion.objects.filter(
-            empleado=empleado, estado='COMPLETADA'
-        ).count()
+        # Estadísticas optimizadas
+        asignaciones_qs = Asignacion.objects.filter(empleado=empleado)
+        context['total_asignaciones'] = asignaciones_qs.count()
+        context['asignaciones_pendientes'] = asignaciones_qs.filter(estado='PENDIENTE').count()
+        context['asignaciones_en_progreso'] = asignaciones_qs.filter(estado='EN_PROGRESO').count()
+        context['asignaciones_completadas'] = asignaciones_qs.filter(estado='COMPLETADA').count()
         
         return context
 
@@ -141,6 +145,11 @@ class EmpleadoDetailView(LoginRequiredMixin, DetailView):
 def empleado_change_state(request, pk):
     """Vista para activar/desactivar un empleado"""
     empleado = get_object_or_404(Empleado, pk=pk)
+    
+    # ✅ CORRECCIÓN: Verificar permisos de administrador
+    if not hasattr(request.user, 'rol') or request.user.rol.nombre != 'Administrador':
+        messages.error(request, 'No tienes permisos para realizar esta acción.')
+        return redirect('empleado-list')
     
     if request.method == 'POST':
         # Cambiar el estado del empleado
@@ -167,7 +176,9 @@ class AsignacionListView(LoginRequiredMixin, ListView):
     context_object_name = 'asignaciones'
     
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related(
+            'empleado__usuario', 'empleado__puesto', 'edificio', 'vivienda', 'asignado_por'
+        )
         
         # Crear formulario de filtro
         self.filtro_form = AsignacionFiltroForm(self.request.GET or None)
@@ -195,7 +206,7 @@ class AsignacionListView(LoginRequiredMixin, ListView):
                 queryset = queryset.filter(fecha_inicio__lte=data['fecha_hasta'])
         
         # Filtro adicional para usuarios que son empleados (ver solo sus propias asignaciones)
-        if hasattr(self.request.user, 'empleado') and not self.request.user.rol.nombre == 'Administrador':
+        if hasattr(self.request.user, 'empleado') and self.request.user.rol.nombre != 'Administrador':
             queryset = queryset.filter(empleado=self.request.user.empleado)
         
         return queryset.order_by('-fecha_asignacion')
@@ -205,10 +216,11 @@ class AsignacionListView(LoginRequiredMixin, ListView):
         context['filtro_form'] = self.filtro_form
         
         # Estadísticas para el dashboard
-        context['total_asignaciones'] = self.get_queryset().count()
-        context['asignaciones_pendientes'] = self.get_queryset().filter(estado='PENDIENTE').count()
-        context['asignaciones_en_progreso'] = self.get_queryset().filter(estado='EN_PROGRESO').count()
-        context['asignaciones_completadas'] = self.get_queryset().filter(estado='COMPLETADA').count()
+        queryset = self.get_queryset()
+        context['total_asignaciones'] = queryset.count()
+        context['asignaciones_pendientes'] = queryset.filter(estado='PENDIENTE').count()
+        context['asignaciones_en_progreso'] = queryset.filter(estado='EN_PROGRESO').count()
+        context['asignaciones_completadas'] = queryset.filter(estado='COMPLETADA').count()
         
         return context
 
@@ -247,12 +259,17 @@ class AsignacionDetailView(LoginRequiredMixin, DetailView):
     template_name = 'personal/asignacion_detail.html'
     context_object_name = 'asignacion'
     
+    def get_queryset(self):
+        return super().get_queryset().select_related(
+            'empleado__usuario', 'empleado__puesto', 'edificio', 'vivienda', 'asignado_por'
+        ).prefetch_related('comentarios__usuario')
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Añadir el formulario de comentarios
         context['comentario_form'] = ComentarioAsignacionForm()
         # Obtener los comentarios para esta asignación
-        context['comentarios'] = self.object.comentarios.all().order_by('-fecha')
+        context['comentarios'] = self.object.comentarios.select_related('usuario').order_by('-fecha')
         return context
     
     def post(self, request, *args, **kwargs):
@@ -266,6 +283,8 @@ class AsignacionDetailView(LoginRequiredMixin, DetailView):
             comentario.usuario = request.user
             comentario.save()
             messages.success(request, 'Comentario añadido exitosamente.')
+        else:
+            messages.error(request, 'Error al agregar el comentario.')
         
         return redirect('asignacion-detail', pk=self.object.pk)
 
@@ -273,6 +292,13 @@ class AsignacionDetailView(LoginRequiredMixin, DetailView):
 def cambiar_estado_asignacion(request, pk):
     """Vista para cambiar el estado de una asignación"""
     asignacion = get_object_or_404(Asignacion, pk=pk)
+    
+    # ✅ CORRECCIÓN: Verificar permisos
+    if not hasattr(request.user, 'rol') or request.user.rol.nombre != 'Administrador':
+        # Permitir que el empleado asignado también pueda cambiar algunos estados
+        if not (hasattr(request.user, 'empleado') and request.user.empleado == asignacion.empleado):
+            messages.error(request, 'No tienes permisos para cambiar el estado de esta asignación.')
+            return redirect('asignacion-detail', pk=asignacion.pk)
     
     if request.method == 'POST':
         nuevo_estado = request.POST.get('estado')
@@ -302,7 +328,7 @@ def cambiar_estado_asignacion(request, pk):
         'estados': Asignacion.ESTADOS,
     })
 
-# API para actualizar viviendas según el edificio seleccionado
+# ✅ CORRECCIÓN: API mejorada con manejo de errores
 @login_required
 def viviendas_por_edificio_api(request):
     edificio_id = request.GET.get('edificio_id')
@@ -311,8 +337,14 @@ def viviendas_por_edificio_api(request):
         return JsonResponse({'error': 'ID de edificio no proporcionado'}, status=400)
     
     try:
-        viviendas = Vivienda.objects.filter(edificio_id=edificio_id).order_by('piso', 'numero')
-        data = [{'id': v.id, 'numero': v.numero, 'piso': v.piso} for v in viviendas]
-        return JsonResponse(data, safe=False)
+        edificio_id = int(edificio_id)
+        viviendas = Vivienda.objects.filter(
+            edificio_id=edificio_id, 
+            activo=True
+        ).values('id', 'numero', 'piso').order_by('piso', 'numero')
+        
+        return JsonResponse(list(viviendas), safe=False)
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'ID de edificio inválido'}, status=400)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

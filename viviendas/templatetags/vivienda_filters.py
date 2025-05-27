@@ -64,12 +64,21 @@ def activas_count(queryset):
     """
     Devuelve la cantidad de viviendas activas en un queryset
     """
-    return queryset(activo=True).count()
+    # ✅ CORREGIDO: Usar .filter() correctamente
+    try:
+        return queryset.filter(activo=True).count()
+    except AttributeError:
+        # Si no es un queryset, intentar filtrar como lista
+        return len([item for item in queryset if getattr(item, 'activo', False)])
 
 @register.filter
 def inactivas_count(queryset):
     """
     Devuelve la cantidad de viviendas inactivas en un queryset
     """
-    return queryset(activo=False).count()
-
+    # ✅ CORREGIDO: Usar .filter() correctamente
+    try:
+        return queryset.filter(activo=False).count()
+    except AttributeError:
+        # Si no es un queryset, intentar filtrar como lista
+        return len([item for item in queryset if not getattr(item, 'activo', True)])
