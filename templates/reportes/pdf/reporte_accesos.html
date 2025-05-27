@@ -7,7 +7,13 @@
 <body>
     <!-- Encabezado del reporte -->
     <div class="header">
-        <div class="titulo">{{ reporte.nombre }}</div>
+        <div style="display: flex; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 30px;">
+            <img src="file://{{ logo_path }}" alt="Logo" style="height: 60px; margin-right: 20px;">
+            <div>
+                <h1 style="margin: 0; color: #007bff;">{{ reporte.nombre }}</h1>
+                <span style="font-size: 1.2em; color: #555;">{{ reporte.get_tipo_display }}</span>
+            </div>
+        </div>
         <div class="subtitulo">Reporte de Accesos</div>
         <div class="fecha">
             Período: {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}<br>
@@ -81,16 +87,16 @@
     <!-- Tabla de datos detallados -->
     <div class="datos">
         <h3>Detalle de Visitas</h3>
-        <table>
+        <table style="width:100%; border-collapse:collapse; margin-bottom: 30px;">
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Visitante</th>
-                    <th>Documento</th>
-                    <th>Vivienda</th>
-                    <th>Entrada</th>
-                    <th>Salida</th>
-                    <th>Estado</th>
+                <tr style="background: #007bff; color: #fff;">
+                    <th style="padding: 8px;">ID</th>
+                    <th style="padding: 8px;">Visitante</th>
+                    <th style="padding: 8px;">Documento</th>
+                    <th style="padding: 8px;">Vivienda</th>
+                    <th style="padding: 8px;">Entrada</th>
+                    <th style="padding: 8px;">Salida</th>
+                    <th style="padding: 8px;">Estado</th>
                 </tr>
             </thead>
             <tbody>
@@ -123,6 +129,12 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+    
+    <!-- Gráficos adicionales -->
+    <div style="text-align:center; margin-bottom: 30px;">
+        <img src="{{ grafico1 }}" style="max-width: 350px; margin: 0 10px;">
+        <img src="{{ grafico2 }}" style="max-width: 350px; margin: 0 10px;">
     </div>
     
     <!-- Pie de página -->

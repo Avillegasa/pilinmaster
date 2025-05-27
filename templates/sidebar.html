@@ -413,6 +413,21 @@
         </ul>
         {% endif %}
         
+        <!-- Sección de reportes -->
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-white-50">
+            <span>Reportes</span>
+            <span class="d-md-none" data-bs-toggle="collapse" data-bs-target="#reportesNav" style="cursor: pointer;">
+                <i class="fas fa-chevron-down"></i>
+            </span>
+        </h6>
+        <ul class="nav flex-column collapse show" id="reportesNav">
+            <li class="nav-item">
+                <a class="nav-link text-white {% if '/reportes/' in request.path %}active bg-primary{% endif %}" href="{% url 'reporte-list' %}">
+                    <i class="fas fa-chart-bar me-2"></i> Reportes
+                </a>
+            </li>
+        </ul>
+
         <!-- Versión y ayuda - responsive -->
         <div class="px-3 mt-4 mb-2 text-center d-none d-md-block">
             <div class="small text-white-50">Versión 1.2.0</div>

@@ -7,6 +7,13 @@
 <body>
     <!-- Encabezado del reporte -->
     <div class="header">
+        <div style="display: flex; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 30px;">
+            <img src="file://{{ logo_path }}" alt="Logo" style="height: 60px; margin-right: 20px;">
+            <div>
+                <h1 style="margin: 0; color: #007bff;">{{ reporte.nombre }}</h1>
+                <span style="font-size: 1.2em; color: #555;">{{ reporte.get_tipo_display }}</span>
+            </div>
+        </div>
         <div class="titulo">{{ reporte.nombre }}</div>
         <div class="subtitulo">Reporte de Personal</div>
         <div class="fecha">
@@ -85,16 +92,16 @@
     <!-- Tabla de datos detallados -->
     <div class="datos">
         <h3>Detalle de Empleados</h3>
-        <table>
+        <table style="width:100%; border-collapse:collapse; margin-bottom: 30px;">
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Puesto</th>
-                    <th>Tipo Contrato</th>
-                    <th>Fecha Contratación</th>
-                    <th>Especialidad</th>
-                    <th>Estado</th>
+                <tr style="background: #007bff; color: #fff;">
+                    <th style="padding: 8px;">ID</th>
+                    <th style="padding: 8px;">Nombre</th>
+                    <th style="padding: 8px;">Puesto</th>
+                    <th style="padding: 8px;">Tipo Contrato</th>
+                    <th style="padding: 8px;">Fecha Contratación</th>
+                    <th style="padding: 8px;">Especialidad</th>
+                    <th style="padding: 8px;">Estado</th>
                 </tr>
             </thead>
             <tbody>
@@ -172,6 +179,12 @@
         </table>
     </div>
     {% endif %}
+    
+    <!-- Gráficos adicionales -->
+    <div style="text-align:center; margin-bottom: 30px;">
+        <img src="{{ grafico1 }}" style="max-width: 350px; margin: 0 10px;">
+        <img src="{{ grafico2 }}" style="max-width: 350px; margin: 0 10px;">
+    </div>
     
     <!-- Pie de página -->
     <div class="pie-pagina">
