@@ -142,23 +142,22 @@
                     </li>
                 </ul>
             </div>
+            <div class="sidebar-section">
+                <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-white-50">
+                    <span>Reportes</span>
+                    <span class="d-md-none" data-bs-toggle="collapse" data-bs-target="#reportesNav" style="cursor: pointer;">
+                        <i class="fas fa-chevron-down"></i>
+                    </span>
+                </h6>
+                <ul class="nav flex-column collapse show" id="reportesNav">
+                    <li class="nav-item">
+                        <a class="nav-link text-white {% if '/reportes/' in request.path %}active bg-primary{% endif %}" href="{% url 'reporte-list' %}">
+                            <i class="fas fa-chart-bar me-2"></i> Reportes
+                        </a>
+                    </li>
+                </ul>
+            </div>
             
-            <!-- Enlaces de administración financiera - solo para administradores -->
-            {% if user.rol.nombre == 'Administrador' %}
-            <li class="nav-item mt-2">
-                <div class="dropdown-divider border-top border-secondary"></div>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white {% if '/financiero/conceptos/' in request.path %}active bg-primary{% endif %}" href="{% url 'concepto-list' %}">
-                    <i class="fas fa-tags me-2"></i> Conceptos de Cuota
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link text-white {% if '/financiero/categorias-gasto/' in request.path %}active bg-primary{% endif %}" href="{% url 'categoria-gasto-list' %}">
-                    <i class="fas fa-list-alt me-2"></i> Categorías de Gasto
-                </a>
-            </li>
-            {% endif %}
         </ul>
             
             <!-- Sección de utilidades -->
@@ -211,6 +210,19 @@
                         <a class="nav-link text-white sidebar-link {% if '/personal/puestos/' in request.path %}active{% endif %}" href="{% url 'puesto-list' %}">
                             <i class="fas fa-briefcase me-2"></i>
                             <span>Puestos de Trabajo</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mt-2">
+                        <div class="dropdown-divider border-top border-secondary"></div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white {% if '/financiero/conceptos/' in request.path %}active bg-primary{% endif %}" href="{% url 'concepto-list' %}">
+                            <i class="fas fa-tags me-2"></i> Conceptos de Cuota
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white {% if '/financiero/categorias-gasto/' in request.path %}active bg-primary{% endif %}" href="{% url 'categoria-gasto-list' %}">
+                            <i class="fas fa-list-alt me-2"></i> Categorías de Gasto
                         </a>
                     </li>
                 </ul>
@@ -413,6 +425,21 @@
         </ul>
         {% endif %}
         
+        <!-- Sección de reportes -->
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-1 text-white-50">
+            <span>Reportes</span>
+            <span class="d-md-none" data-bs-toggle="collapse" data-bs-target="#reportesNav" style="cursor: pointer;">
+                <i class="fas fa-chevron-down"></i>
+            </span>
+        </h6>
+        <ul class="nav flex-column collapse show" id="reportesNav">
+            <li class="nav-item">
+                <a class="nav-link text-white {% if '/reportes/' in request.path %}active bg-primary{% endif %}" href="{% url 'reporte-list' %}">
+                    <i class="fas fa-chart-bar me-2"></i> Reportes
+                </a>
+            </li>
+        </ul>
+
         <!-- Versión y ayuda - responsive -->
         <div class="px-3 mt-4 mb-2 text-center d-none d-md-block">
             <div class="small text-white-50">Versión 1.2.0</div>

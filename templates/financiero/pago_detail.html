@@ -140,10 +140,10 @@
                 <p>{{ pago.vivienda.edificio.nombre }}</p>
                 
                 <h6 class="fw-bold mt-3">Cuotas Pendientes:</h6>
-                <p class="fs-5">{{ pago.vivienda.cuotas.filter.pagada=False.count }}</p>
+                <p class="fs-5">{{ cuotas_pendientes_count }}</p>
                 
                 <h6 class="fw-bold mt-3">Monto Pendiente Total:</h6>
-                <p class="fs-5">${{ pago.get_cuotas_pendientes.aggregate.monto_total|default:"0.00" }}</p>
+                <p class="fs-5">${{ monto_pendiente_total|default:"0.00"|floatformat:2 }}</p>
                 
                 <div class="d-grid gap-2 mt-3">
                     <a href="{% url 'pago-create' %}?vivienda={{ pago.vivienda.id }}" class="btn btn-primary">
@@ -172,9 +172,8 @@
                         </div>
                         <small class="text-muted">Vence: {{ pago_cuota.cuota.fecha_vencimiento|date:"d/m/Y" }}</small>
                         <div class="progress mt-1" style="height: 4px;">
-                            {% with porcentaje=pago_cuota.monto_aplicado|div:pago_cuota.cuota.total_a_pagar|mul:100 %}
+                            {% widthratio pago_cuota.monto_aplicado pago_cuota.cuota.total_a_pagar 100 as porcentaje %}
                             <div class="progress-bar bg-success" role="progressbar" style="width: {{ porcentaje }}%" aria-valuenow="{{ porcentaje }}" aria-valuemin="0" aria-valuemax="100"></div>
-                            {% endwith %}
                         </div>
                     </div>
                     {% endfor %}

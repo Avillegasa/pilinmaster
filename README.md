@@ -1,412 +1,558 @@
-# Sistema de Administración de Condominios
+# 🏢 Sistema de Administración de Condominios
 
-Sistema web desarrollado con Django para la administración de condominios verticales (edificios).
+![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![SQLite](https://img.shields.io/badge/sqlite-%2307405e.svg?style=for-the-badge&logo=sqlite&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/bootstrap-%23563D7C.svg?style=for-the-badge&logo=bootstrap&logoColor=white)
 
-## Características
-
-- 🔐 **Gestión de Usuarios y Roles**: Control de acceso basado en roles (Administrador, Vigilante, Residente, Gerente)
-- 🏢 **Gestión de Viviendas**: Administración de edificios, departamentos y sus características
-- 👨‍👩‍👧‍👦 **Gestión de Residentes**: Registro de propietarios e inquilinos
-- 🚶‍♂️ **Control de Acceso**: Registro de entradas y salidas de residentes y visitantes
-- 📊 **Reportes**: Generación de informes en varios formatos
-
-## Requisitos
-
-- Python 3.8 o superior
-- Django 4.2 o superior
-- Otras dependencias en `requirements.txt`
-
-## Instalación
-
-1. Clonar el repositorio:
-   ```bash
-   git clone https://github.com/tu-usuario/condominio_app.git
-   cd condominio_app
-   ```
-
-2. Crear y activar entorno virtual:
-   ```bash
-   python -m venv venv
-   
-   # Windows
-   venv\Scripts\activate
-   
-   # Linux/Mac
-   source venv/bin/activate
-   ```
-
-3. Instalar dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Realizar migraciones:
-   ```bash
-   python manage.py makemigrations
-   python manage.py migrate
-   ```
-
-5. Ejecutar script de configuración inicial:
-   ```bash
-   python scripts/setup.py
-   ```
-
-6. Iniciar el servidor de desarrollo:
-   ```bash
-   python manage.py runserver
-   ```
-
-7. Acceder al sistema en http://127.0.0.1:8000/
-
-## Usuarios por defecto
-
-El script de configuración crea los siguientes usuarios:
-
-| Usuario    | Contraseña    | Rol          |
-|------------|---------------|--------------|
-| admin      | admin123      | Administrador|
-| vigilante  | vigilante123  | Vigilante    |
-| carlos     | carlos123     | Residente    |
-| maria      | maria123      | Residente    |
-| jorge      | jorge123      | Residente    |
-
-## Estructura del proyecto
-
-```
-condominio_app/
-├── condominio_app/      # Configuración principal del proyecto
-├── usuarios/            # Gestión de usuarios y roles
-├── viviendas/           # Gestión de edificios, viviendas y residentes
-├── accesos/             # Control de entradas y salidas
-├── reportes/            # Generación de informes
-├── static/              # Archivos estáticos (CSS, JS)
-├── media/               # Archivos subidos por los usuarios
-├── templates/           # Plantillas HTML
-├── scripts/             # Scripts de utilidad
-├── manage.py            # Script de gestión de Django
-└── requirements.txt     # Dependencias del proyecto
-```
-
-## Módulos principales
-
-### Usuarios
-- Gestión de perfiles de usuario
-- Control de roles y permisos
-- Autenticación y autorización
-
-### Viviendas
-- Gestión de edificios
-- Administración de viviendas/departamentos
-- Registro de residentes (propietarios e inquilinos)
-
-### Accesos
-- Registro de entradas y salidas de residentes
-- Control de visitas
-- Registro de vehículos
-
-### Reportes
-- Generación de informes sobre:
-  - Accesos al condominio
-  - Listados de residentes
-  - Estado de viviendas
-  - Informes financieros (futuro)
-
-## Personalización
-
-Para personalizar el sistema a las necesidades específicas de un condominio:
-
-1. Modificar los modelos en cada aplicación según sea necesario
-2. Actualizar las plantillas HTML para cambiar la apariencia
-3. Ajustar los permisos en las vistas para controlar el acceso
-4. Crear migraciones y aplicarlas a la base de datos
-
-## Contribución
-
-Si deseas contribuir a este proyecto:
-
-1. Haz un fork del repositorio
-2. Crea una nueva rama (`git checkout -b feature/nueva-caracteristica`)
-3. Haz commit de tus cambios (`git commit -m 'Agregar nueva característica'`)
-4. Haz push a la rama (`git push origin feature/nueva-caracteristica`)
-5. Abre un Pull Request
-
-## Configuración de la Autenticación con Google
-
-Para habilitar el inicio de sesión con Google en el sistema de administración de condominios, sigue estos pasos:
-
-## 1. Instalar Dependencias
-
-Primero, asegúrate de que todas las dependencias estén instaladas:
-
-```bash
-pip install -r requirements.txt
-```
-
-## 2. Crear un Proyecto en la Consola de Desarrolladores de Google
-
-1. Ve a la [Consola de Google Cloud](https://console.cloud.google.com/)
-2. Crea un nuevo proyecto o selecciona uno existente
-3. Ve a "APIs & Servicios" > "Credenciales"
-4. Haz clic en "Crear credenciales" y selecciona "ID de cliente OAuth"
-5. Configura la pantalla de consentimiento si se te solicita
-6. Para el tipo de aplicación, selecciona "Aplicación web"
-7. Pon un nombre descriptivo para tu aplicación
-8. En "Orígenes de JavaScript autorizados", agrega:
-   ```
-   http://localhost:8000
-   ```
-9. En "URIs de redirección autorizadas", agrega:
-   ```
-   http://localhost:8000/accounts/google/login/callback/
-   ```
-10. Haz clic en "Crear"
-11. Anota el "ID de cliente" y la "Clave secreta de cliente" que se te proporcionarán
-
-## 3. Configurar Django Allauth
-
-1. Ajusta las siguientes variables en `settings.py`:
-
-```python
-GOOGLE_CLIENT_ID = 'tu-client-id'  # Reemplaza con tu ID de cliente
-GOOGLE_SECRET = 'tu-secret-key'    # Reemplaza con tu clave secreta
-```
-
-2. Aplica las migraciones para crear las tablas necesarias:
-
-```bash
-python manage.py migrate
-```
-
-3. Crea un sitio en el admin de Django:
-   - Accede a http://localhost:8000/admin/
-   - Ve a "Sitios" y edita el sitio existente o crea uno nuevo
-   - Establece el "Nombre del dominio" como "localhost:8000"
-   - Establece el "Nombre visible" como "Torre Segura"
-
-4. Configura el proveedor de Google:
-   - En el admin de Django, ve a "Social Accounts" > "Social applications"
-   - Haz clic en "Añadir social application"
-   - Selecciona "Google" como proveedor
-   - Ingresa un nombre descriptivo (por ejemplo, "Google Login")
-   - Ingresa el ID de cliente y la clave secreta que obtuviste de Google
-   - Añade el sitio que creaste anteriormente al campo "Sitios disponibles"
-   - Guarda los cambios
-
-## 4. Ajustes Adicionales (Opcional)
-
-Para personalizar aún más la experiencia de inicio de sesión con Google, puedes modificar las siguientes configuraciones en `settings.py`:
-
-```python
-# Configuración de redes sociales
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-        'VERIFIED_EMAIL': True,
-        'EXCHANGE_TOKEN': True,
-        'LOCALE_FUNC': lambda request: 'es_MX',
-        'FIELDS': [
-            'id',
-            'email',
-            'name',
-            'first_name',
-            'last_name',
-            'verified',
-            'locale',
-            'picture',
-        ],
-    }
-}
-```
-
-## 5. Asociación de Cuentas
-
-Cuando un usuario inicia sesión con su cuenta de Google por primera vez, puedes:
-
-1. **Crear una nueva cuenta de usuario**: Django AllAuth creará automáticamente una cuenta de usuario con la información del perfil de Google.
-2. **Asociar con una cuenta existente**: Si deseas permitir que los usuarios asocien sus cuentas existentes con Google, asegúrate de tener habilitada la siguiente configuración:
-
-```python
-ACCOUNT_EMAIL_REQUIRED = True
-SOCIALACCOUNT_EMAIL_VERIFICATION = "none"
-SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_ADAPTER = 'usuarios.adapters.CustomSocialAccountAdapter'  # Opcional para personalizar el proceso
-```
-
-## 6. Configuración para Producción
-
-Cuando despliegues el sistema en producción, asegúrate de:
-
-1. Actualizar los "Orígenes de JavaScript autorizados" y "URIs de redirección autorizadas" en la Consola de Google Cloud con la URL de tu sitio en producción.
-2. Actualizar el objeto "Sitio" en el admin de Django con el dominio correcto.
-3. Usar variables de entorno para el ID de cliente y la clave secreta en lugar de codificarlos directamente en `settings.py`.
-
-```python
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID')
-GOOGLE_SECRET = os.environ.get('GOOGLE_SECRET')
-```
-
-## 7. Funcionamiento
-
-Una vez configurado, los usuarios podrán:
-
-1. Hacer clic en el botón "Iniciar sesión con Google" en la página de login
-2. Serán redirigidos a la pantalla de autenticación de Google
-3. Después de autenticarse, regresarán a la aplicación y serán redirigidos al dashboard o a la página de completar perfil para nuevos usuarios
-
-## 8. Solución de Problemas
-
-Si encuentras problemas durante la configuración, verifica:
-
-- Que las URIs de redirección sean exactamente las mismas en la Consola de Google y en tu configuración de Django
-- Que la API de Google People esté habilitada en tu proyecto de Google Cloud
-- Los registros de Django para mensajes de error específicos
-- La configuración de SITE_ID en settings.py coincide con el ID del sitio creado
-
-## SETUP PARA REPORTES
-
-# 📊 Módulo de Reportes - Guía de Instalación (Windows)
-
-Este módulo permite generar reportes dinámicos con filtros personalizados y exportación a PDF, Excel, CSV y HTML usando **WeasyPrint**.
+**Torre Segura** - Sistema web desarrollado con Django para la administración integral de condominios verticales (edificios). Solución completa que incluye gestión de residentes, control de accesos, módulo financiero y sistema de reportes avanzado.
 
 ---
 
-## ✅ Requisitos
+## 🌟 Características Principales
 
-- Python 3.10+ (recomendado: 3.12.x)
-- Git
-- VS Code o terminal
-- Acceso a internet
-- Windows 64 bits
+### 👥 Gestión de Usuarios y Roles
+- 🔐 Control de acceso basado en roles (Administrador, Vigilante, Residente, Gerente)
+- 👤 Perfiles personalizados por tipo de usuario
+- 🔄 Sistema de cambio de roles dinámico
+- 🌐 **Autenticación con Google** integrada
+
+### 🏠 Gestión de Viviendas
+- 🏢 Administración de edificios y sus características
+- 🏠 Gestión completa de departamentos/viviendas
+- 👨‍👩‍👧‍👦 Registro detallado de propietarios e inquilinos
+- 📊 Estados de vivienda (ocupada, vacía, en mantenimiento)
+
+### 🚪 Control de Accesos
+- ⏰ Registro de entradas y salidas en tiempo real
+- 👥 Control de visitantes con datos completos
+- 🚗 Registro de vehículos residentes y de visita
+- 📱 Interface optimizada para vigilantes
+
+### 💰 Módulo Financiero (¡NUEVO!)
+- 🧾 Gestión de cuotas de mantenimiento
+- 📈 Control de pagos y estados financieros
+- 🔔 Sistema de notificaciones de vencimientos
+- 📊 Reportes financieros detallados
+- 💳 Manejo de múltiples tipos de pago
+
+### 📊 Sistema de Reportes Avanzado
+- 📈 Generación de reportes dinámicos con filtros
+- 📄 Exportación múltiple: PDF, Excel, CSV, HTML
+- 📉 Gráficos interactivos y dashboards
+- 🔍 Filtros personalizables por módulo
 
 ---
 
-## 🧪 Clonar el proyecto
+## 💻 Requisitos del Sistema
 
+### Software Requerido
+- **Python**: 3.10+ (recomendado: 3.12.x)
+- **Django**: 4.2+
+- **Node.js**: (opcional, para desarrollo de frontend)
+- **Git**: Para control de versiones
+
+### Dependencias Principales
+- Django AllAuth (autenticación con Google)
+- WeasyPrint (generación de PDFs)
+- Pillow (manejo de imágenes)
+- django-crispy-forms (formularios estilizados)
+- python-decouple (variables de entorno)
+
+---
+
+## 🚀 Instalación Rápida
+
+### 1. Clonar el Repositorio
 ```bash
 git clone https://github.com/Avillegasa/pilinmaster.git
 cd pilinmaster/condominio_app
 ```
 
----
-
-## 📦 Crear entorno virtual
-
+### 2. Configurar Entorno Virtual
 ```bash
+# Crear entorno virtual
 python -m venv venv
+
+# Activar entorno virtual
+# Windows
 venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
 ```
 
----
-
-## 📥 Instalar dependencias
-
+### 3. Instalar Dependencias
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 🧱 Instalar GTK para WeasyPrint
-
-WeasyPrint necesita bibliotecas del sistema como `cairo`, `pango`, `gobject`.
-
-1. Descargar el instalador GTK desde:  
-   🔹 [https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases)
-
-2. Instalar `gtk3-runtime-*.exe` en:  
-   ```
-   C:\Program Files\GTK3-Runtime Win64
-   ```
-
-3. Agregar al **PATH del sistema**:
-
-   ```
-   C:\Program Files\GTK3-Runtime Win64\bin
-   ```
-
-4. Reiniciar VSCode o terminal.
-
-5. Verificar con:
-
-   ```bash
-   where gobject-2.0-0.dll
-   ```
-
-   ✅ Si aparece la ruta, todo está correcto.
-
----
-
-## 🧹 Compatibilidad entre versiones
-
-Si hay errores con `pydyf`:
-
+### 4. Configuración de Base de Datos
 ```bash
-pip install WeasyPrint==60.0
-pip install pydyf==0.8.0
+# Crear migraciones
+python manage.py makemigrations
+
+# Aplicar migraciones
+python manage.py migrate
+
+# Cargar datos iniciales
+python scripts/setup.py
 ```
 
----
-
-## 📄 Migraciones y superusuario
-
+### 5. Crear Superusuario
 ```bash
-python manage.py makemigrations
-python manage.py migrate
 python manage.py createsuperuser
 ```
 
----
-
-## 🚀 Correr el servidor
-
+### 6. Iniciar Servidor de Desarrollo
 ```bash
 python manage.py runserver
 ```
 
-Accede a: [http://127.0.0.1:8000/reportes/](http://127.0.0.1:8000/reportes/)
+**🌐 Acceder al sistema**: http://127.0.0.1:8000/
 
 ---
 
-## 🛠 Filtro `get_item` en templates
+## 👤 Usuarios por Defecto
 
-Agregar el filtro a `reportes/templatetags/dict_extras.py`:
+El script de configuración crea los siguientes usuarios de prueba:
+
+| 👤 Usuario    | 🔑 Contraseña | 🎭 Rol          | 📧 Email                    |
+|---------------|---------------|-----------------|----------------------------|
+| admin         | admin123      | Administrador   | admin@torresegura.com      |
+| vigilante     | vigilante123  | Vigilante       | vigilante@torresegura.com  |
+| gerente       | gerente123    | Gerente         | gerente@torresegura.com    |
+| carlos        | carlos123     | Residente       | carlos@torresegura.com     |
+| maria         | maria123      | Residente       | maria@torresegura.com      |
+| jorge         | jorge123      | Residente       | jorge@torresegura.com      |
+
+> **💡 Importante**: Cambia estas contraseñas antes del despliegue en producción.
+
+---
+
+## 📁 Estructura del Proyecto
+
+```
+condominio_app/
+│
+├── 📁 condominio_app/           # Configuración principal del proyecto
+│   ├── settings.py              # Configuraciones del proyecto
+│   ├── urls.py                  # URLs principales
+│   └── wsgi.py                  # Configuración WSGI
+│
+├── 📁 usuarios/                 # 👥 Gestión de usuarios y roles
+│   ├── models.py                # Modelos de usuario y perfiles
+│   ├── views.py                 # Vistas de autenticación
+│   └── adapters.py              # Adaptadores para OAuth
+│
+├── 📁 viviendas/                # 🏠 Gestión de edificios y viviendas
+│   ├── models.py                # Modelos de edificios y residentes
+│   ├── views.py                 # Vistas de gestión
+│   └── admin.py                 # Configuración del admin
+│
+├── 📁 accesos/                  # 🚪 Control de entradas y salidas
+│   ├── models.py                # Modelos de acceso y visitas
+│   ├── views.py                 # Vistas de control
+│   └── forms.py                 # Formularios de registro
+│
+├── 📁 financiero/               # 💰 Módulo financiero (NUEVO)
+│   ├── models.py                # Modelos de pagos y cuotas
+│   ├── views.py                 # Vistas financieras
+│   ├── forms.py                 # Formularios de pago
+│   └── utils.py                 # Utilidades de cálculo
+│
+├── 📁 reportes/                 # 📊 Sistema de reportes
+│   ├── models.py                # Modelos de reportes
+│   ├── views.py                 # Vistas de generación
+│   ├── utils.py                 # Utilidades para reportes
+│   └── templatetags/            # Filtros personalizados
+│
+├── 📁 templates/                # 🎨 Plantillas HTML
+│   ├── base/                    # Plantillas base
+│   ├── usuarios/                # Templates de usuarios
+│   ├── viviendas/               # Templates de viviendas
+│   ├── accesos/                 # Templates de accesos
+│   ├── financiero/              # Templates financieros
+│   └── reportes/                # Templates de reportes
+│
+├── 📁 static/                   # 🎨 Archivos estáticos
+│   ├── css/                     # Estilos CSS personalizados
+│   ├── js/                      # JavaScript personalizado
+│   └── img/                     # Imágenes del sistema
+│
+├── 📁 media/                    # 📂 Archivos subidos
+│   ├── profiles/                # Fotos de perfil
+│   └── documents/               # Documentos varios
+│
+├── 📁 scripts/                  # 🔧 Scripts de utilidad
+│   └── setup.py                 # Script de configuración inicial
+│
+├── manage.py                    # 🚀 Script de gestión de Django
+├── requirements.txt             # 📦 Dependencias del proyecto
+├── .env.example                 # 🔧 Variables de entorno ejemplo
+└── README.md                    # 📚 Documentación (este archivo)
+```
+
+---
+
+## 🔧 Configuración Avanzada
+
+### 🔐 Autenticación con Google
+
+Para habilitar el inicio de sesión con Google:
+
+#### 1. Crear Proyecto en Google Cloud Console
+
+1. Ve a [Google Cloud Console](https://console.cloud.google.com/)
+2. Crea un nuevo proyecto o selecciona uno existente
+3. Navega a "APIs & Services" > "Credentials"
+4. Crea credenciales OAuth 2.0
+
+#### 2. Configurar URLs Autorizadas
+
+En la configuración de OAuth, añade:
+
+**Orígenes autorizados:**
+```
+http://localhost:8000
+https://tu-dominio.com  # Para producción
+```
+
+**URIs de redirección:**
+```
+http://localhost:8000/accounts/google/login/callback/
+https://tu-dominio.com/accounts/google/login/callback/  # Para producción
+```
+
+#### 3. Configurar Variables de Entorno
+
+Crea un archivo `.env` basado en `.env.example`:
+
+```bash
+# Configuración de Google OAuth
+GOOGLE_CLIENT_ID=tu-client-id-aqui
+GOOGLE_SECRET=tu-secret-key-aqui
+
+# Configuración de base de datos
+DATABASE_URL=sqlite:///db.sqlite3
+
+# Configuración de seguridad
+SECRET_KEY=tu-secret-key-django
+DEBUG=True
+```
+
+#### 4. Configurar en Django Admin
+
+1. Accede al admin: http://localhost:8000/admin/
+2. Ve a "Sites" y configura:
+   - Domain: `localhost:8000` (desarrollo) o `tu-dominio.com` (producción)
+   - Display name: `Torre Segura`
+3. Ve a "Social Applications" y crea una nueva aplicación:
+   - Provider: Google
+   - Name: Google Login
+   - Client ID: (del paso 1)
+   - Secret key: (del paso 1)
+   - Sites: Selecciona el sitio creado
+
+---
+
+### 📊 Configuración de Reportes con WeasyPrint
+
+#### Instalación de GTK (Windows)
+
+1. Descarga el instalador GTK desde:
+   [GTK for Windows](https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases)
+
+2. Instala en: `C:\Program Files\GTK3-Runtime Win64`
+
+3. Añade al PATH del sistema:
+   ```
+   C:\Program Files\GTK3-Runtime Win64\bin
+   ```
+
+4. Reinicia tu terminal/IDE
+
+5. Verifica la instalación:
+   ```bash
+   where gobject-2.0-0.dll
+   ```
+
+#### Configuración Alternativa para Linux
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install python3-dev python3-pip python3-cffi libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info
+
+# CentOS/RHEL
+sudo yum install python3-devel python3-pip python3-cffi cairo pango gdk-pixbuf2
+```
+
+---
+
+## 🎯 Funcionalidades por Módulo
+
+### 👥 Módulo de Usuarios
+- ✅ Registro y autenticación local
+- ✅ Integración con Google OAuth
+- ✅ Gestión de perfiles por rol
+- ✅ Sistema de permisos granular
+- ✅ Cambio de contraseñas
+- ✅ Recuperación de cuentas
+
+### 🏠 Módulo de Viviendas
+- ✅ CRUD completo de edificios
+- ✅ Gestión de viviendas/departamentos
+- ✅ Registro de propietarios/inquilinos
+- ✅ Historial de cambios
+- ✅ Estados de ocupación
+- ✅ Búsqueda y filtros avanzados
+
+### 🚪 Módulo de Accesos
+- ✅ Registro de entradas/salidas
+- ✅ Control de visitantes
+- ✅ Gestión de vehículos
+- ✅ Notificaciones automáticas
+- ✅ Reportes de acceso
+- ✅ Interface móvil-friendly
+
+### 💰 Módulo Financiero
+- ✅ Gestión de cuotas mensuales
+- ✅ Control de pagos
+- ✅ Estados de cuenta
+- ✅ Generación de recibos
+- ✅ Notificaciones de vencimiento
+- ✅ Reportes financieros
+- ✅ Dashboard de ingresos
+
+### 📊 Módulo de Reportes
+- ✅ Reportes dinámicos con filtros
+- ✅ Exportación múltiple (PDF/Excel/CSV/HTML)
+- ✅ Gráficos interactivos
+- ✅ Dashboards por módulo
+- ✅ Programación de reportes
+- ✅ Plantillas personalizables
+
+---
+
+## 🔒 Configuración de Seguridad
+
+### Variables de Entorno Importantes
+
+```bash
+# Seguridad
+SECRET_KEY=tu-clave-secreta-muy-larga-y-compleja
+DEBUG=False
+ALLOWED_HOSTS=localhost,127.0.0.1,tu-dominio.com
+
+# Base de Datos
+DATABASE_URL=postgresql://usuario:password@host:puerto/basededatos
+
+# Email (para notificaciones)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=tu-email@gmail.com
+EMAIL_HOST_PASSWORD=tu-app-password
+
+# Almacenamiento en la nube (opcional)
+AWS_ACCESS_KEY_ID=tu-access-key
+AWS_SECRET_ACCESS_KEY=tu-secret-key
+AWS_STORAGE_BUCKET_NAME=tu-bucket
+```
+
+### Configuraciones Recomendadas para Producción
 
 ```python
-from django import template
-register = template.Library()
-
-@register.filter
-def get_item(dictionary, key):
-    return dictionary.get(key)
-```
-
-Asegúrate de tener también `__init__.py` en esa carpeta.  
-Y en la plantilla `reporte_list.html`, cargarlo con:
-
-```django
-{% load dict_extras %}
+# settings.py para producción
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 ```
 
 ---
 
-## ✅ Verificación final
+## 🚀 Despliegue
 
-- ✅ Visualización y exportación de reportes
-- ✅ Filtros por edificio, estado, tipo
-- ✅ Exportación PDF/Excel/CSV/HTML
-- ✅ Gráficos y tablas dinámicas
+### Opción 1: Heroku
+
+```bash
+# Instalar Heroku CLI
+# Crear archivo Procfile
+echo "web: gunicorn condominio_app.wsgi" > Procfile
+
+# Configurar Heroku
+heroku create tu-app-name
+heroku config:set SECRET_KEY=tu-secret-key
+heroku config:set DEBUG=False
+heroku addons:create heroku-postgresql:hobby-dev
+
+# Desplegar
+git push heroku main
+heroku run python manage.py migrate
+heroku run python scripts/setup.py
+```
+
+### Opción 2: VPS con Docker
+
+```dockerfile
+# Dockerfile
+FROM python:3.12
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["gunicorn", "condominio_app.wsgi:application", "--bind", "0.0.0.0:8000"]
+```
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=tu-secret-key
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: condominio
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
 
 ---
 
-## 📌 Recomendaciones
+## 🧪 Testing
 
-- Cambiar SQLite por PostgreSQL en producción
-- Usar Linux + Gunicorn + Nginx para despliegue
-- Agregar permisos de escritura si se generan PDFs en disco
+### Ejecutar Tests
+```bash
+# Todos los tests
+python manage.py test
 
+# Tests específicos por app
+python manage.py test usuarios
+python manage.py test viviendas
+python manage.py test accesos
+python manage.py test financiero
+python manage.py test reportes
+
+# Tests con coverage
+pip install coverage
+coverage run --source='.' manage.py test
+coverage report
+coverage html
+```
+
+### Tests Incluidos
+- ✅ Tests unitarios para modelos
+- ✅ Tests de vistas y formularios
+- ✅ Tests de autenticación
+- ✅ Tests de permisos
+- ✅ Tests de integración
+
+---
+
+## 🤝 Contribución
+
+### Flujo de Contribución
+
+1. **Fork** el repositorio
+2. **Crea** una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. **Commit** tus cambios (`git commit -m 'Agrega nueva funcionalidad'`)
+4. **Push** a la rama (`git push origin feature/nueva-funcionalidad`)
+5. **Abre** un Pull Request
+
+### Estándares de Código
+
+- **PEP 8** para Python
+- **Documentación** en español
+- **Tests** para nuevas funcionalidades
+- **Variables** en español
+- **Commits** descriptivos
+
+### Reportar Bugs
+
+1. Verifica que el bug no esté ya reportado
+2. Crea un issue con:
+   - Descripción clara del problema
+   - Pasos para reproducir
+   - Comportamiento esperado vs actual
+   - Screenshots si es necesario
+   - Información del entorno
+
+---
+
+## 📚 Documentación Adicional
+
+### APIs Disponibles
+- **REST API** para integración móvil (en desarrollo)
+- **Webhooks** para notificaciones externas
+- **GraphQL** endpoint (plannificado)
+
+### Integraciones
+- 📱 **Aplicación móvil** (en desarrollo)
+- 🔔 **Notificaciones push**
+- 📧 **Sistema de emails automáticos**
+- 📊 **Integración con Google Analytics**
+
+### Roadmap
+- [ ] Módulo de reservas de áreas comunes
+- [ ] Sistema de tickets/soporte
+- [ ] Chat interno entre residentes
+- [ ] Integración con sistemas de domótica
+- [ ] App móvil nativa
+- [ ] Dashboard ejecutivo avanzado
+
+---
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
+
+---
+
+## 👨‍💻 Desarrollado por
+
+**Avillegasa** - [GitHub](https://github.com/Avillegasa)
+
+---
+
+## 🆘 Soporte
+
+¿Necesitas ayuda? 
+
+- 📧 **Email**: soporte@torresegura.com
+- 🐛 **Reportar bug**: [Issues](https://github.com/Avillegasa/pilinmaster/issues)
+- 💬 **Discusiones**: [Discussions](https://github.com/Avillegasa/pilinmaster/discussions)
+- 📖 **Wiki**: [Documentación completa](https://github.com/Avillegasa/pilinmaster/wiki)
+
+---
+
+<div align="center">
+
+### ⭐ Si te gusta este proyecto, ¡dale una estrella! ⭐
+
+**Torre Segura - Sistema Integral de Gestión de Condominios**
+
+*Desarrollado con ❤️ por la comunidad*
+
+![GitHub stars](https://img.shields.io/github/stars/Avillegasa/pilinmaster?style=social)
+![GitHub forks](https://img.shields.io/github/forks/Avillegasa/pilinmaster?style=social)
+
+</div>

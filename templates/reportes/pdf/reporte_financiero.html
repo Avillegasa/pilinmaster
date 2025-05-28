@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte Financiero - {{ reporte.nombre }}</title>
+</head>
+<body>
+    <div style="display: flex; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 30px;">
+        <img src="file://{{ logo_path }}" alt="Logo" style="height: 60px; margin-right: 20px;">
+        <div>
+            <h1 style="margin: 0; color: #007bff;">{{ reporte.nombre }}</h1>
+            <span style="font-size: 1.2em; color: #555;">{{ reporte.get_tipo_display }}</span>
+        </div>
+    </div>
+    <div class="header">
+        <div class="subtitulo">Reporte Financiero</div>
+        <div class="fecha">
+            Período: {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}<br>
+            Generado el: {{ fecha_generacion|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+    <div class="resumen">
+        <h3>Resumen Estadístico</h3>
+        <table class="resumen-table">
+            <tr>
+                <td><strong>Total ingresos:</strong></td>
+                <td>{{ total_ingresos }}</td>
+                <td><strong>Total egresos:</strong></td>
+                <td>{{ total_egresos }}</td>
+                <td><strong>Balance:</strong></td>
+                <td>{{ balance }}</td>
+            </tr>
+        </table>
+    </div>
+    <div style="text-align:center; margin-bottom: 30px;">
+        <img src="{{ grafico1 }}" style="max-width: 350px; margin: 0 10px;">
+        <img src="{{ grafico2 }}" style="max-width: 350px; margin: 0 10px;">
+    </div>
+    <div class="datos">
+        <h3>Detalle Financiero</h3>
+        <table style="width:100%; border-collapse:collapse; margin-bottom: 30px;">
+            <thead>
+                <tr style="background: #007bff; color: #fff;">
+                    <th style="padding: 8px;">Fecha</th>
+                    <th style="padding: 8px;">Concepto</th>
+                    <th style="padding: 8px;">Tipo</th>
+                    <th style="padding: 8px;">Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for movimiento in movimientos %}
+                <tr>
+                    <td>{{ movimiento.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ movimiento.concepto }}</td>
+                    <td>{{ movimiento.get_tipo_display }}</td>
+                    <td>${{ movimiento.monto|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center;">No hay movimientos en este período</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="pie-pagina">
+        Torre Segura - Sistema de Administración de Condominios - Página <span class="pagina"></span>
+    </div>
+</body>
+</html>

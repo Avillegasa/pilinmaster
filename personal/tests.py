@@ -41,6 +41,12 @@ class EmpleadoModelTest(TestCase):
             requiere_especializacion=True
         )
         
+        # Crear rol
+        self.rol = Rol.objects.create(
+            nombre='Empleado',
+            descripcion='Rol de empleado'
+        )
+        
         # Crear usuario
         User = get_user_model()
         self.usuario = User.objects.create_user(
@@ -48,7 +54,8 @@ class EmpleadoModelTest(TestCase):
             email='empleado@example.com',
             password='password',
             first_name='Pedro',
-            last_name='García'
+            last_name='García',
+            rol=self.rol
         )
         
         # Crear empleado
@@ -106,6 +113,12 @@ class AsignacionModelTest(TestCase):
     """
     
     def setUp(self):
+        # Crear rol
+        self.rol = Rol.objects.create(
+            nombre='Administrador',
+            descripcion='Administrador del sistema'
+        )
+        
         # Crear puesto y empleado
         self.puesto = Puesto.objects.create(
             nombre='Mantenimiento',
@@ -119,7 +132,8 @@ class AsignacionModelTest(TestCase):
             email='empleado@example.com',
             password='password',
             first_name='Pedro',
-            last_name='García'
+            last_name='García',
+            rol=self.rol
         )
         
         self.empleado = Empleado.objects.create(
@@ -147,27 +161,25 @@ class AsignacionModelTest(TestCase):
         )
         
         # Crear usuario administrador
-        self.rol_admin = Rol.objects.create(nombre='Administrador', descripcion='Administrador del sistema')
-        
         self.admin_user = User.objects.create_user(
             username='admin',
             email='admin@example.com',
             password='adminpassword',
-            rol=self.rol_admin
+            rol=self.rol
         )
         
-        # Crear asignación
+        # ✅ CORRECCIÓN: Crear asignación con fecha_fin para tipo TAREA
         self.fecha_asignacion = timezone.now().date()
         self.fecha_inicio = self.fecha_asignacion
         self.fecha_fin = self.fecha_asignacion + timedelta(days=5)
         
         self.asignacion = Asignacion.objects.create(
             empleado=self.empleado,
-            tipo='TAREA',
+            tipo='TAREA',  # Para TAREA necesita fecha_fin
             titulo='Reparación de goteras',
             descripcion='Revisar y reparar goteras en el baño',
             fecha_inicio=self.fecha_inicio,
-            fecha_fin=self.fecha_fin,
+            fecha_fin=self.fecha_fin,  # ✅ CORRECCIÓN: Agregada fecha_fin
             edificio=self.edificio,
             vivienda=self.vivienda,
             estado='PENDIENTE',
@@ -195,6 +207,24 @@ class AsignacionModelTest(TestCase):
         """Verificar que el método __str__ funciona correctamente"""
         expected_str = f"Reparación de goteras - {self.empleado}"
         self.assertEqual(str(self.asignacion), expected_str)
+    
+    def test_asignacion_responsabilidad_sin_fecha_fin(self):
+        """Verificar que una responsabilidad puede crearse sin fecha_fin"""
+        responsabilidad = Asignacion.objects.create(
+            empleado=self.empleado,
+            tipo='RESPONSABILIDAD',  # RESPONSABILIDAD no requiere fecha_fin
+            titulo='Limpieza general',
+            descripcion='Mantener limpio el edificio',
+            fecha_inicio=timezone.now().date(),
+            # Sin fecha_fin - esto debe funcionar para RESPONSABILIDAD
+            edificio=self.edificio,
+            estado='PENDIENTE',
+            prioridad=2,
+            asignado_por=self.admin_user
+        )
+        
+        self.assertEqual(responsabilidad.tipo, 'RESPONSABILIDAD')
+        self.assertIsNone(responsabilidad.fecha_fin)
 
 class ComentarioAsignacionModelTest(TestCase):
     """
@@ -202,6 +232,12 @@ class ComentarioAsignacionModelTest(TestCase):
     """
     
     def setUp(self):
+        # Crear rol
+        self.rol = Rol.objects.create(
+            nombre='Administrador',
+            descripcion='Administrador del sistema'
+        )
+        
         # Crear puesto y empleado
         self.puesto = Puesto.objects.create(
             nombre='Mantenimiento',
@@ -215,7 +251,8 @@ class ComentarioAsignacionModelTest(TestCase):
             email='empleado@example.com',
             password='password',
             first_name='Pedro',
-            last_name='García'
+            last_name='García',
+            rol=self.rol
         )
         
         self.empleado = Empleado.objects.create(
@@ -234,19 +271,17 @@ class ComentarioAsignacionModelTest(TestCase):
         )
         
         # Crear usuario administrador
-        self.rol_admin = Rol.objects.create(nombre='Administrador', descripcion='Administrador del sistema')
-        
         self.admin_user = User.objects.create_user(
             username='admin',
             email='admin@example.com',
             password='adminpassword',
-            rol=self.rol_admin
+            rol=self.rol
         )
         
-        # Crear asignación
+        # ✅ CORRECCIÓN: Crear asignación correcta
         self.asignacion = Asignacion.objects.create(
             empleado=self.empleado,
-            tipo='TAREA',
+            tipo='RESPONSABILIDAD',  # ✅ CORRECCIÓN: Usar RESPONSABILIDAD que no requiere fecha_fin
             titulo='Revisión general',
             descripcion='Revisión de instalaciones',
             fecha_inicio=timezone.now().date(),
@@ -414,7 +449,8 @@ class EmpleadoViewsTest(TestCase):
             email='empleado@example.com',
             password='password',
             first_name='Pedro',
-            last_name='García'
+            last_name='García',
+            rol=self.rol_normal
         )
         
         # Crear puesto
@@ -505,7 +541,8 @@ class AsignacionViewsTest(TestCase):
             email='empleado@example.com',
             password='password',
             first_name='Pedro',
-            last_name='García'
+            last_name='García',
+            rol=self.rol_admin
         )
         
         # Crear puesto
@@ -540,10 +577,10 @@ class AsignacionViewsTest(TestCase):
             baños=1
         )
         
-        # Crear asignación
+        # ✅ CORRECCIÓN: Crear asignación correcta para tests
         self.asignacion = Asignacion.objects.create(
             empleado=self.empleado,
-            tipo='TAREA',
+            tipo='RESPONSABILIDAD',  # ✅ CORRECCIÓN: Usar RESPONSABILIDAD que no requiere fecha_fin
             titulo='Revisión general',
             descripcion='Revisión de instalaciones',
             fecha_inicio=timezone.now().date(),

@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-from . import api
 
 urlpatterns = [
     # Vistas de puestos
@@ -23,6 +22,6 @@ urlpatterns = [
     path('asignaciones/<int:pk>/editar/', views.AsignacionUpdateView.as_view(), name='asignacion-update'),
     path('asignaciones/<int:pk>/estado/', views.cambiar_estado_asignacion, name='cambiar-estado-asignacion'),
     
-    # API endpoints
-    path('api/edificio/<int:edificio_id>/viviendas/', api.viviendas_por_edificio, name='api-personal-viviendas-por-edificio'),
+    # ✅ CORRECCIÓN: API endpoints corregidos
+    path('api/viviendas-por-edificio/', views.viviendas_por_edificio_api, name='api-viviendas-por-edificio'),
 ]

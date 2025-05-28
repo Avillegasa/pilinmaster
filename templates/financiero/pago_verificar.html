@@ -1,0 +1,67 @@
+<!-- templates/financiero/pago_verificar.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verificar Pago | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Verificar Pago #{{ pago.id }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Confirmar Verificación de Pago</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Información:</strong> Al verificar este pago, se aplicará automáticamente a las cuotas correspondientes y se actualizará el estado de las mismas.
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Monto:</h6>
+                        <p class="fs-5 fw-bold text-success">${{ pago.monto|floatformat:2 }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Fecha:</h6>
+                        <p>{{ pago.fecha_pago|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Vivienda:</h6>
+                        <p>{{ pago.vivienda.numero }} - {{ pago.vivienda.edificio.nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Método:</h6>
+                        <p>{{ pago.get_metodo_pago_display }}</p>
+                    </div>
+                </div>
+                
+                {% if pago.referencia %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Referencia:</h6>
+                        <p>{{ pago.referencia }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'pago-detail' pago.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Confirmar Verificación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

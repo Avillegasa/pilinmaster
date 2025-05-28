@@ -30,8 +30,8 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Tipo de Asignación</label>
-                            <p class="form-control">
+                            <label class="form-label fw-bold">Tipo de Asignación</label>
+                            <p class="form-control-plaintext">
                                 {% if asignacion.tipo == 'TAREA' %}
                                     <span class="badge bg-secondary">Tarea puntual</span>
                                 {% else %}
@@ -42,12 +42,13 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Asignado a</label>
-                            <p class="form-control">
-                                <a href="{% url 'empleado-detail' asignacion.empleado.id %}">
+                            <label class="form-label fw-bold">Asignado a</label>
+                            <p class="form-control-plaintext">
+                                <a href="{% url 'empleado-detail' asignacion.empleado.id %}" class="text-decoration-none">
+                                    <i class="fas fa-user me-1"></i>
                                     {{ asignacion.empleado.usuario.first_name }} {{ asignacion.empleado.usuario.last_name }}
                                 </a>
-                                <span class="text-muted">({{ asignacion.empleado.puesto.nombre }})</span>
+                                <br><small class="text-muted">({{ asignacion.empleado.puesto.nombre }})</small>
                             </p>
                         </div>
                     </div>
@@ -56,14 +57,24 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Fecha de Inicio</label>
-                            <p class="form-control">{{ asignacion.fecha_inicio|date:"d/m/Y" }}</p>
+                            <label class="form-label fw-bold">Fecha de Inicio</label>
+                            <p class="form-control-plaintext">
+                                <i class="fas fa-calendar-alt me-1 text-success"></i>
+                                {{ asignacion.fecha_inicio|date:"d/m/Y" }}
+                            </p>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Fecha de Fin</label>
-                            <p class="form-control">{{ asignacion.fecha_fin|date:"d/m/Y"|default:"No especificada" }}</p>
+                            <label class="form-label fw-bold">Fecha de Fin</label>
+                            <p class="form-control-plaintext">
+                                {% if asignacion.fecha_fin %}
+                                    <i class="fas fa-calendar-times me-1 text-danger"></i>
+                                    {{ asignacion.fecha_fin|date:"d/m/Y" }}
+                                {% else %}
+                                    <span class="text-muted">No especificada</span>
+                                {% endif %}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -71,10 +82,11 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Edificio</label>
-                            <p class="form-control">
+                            <label class="form-label fw-bold">Edificio</label>
+                            <p class="form-control-plaintext">
                                 {% if asignacion.edificio %}
-                                    <a href="{% url 'edificio-detail' asignacion.edificio.id %}">
+                                    <a href="{% url 'edificio-detail' asignacion.edificio.id %}" class="text-decoration-none">
+                                        <i class="fas fa-building me-1"></i>
                                         {{ asignacion.edificio.nombre }}
                                     </a>
                                 {% else %}
@@ -85,10 +97,11 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Vivienda</label>
-                            <p class="form-control">
+                            <label class="form-label fw-bold">Vivienda</label>
+                            <p class="form-control-plaintext">
                                 {% if asignacion.vivienda %}
-                                    <a href="{% url 'vivienda-detail' asignacion.vivienda.id %}">
+                                    <a href="{% url 'vivienda-detail' asignacion.vivienda.id %}" class="text-decoration-none">
+                                        <i class="fas fa-home me-1"></i>
                                         {{ asignacion.vivienda.numero }} (Piso {{ asignacion.vivienda.piso }})
                                     </a>
                                 {% else %}
@@ -100,47 +113,58 @@
                 </div>
                 
                 <div class="form-group mb-3">
-                    <label class="form-label">Descripción</label>
-                    <div class="form-control" style="min-height: 100px; white-space: pre-wrap;">{{ asignacion.descripcion }}</div>
+                    <label class="form-label fw-bold">Descripción</label>
+                    <div class="border rounded p-3 bg-light" style="min-height: 100px; white-space: pre-wrap;">{{ asignacion.descripcion }}</div>
                 </div>
                 
                 {% if asignacion.notas %}
                 <div class="form-group mb-3">
-                    <label class="form-label">Notas Adicionales</label>
-                    <div class="form-control" style="min-height: 80px; white-space: pre-wrap;">{{ asignacion.notas }}</div>
+                    <label class="form-label fw-bold">Notas Adicionales</label>
+                    <div class="border rounded p-3 bg-light" style="min-height: 80px; white-space: pre-wrap;">{{ asignacion.notas }}</div>
                 </div>
                 {% endif %}
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Asignado por</label>
-                            <p class="form-control">
+                            <label class="form-label fw-bold">Asignado por</label>
+                            <p class="form-control-plaintext">
+                                <i class="fas fa-user-tie me-1"></i>
                                 {{ asignacion.asignado_por.first_name }} {{ asignacion.asignado_por.last_name }}
-                                <span class="text-muted">({{ asignacion.asignado_por.rol.nombre }})</span>
+                                <br><small class="text-muted">({{ asignacion.asignado_por.rol.nombre }})</small>
                             </p>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label">Fecha de Asignación</label>
-                            <p class="form-control">{{ asignacion.fecha_asignacion|date:"d/m/Y" }}</p>
+                            <label class="form-label fw-bold">Fecha de Asignación</label>
+                            <p class="form-control-plaintext">
+                                <i class="fas fa-clock me-1 text-info"></i>
+                                {{ asignacion.fecha_asignacion|date:"d/m/Y" }}
+                            </p>
                         </div>
                     </div>
                 </div>
                 
+                <!-- ✅ CORRECCIÓN: Verificación de permisos para botones de acción -->
                 <div class="d-flex justify-content-between mt-4">
                     <a href="{% url 'asignacion-list' %}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Volver a la lista
                     </a>
+                    
+                    {% if user.rol.nombre == 'Administrador' or user.empleado == asignacion.empleado %}
                     <div>
-                        <a href="{% url 'asignacion-update' asignacion.id %}" class="btn btn-warning">
-                            <i class="fas fa-edit"></i> Editar
-                        </a>
+                        {% if user.rol.nombre == 'Administrador' %}
+                            <a href="{% url 'asignacion-update' asignacion.id %}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                        {% endif %}
+                        
                         <a href="{% url 'cambiar-estado-asignacion' asignacion.id %}" class="btn btn-success">
                             <i class="fas fa-exchange-alt"></i> Cambiar Estado
                         </a>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -153,15 +177,27 @@
                 <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> Estado de la Asignación</h5>
             </div>
             <div class="card-body">
+                <!-- ✅ CORRECCIÓN: Solo mostrar formulario de cambio de estado si tiene permisos -->
+                {% if user.rol.nombre == 'Administrador' or user.empleado == asignacion.empleado %}
                 <form method="post" action="{% url 'cambiar-estado-asignacion' asignacion.id %}">
                     {% csrf_token %}
                     <div class="mb-3">
                         <label for="estado" class="form-label">Cambiar estado:</label>
                         <select name="estado" id="estado" class="form-select">
                             {% for estado_value, estado_name in asignacion.ESTADOS %}
-                                <option value="{{ estado_value }}" {% if asignacion.estado == estado_value %}selected{% endif %}>
-                                    {{ estado_name }}
-                                </option>
+                                {% comment %} ✅ CORRECCIÓN: Restricciones por rol {% endcomment %}
+                                {% if user.rol.nombre == 'Administrador' %}
+                                    <option value="{{ estado_value }}" {% if asignacion.estado == estado_value %}selected{% endif %}>
+                                        {{ estado_name }}
+                                    </option>
+                                {% else %}
+                                    {% comment %} Empleados solo pueden cambiar entre EN_PROGRESO y COMPLETADA {% endcomment %}
+                                    {% if estado_value == 'EN_PROGRESO' or estado_value == 'COMPLETADA' %}
+                                        <option value="{{ estado_value }}" {% if asignacion.estado == estado_value %}selected{% endif %}>
+                                            {{ estado_name }}
+                                        </option>
+                                    {% endif %}
+                                {% endif %}
                             {% endfor %}
                         </select>
                     </div>
@@ -171,6 +207,7 @@
                         </button>
                     </div>
                 </form>
+                {% endif %}
                 
                 <div class="alert {% if asignacion.estado == 'PENDIENTE' %}alert-warning{% elif asignacion.estado == 'EN_PROGRESO' %}alert-info{% elif asignacion.estado == 'COMPLETADA' %}alert-success{% else %}alert-danger{% endif %} mt-3">
                     <div class="d-flex align-items-center">
@@ -202,6 +239,8 @@
                 <h5 class="mb-0"><i class="fas fa-comments"></i> Comentarios</h5>
             </div>
             <div class="card-body">
+                <!-- ✅ CORRECCIÓN: Solo mostrar formulario si está logueado y tiene acceso -->
+                {% if user.is_authenticated %}
                 <form method="post" action="{% url 'asignacion-detail' asignacion.id %}">
                     {% csrf_token %}
                     {{ comentario_form|crispy }}
@@ -213,6 +252,7 @@
                 </form>
                 
                 <hr>
+                {% endif %}
                 
                 <div class="comentarios-container" style="max-height: 400px; overflow-y: auto;">
                     {% for comentario in comentarios %}
@@ -226,7 +266,12 @@
                                         <i class="fas fa-user"></i>
                                     </div>
                                 {% endif %}
-                                <span class="fw-bold">{{ comentario.usuario.first_name }} {{ comentario.usuario.last_name }}</span>
+                                <div>
+                                    <span class="fw-bold">{{ comentario.usuario.first_name }} {{ comentario.usuario.last_name }}</span>
+                                    {% if comentario.usuario.rol %}
+                                        <small class="text-muted d-block">({{ comentario.usuario.rol.nombre }})</small>
+                                    {% endif %}
+                                </div>
                             </div>
                             <small class="text-muted">{{ comentario.fecha|date:"d/m/Y H:i" }}</small>
                         </div>
