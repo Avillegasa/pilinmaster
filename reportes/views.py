@@ -14,6 +14,7 @@ import io
 import base64
 import os
 from django.conf import settings
+from django.contrib import messages
 
 class ReporteListView(ListView):
     model = Reporte
@@ -504,3 +505,151 @@ def generar_grafico_barras(labels, values, titulo):
     buf.seek(0)
     image_base64 = base64.b64encode(buf.read()).decode('utf-8')
     return f'data:image/png;base64,{image_base64}'
+
+def reporte_exportar(request, pk):
+    """Vista para exportar reporte en el formato seleccionado"""
+    if request.method != 'POST':
+        return redirect('reporte-preview', pk=pk)
+    
+    reporte = get_object_or_404(Reporte, pk=pk)
+    formato = request.POST.get('formato', 'PDF')
+    
+    if formato == 'PDF':
+        return reporte_pdf(request, pk)
+    elif formato == 'HTML':
+        # Renderizar como HTML para visualización en navegador
+        context = obtener_contexto_reporte(reporte)
+        template_map = {
+            'ACCESOS': 'reportes/pdf/reporte_accesos.html',
+            'RESIDENTES': 'reportes/pdf/reporte_residentes.html',
+            'VIVIENDAS': 'reportes/pdf/reporte_viviendas.html',
+            'PERSONAL': 'reportes/pdf/reporte_personal.html',
+            'FINANCIERO': 'reportes/pdf/reporte_financiero.html',
+        }
+        template = template_map.get(reporte.tipo, 'reportes/pdf/reporte_generico.html')
+        return render(request, template, context)
+    else:
+        # Para Excel y CSV, mostrar mensaje informativo y generar PDF
+        messages.info(request, f'Exportación a {formato} estará disponible próximamente. Generando PDF...')
+        return reporte_pdf(request, pk)
+
+def obtener_contexto_reporte(reporte):
+    """Función auxiliar para obtener contexto completo del reporte"""
+    from viviendas.models import Residente, Vivienda
+    from personal.models import Empleado
+    from accesos.models import Visita
+    from financiero.models import Pago, Gasto
+    
+    # Contexto base
+    context = {
+        'reporte': reporte,
+        'fecha_generacion': timezone.now(),
+        'today': timezone.now().date(),
+    }
+    
+    # Obtener nombre del edificio si está filtrado
+    if reporte.edificio:
+        context['nombre_edificio'] = reporte.edificio.nombre
+    else:
+        context['nombre_edificio'] = 'Todos los edificios'
+    
+    # Procesamiento según tipo de reporte (SIN LÍMITES - datos completos)
+    if reporte.tipo == 'RESIDENTES':
+        # Filtrar residentes
+        residentes = Residente.objects.all()
+        if reporte.edificio:
+            residentes = residentes.filter(vivienda__edificio=reporte.edificio)
+        
+        context.update({
+            'residentes': residentes,  # TODOS los residentes, no solo 10
+            'total_residentes': residentes.count(),
+            'activos': residentes.filter(activo=True).count(),
+            'inactivos': residentes.filter(activo=False).count(),
+            'propietarios': residentes.filter(es_propietario=True).count(),
+            'inquilinos': residentes.filter(es_propietario=False).count(),
+        })
+        
+    elif reporte.tipo == 'VIVIENDAS':
+        # Filtrar viviendas
+        viviendas = Vivienda.objects.filter(activo=True)
+        if reporte.edificio:
+            viviendas = viviendas.filter(edificio=reporte.edificio)
+        
+        ocupadas = viviendas.filter(estado='OCUPADO').count()
+        desocupadas = viviendas.filter(estado='DESOCUPADO').count()
+        mantenimiento = viviendas.filter(estado='MANTENIMIENTO').count()
+        total = viviendas.count()
+        
+        porcentaje_ocupacion = (ocupadas / total * 100) if total > 0 else 0
+        
+        context.update({
+            'viviendas': viviendas,  # TODAS las viviendas
+            'total_viviendas': total,
+            'ocupadas': ocupadas,
+            'desocupadas': desocupadas,
+            'mantenimiento': mantenimiento,
+            'porcentaje_ocupacion': porcentaje_ocupacion,
+        })
+        
+    elif reporte.tipo == 'PERSONAL':
+        # Filtrar personal
+        empleados = Empleado.objects.all()
+        
+        context.update({
+            'empleados': empleados,  # TODOS los empleados
+            'total_empleados': empleados.count(),
+            'activos': empleados.filter(activo=True).count(),
+            'inactivos': empleados.filter(activo=False).count(),
+        })
+        
+    elif reporte.tipo == 'ACCESOS':
+        # Filtrar visitas
+        visitas = Visita.objects.all()
+        
+        if reporte.fecha_desde:
+            visitas = visitas.filter(fecha_hora_entrada__date__gte=reporte.fecha_desde)
+        if reporte.fecha_hasta:
+            visitas = visitas.filter(fecha_hora_entrada__date__lte=reporte.fecha_hasta)
+        if reporte.edificio:
+            visitas = visitas.filter(vivienda_destino__edificio=reporte.edificio)
+        
+        activas = visitas.filter(fecha_hora_salida__isnull=True).count()
+        finalizadas = visitas.filter(fecha_hora_salida__isnull=False).count()
+        
+        context.update({
+            'visitas': visitas,  # TODAS las visitas
+            'total_visitas': visitas.count(),
+            'visitas_activas': activas,
+            'visitas_finalizadas': finalizadas,
+        })
+        
+    elif reporte.tipo == 'FINANCIERO':
+        # Datos financieros
+        fecha_desde = reporte.fecha_desde or timezone.now().date().replace(day=1)
+        fecha_hasta = reporte.fecha_hasta or timezone.now().date()
+        
+        # Ingresos (pagos verificados)
+        ingresos = Pago.objects.filter(
+            estado='VERIFICADO',
+            fecha_pago__range=[fecha_desde, fecha_hasta]
+        )
+        
+        # Egresos (gastos pagados)
+        egresos = Gasto.objects.filter(
+            estado='PAGADO',
+            fecha__range=[fecha_desde, fecha_hasta]
+        )
+        
+        total_ingresos = sum(p.monto for p in ingresos)
+        total_egresos = sum(g.monto for g in egresos)
+        balance = total_ingresos - total_egresos
+        
+        context.update({
+            'total_ingresos': total_ingresos,
+            'total_egresos': total_egresos,
+            'balance': balance,
+            'ingresos': ingresos,  # TODOS los ingresos
+            'egresos': egresos,    # TODOS los egresos
+        })
+    
+    return context
