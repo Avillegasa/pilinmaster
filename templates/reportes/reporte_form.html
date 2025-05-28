@@ -8,82 +8,10 @@
 <div class="row">
     <div class="col-md-8 mx-auto">
         <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="fas fa-{% if tipo_reporte == 'ACCESOS' %}clipboard-list{% elif tipo_reporte == 'RESIDENTES' %}users{% elif tipo_reporte == 'VIVIENDAS' %}home{% elif tipo_reporte == 'PERSONAL' %}id-badge{% else %}chart-bar{% endif %}"></i>
-                    {% if form.instance.pk %}Editar{% else %}Configurar{% endif %} Reporte de {{ tipo_reporte|title }}
-                </h5>
-            </div>
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-8">
-                            {{ form.nombre|as_crispy_field }}
-                        </div>
-                        <div class="col-md-4">
-                            {{ form.formato_preferido|as_crispy_field }}
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            {{ form.fecha_desde|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.fecha_hasta|as_crispy_field }}
-                        </div>
-                    </div>
-
-                    {% if tipo_reporte == 'ACCESOS' %}
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                {{ form.edificio|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.tipo_visita|as_crispy_field }}
-                            </div>
-                        </div>
-                    {% elif tipo_reporte == 'RESIDENTES' %}
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                {{ form.edificio|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.estado|as_crispy_field }}
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            {{ form.tipo_residente|as_crispy_field }}
-                        </div>
-                    {% elif tipo_reporte == 'VIVIENDAS' %}
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                {{ form.edificio|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.estado|as_crispy_field }}
-                            </div>
-                        </div>
-                    {% elif tipo_reporte == 'PERSONAL' %}
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                {{ form.estado|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.es_favorito|as_crispy_field }}
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            {{ form.puesto|as_crispy_field }}
-                        </div>
-                    {% else %}
-                        <div class="mb-3">
-                            {{ form.es_favorito|as_crispy_field }}
-                        </div>
-                    {% endif %}
-                    
+                    {{ form|crispy }}
                     <div class="mt-4 d-flex justify-content-between">
                         <a href="{% url 'reporte-list' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Cancelar
@@ -95,75 +23,21 @@
                 </form>
             </div>
         </div>
-        
-        <!-- Ayuda contextual según el tipo de reporte -->
-        <div class="card shadow mt-4">
-            <div class="card-header bg-light">
-                <h6 class="m-0"><i class="fas fa-info-circle"></i> Información sobre este tipo de reporte</h6>
-            </div>
-            <div class="card-body">
-                {% if tipo_reporte == 'ACCESOS' %}
-                    <p>El <strong>Reporte de Accesos</strong> te permite analizar las visitas al condominio:</p>
-                    <ul>
-                        <li>Visualiza las visitas registradas en un período específico</li>
-                        <li>Filtra por edificio si necesitas datos más específicos</li>
-                        <li>Consulta estadísticas como duración promedio de visitas</li>
-                        <li>Gráficos de visitas por día y distribución por estados</li>
-                    </ul>
-                {% elif tipo_reporte == 'RESIDENTES' %}
-                    <p>El <strong>Reporte de Residentes</strong> te permite analizar la información de los habitantes:</p>
-                    <ul>
-                        <li>Obtén listados de residentes con sus datos básicos</li>
-                        <li>Filtra por edificio, tipo de residente o estado</li>
-                        <li>Consulta estadísticas de propietarios vs inquilinos</li>
-                        <li>Visualiza gráficos de distribución por tipo de residente</li>
-                    </ul>
-                {% elif tipo_reporte == 'VIVIENDAS' %}
-                    <p>El <strong>Reporte de Viviendas</strong> te permite analizar los departamentos/unidades:</p>
-                    <ul>
-                        <li>Obtén información detallada de las viviendas</li>
-                        <li>Filtra por edificio y estado de ocupación</li>
-                        <li>Consulta estadísticas como porcentaje de ocupación</li>
-                        <li>Visualiza gráficos de distribución por estado y tamaño</li>
-                    </ul>
-                {% elif tipo_reporte == 'PERSONAL' %}
-                    <p>El <strong>Reporte de Personal</strong> te permite analizar la información de empleados:</p>
-                    <ul>
-                        <li>Obtén listados del personal del condominio</li>
-                        <li>Filtra por puesto de trabajo y estado</li>
-                        <li>Consulta estadísticas de tipos de contrato</li>
-                        <li>Visualiza gráficos de distribución por puesto</li>
-                    </ul>
-                {% else %}
-                    <p>Configura los parámetros del reporte según tus necesidades.</p>
-                {% endif %}
-            </div>
-        </div>
     </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Validar que la fecha hasta no sea menor que la fecha desde
-        const fechaDesde = document.getElementById('id_fecha_desde');
-        const fechaHasta = document.getElementById('id_fecha_hasta');
-        
-        if (fechaDesde && fechaHasta) {
-            fechaHasta.addEventListener('change', function() {
-                if (fechaDesde.value && this.value && this.value < fechaDesde.value) {
-                    alert('La fecha hasta no puede ser menor que la fecha desde');
-                    this.value = fechaDesde.value;
-                }
-            });
-            
-            fechaDesde.addEventListener('change', function() {
-                if (fechaHasta.value && this.value && fechaHasta.value < this.value) {
-                    fechaHasta.value = this.value;
-                }
-            });
+        // Initialize date inputs to use the browser's date picker
+        var fechaDesde = document.querySelector('input[name="fecha_desde"]');
+        var fechaHasta = document.querySelector('input[name="fecha_hasta"]');
+
+        if (fechaDesde) {
+            fechaDesde.setAttribute('type', 'date');
+        }
+        if (fechaHasta) {
+            fechaHasta.setAttribute('type', 'date');
         }
     });
 </script>
-{% endblock %}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte - {{ reporte.nombre }}</title>
+</head>
+<body>
+    <div style="display: flex; align-items: center; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 30px;">
+        <img src="file://{{ logo_path }}" alt="Logo" style="height: 60px; margin-right: 20px;">
+        <div>
+            <h1 style="margin: 0; color: #007bff;">{{ reporte.nombre }}</h1>
+            <span style="font-size: 1.2em; color: #555;">{{ reporte.get_tipo_display }}</span>
+        </div>
+    </div>
+    <div class="header">
+        <div class="titulo">{{ reporte.nombre }}</div>
+        <div class="subtitulo">Reporte {{ reporte.get_tipo_display }}</div>
+        <div class="fecha">
+            Período: {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}<br>
+            Generado el: {{ fecha_generacion|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+    <div class="contenido">
+        <h3>Este es un reporte genérico.</h3>
+        <p>Puedes personalizar este template en <code>reportes/pdf/reporte_generico.html</code> según tus necesidades.</p>
+    </div>
+    <div style="text-align:center; margin-bottom: 30px;">
+        <img src="{{ grafico1 }}" style="max-width: 350px; margin: 0 10px;">
+        <img src="{{ grafico2 }}" style="max-width: 350px; margin: 0 10px;">
+    </div>
+    <table style="width:100%; border-collapse:collapse; margin-bottom: 30px;">
+        <thead>
+            <tr style="background: #007bff; color: #fff;">
+                <th style="padding: 8px;">Columna 1</th>
+                <th style="padding: 8px;">Columna 2</th>
+                ...
+            </tr>
+        </thead>
+        <tbody>
+            ...
+        </tbody>
+    </table>
+</body>
+</html>
