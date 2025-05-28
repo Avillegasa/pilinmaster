@@ -81,7 +81,13 @@
                         {% endif %}
                     </div>
                     <div class="col-md-6 text-end">
-                        <p><strong>Creado por:</strong> {{ reporte.creado_por.first_name }} {{ reporte.creado_por.last_name }}</p>
+                        <p><strong>Creado por:</strong>
+                            {% if reporte.creado_por %}
+                                {{ reporte.creado_por.first_name }} {{ reporte.creado_por.last_name }}
+                            {% else %}
+                                <span class="text-muted">Administrador</span>
+                            {% endif %}
+                        </p>
                         <p><strong>Fecha de creación:</strong> {{ reporte.fecha_creacion|date:"d/m/Y H:i" }}</p>
                         <p><strong>Última generación:</strong> 
                             {% if reporte.ultima_generacion %}
@@ -557,9 +563,9 @@
                     {{ export_form|crispy }}
                     
                     <div class="d-grid mt-3">
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-download"></i> Generar y Descargar
-                        </button>
+                        <a href="{% url 'reporte-pdf' reporte.id %}" class="btn btn-success" target="_blank">
+                            <i class="fas fa-download"></i> Generar y Descargar PDF
+                        </a>
                     </div>
                 </form>
                 

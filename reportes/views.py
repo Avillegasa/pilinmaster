@@ -91,6 +91,10 @@ class ReporteCreateView(CreateView):
         context['tipo_reporte'] = self.request.GET.get('tipo', self.object.tipo if hasattr(self, 'object') and self.object else '')
         return context
 
+    def form_valid(self, form):
+        form.instance.creado_por = self.request.user
+        return super().form_valid(form)
+
 class ReporteUpdateView(UpdateView):
     model = Reporte
     form_class = ReporteForm
@@ -114,10 +118,48 @@ class ReporteDeleteView(DeleteView):
         return redirect(self.success_url)
 
 def reporte_preview(request, pk):
+    from viviendas.models import Residente, Vivienda
+    from personal.models import Empleado
+    from accesos.models import Visita
+
     reporte = get_object_or_404(Reporte, pk=pk)
     context = {
         'reporte': reporte,
+        'fecha_generacion': timezone.now(),
     }
+
+    if reporte.tipo == 'RESIDENTES':
+        residentes = Residente.objects.all()
+        context['residentes'] = residentes
+        context['total_residentes'] = residentes.count()
+        context['activos'] = residentes.filter(activo=True).count()
+        context['propietarios'] = residentes.filter(es_propietario=True).count()
+        context['inquilinos'] = residentes.filter(es_propietario=False).count()
+    elif reporte.tipo == 'VIVIENDAS':
+        viviendas = Vivienda.objects.all()
+        context['viviendas'] = viviendas
+        context['total_viviendas'] = viviendas.count()
+        context['ocupadas'] = viviendas.filter(estado='OCUPADO').count()
+        context['desocupadas'] = viviendas.filter(estado='DESOCUPADO').count()
+        context['mantenimiento'] = viviendas.filter(estado='MANTENIMIENTO').count()
+        if context['total_viviendas']:
+            context['porcentaje_ocupacion'] = (context['ocupadas'] / context['total_viviendas']) * 100
+        else:
+            context['porcentaje_ocupacion'] = 0
+    elif reporte.tipo == 'ACCESOS':
+        visitas = Visita.objects.all()
+        context['visitas'] = visitas
+        context['total_visitas'] = visitas.count()
+        context['visitas_activas'] = visitas.filter(fecha_hora_salida__isnull=True).count()
+        context['visitas_finalizadas'] = visitas.filter(fecha_hora_salida__isnull=False).count()
+    elif reporte.tipo == 'PERSONAL':
+        empleados = Empleado.objects.all()
+        context['empleados'] = empleados
+        context['total_empleados'] = empleados.count()
+        context['activos'] = empleados.filter(activo=True).count()
+        context['inactivos'] = empleados.filter(activo=False).count()
+    # Agrega lógica similar para FINANCIERO si es necesario
+
     return render(request, 'reportes/reporte_preview.html', context)
 
 def reporte_toggle_favorito(request, pk):
@@ -149,6 +191,8 @@ def reporte_pdf(request, pk):
     from accesos.models import Visita
 
     reporte = get_object_or_404(Reporte, pk=pk)
+    reporte.ultima_generacion = timezone.now()
+    reporte.save(update_fields=['ultima_generacion'])
     context = {
         'reporte': reporte,
         'fecha_generacion': timezone.now(),
@@ -273,7 +317,7 @@ def reporte_pdf(request, pk):
 
     html = render_to_string(template, context)
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'filename="reporte_{reporte.nombre}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="reporte_{reporte.nombre}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
     weasyprint.HTML(string=html).write_pdf(target=response)
     return response
 
