@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.http import JsonResponse
 
-from usuarios.views import AccesoWebPermitidoMixin, AdminRequiredMixin
+from usuarios.views import AccesoWebPermitidoMixin
 from .models import Puesto, Empleado, Asignacion, ComentarioAsignacion, Vivienda
 from .forms import PuestoForm, EmpleadoForm, AsignacionForm, ComentarioAsignacionForm, AsignacionFiltroForm
 # CORRECCIÓN: Import agregado para el modelo Vivienda
@@ -328,7 +328,7 @@ def cambiar_estado_asignacion(request, pk):
         'estados': Asignacion.ESTADOS,
     })
 
-# ✅ CORRECCIÓN: API mejorada con manejo de errores
+# CORRECCIÓN: API mejorada con manejo de errores
 @login_required
 def viviendas_por_edificio_api(request):
     edificio_id = request.GET.get('edificio_id')

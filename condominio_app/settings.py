@@ -2,6 +2,10 @@ import os
 from pathlib import Path
 from datetime import timedelta
 import environ
+import socket
+
+hostname = socket.gethostname()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env')) # Lee automáticamente el archivo .env
@@ -168,7 +172,10 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-SITE_ID = 1
+if "torresegura" in hostname:
+    SITE_ID = 1  # Sitio móvil
+else:
+    SITE_ID = 2  # Sitio escritorio
 
 # Configuración de AllAuth
 ACCOUNT_EMAIL_REQUIRED = True

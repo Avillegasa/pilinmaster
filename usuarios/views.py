@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from .models import Usuario, Rol
-from .forms import UsuarioCreationForm, UsuarioChangeForm, RolForm
+from .forms import UsuarioCreationForm, UsuarioEditForm, RolForm
 from django.contrib.auth.views import LoginView
 # Función auxiliar para comprobar si es administrador
 def tiene_acceso_web(user):
@@ -16,7 +16,6 @@ def tiene_acceso_web(user):
         user.rol is not None and
         user.rol.nombre in ['Administrador', 'Gerente']
     )
-
 
 class AccesoWebPermitidoMixin(UserPassesTestMixin):
     def test_func(self):
@@ -32,6 +31,19 @@ class UsuarioListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = Usuario
     template_name = 'usuarios/usuario_list.html'
     context_object_name = 'usuarios'
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(rol__isnull=False)
+        query = self.request.GET.get("q")
+        if query:
+            queryset = queryset.filter(username__icontains=query)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["q"] = self.request.GET.get("q", "")
+        return context
+
 
 class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Usuario
@@ -62,9 +74,14 @@ class CustomLoginView(LoginView):
 
 class UsuarioUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Usuario
-    form_class = UsuarioChangeForm
+    form_class = UsuarioEditForm
     template_name = 'usuarios/usuario_form.html'
     success_url = reverse_lazy('usuario-list')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f"Se modificó correctamente la información del usuario: {self.object.username}")
+        return response
 
 # Reemplazo de la vista DeleteView por una vista personalizada para cambiar estado
 class UsuarioChangeStateView(LoginRequiredMixin, AccesoWebPermitidoMixin, View):
@@ -74,19 +91,24 @@ class UsuarioChangeStateView(LoginRequiredMixin, AccesoWebPermitidoMixin, View):
     
     def post(self, request, pk):
         usuario = get_object_or_404(Usuario, pk=pk)
-        
-        # Verificar si es el mismo usuario que está intentando desactivarse
+
         if usuario == request.user:
-            messages.error(request, "No puedes cambiar tu propio estado.")
+            messages.add_message(request, messages.ERROR, "No puedes cambiar tu propio estado...", extra_tags='danger')
             return HttpResponseRedirect(reverse_lazy('usuario-list'))
-        
-        # Cambiar el estado del usuario (activar/desactivar)
+
+        # Bloquear si el usuario tiene rol de alta seguridad
+        if usuario.rol and usuario.rol.nombre in ['Administrador', 'Gerente']:
+            messages.add_message(request, messages.ERROR, f"No puedes desactivar a un usuario con rol '{usuario.rol.nombre}'.", extra_tags='danger')
+            return HttpResponseRedirect(reverse_lazy('usuario-list'))
+
+        # Alternar estado activo
         usuario.is_active = not usuario.is_active
         usuario.save()
-        
+
         estado = "activado" if usuario.is_active else "desactivado"
         messages.success(request, f'El usuario {usuario.username} ha sido {estado} correctamente.')
         return HttpResponseRedirect(reverse_lazy('usuario-list'))
+
 
 class UsuarioDetailView(LoginRequiredMixin, DetailView):
     model = Usuario
