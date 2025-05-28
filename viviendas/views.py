@@ -7,13 +7,30 @@ from django.contrib import messages
 from django.utils import timezone
 from usuarios.views import AdminRequiredMixin
 from .models import Edificio, Vivienda, Residente
-from .forms import EdificioForm, ViviendaForm, ResidenteForm, ViviendaBajaForm
+from .forms import EdificioForm, ViviendaForm, ResidenteForm, ViviendaBajaForm, EdificioBajaForm
 
 # Vistas de Edificios
 class EdificioListView(LoginRequiredMixin, ListView):
     model = Edificio
     template_name = 'viviendas/edificio_list.html'
     context_object_name = 'edificios'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Por defecto mostrar solo edificios activos
+        activo = self.request.GET.get('activo', 'true')
+        if activo == 'true':
+            queryset = queryset.filter(activo=True)
+        elif activo == 'false':
+            queryset = queryset.filter(activo=False)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['filtro_activo'] = self.request.GET.get('activo', 'true')
+        context['total_activos'] = Edificio.objects.filter(activo=True).count()
+        context['total_inactivos'] = Edificio.objects.filter(activo=False).count()
+        return context
 
 class EdificioCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
     model = Edificio
@@ -27,10 +44,58 @@ class EdificioUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
     template_name = 'viviendas/edificio_form.html'
     success_url = reverse_lazy('edificio-list')
 
-class EdificioDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
-    model = Edificio
-    template_name = 'viviendas/edificio_confirm_delete.html'
-    success_url = reverse_lazy('edificio-list')
+class EdificioBajaView(LoginRequiredMixin, AdminRequiredMixin, View):
+    template_name = 'viviendas/edificio_baja.html'
+    
+    def get(self, request, pk):
+        edificio = get_object_or_404(Edificio, pk=pk)
+        viviendas_activas = edificio.viviendas.filter(activo=True).count()
+        form = EdificioBajaForm(instance=edificio)
+        
+        return render(request, self.template_name, {
+            'edificio': edificio,
+            'form': form,
+            'viviendas_activas': viviendas_activas
+        })
+    
+    def post(self, request, pk):
+        edificio = get_object_or_404(Edificio, pk=pk)
+        form = EdificioBajaForm(request.POST, instance=edificio)
+        viviendas_activas = edificio.viviendas.filter(activo=True).count()
+        
+        if viviendas_activas > 0 and not request.POST.get('confirmar_viviendas'):
+            messages.error(request, "Debe confirmar que entiende las consecuencias para las viviendas.")
+            return render(request, self.template_name, {
+                'edificio': edificio,
+                'form': form,
+                'viviendas_activas': viviendas_activas
+            })
+        
+        if form.is_valid():
+            # Dar de baja el edificio
+            edificio.activo = False
+            edificio.fecha_baja = form.cleaned_data.get('fecha_baja') or timezone.now().date()
+            edificio.motivo_baja = form.cleaned_data.get('motivo_baja')
+            edificio.save()
+            
+            # Dar de baja todas las viviendas del edificio
+            edificio.viviendas.filter(activo=True).update(
+                activo=False,
+                estado='BAJA',
+                fecha_baja=edificio.fecha_baja,
+                motivo_baja=f"Edificio dado de baja: {edificio.motivo_baja}"
+            )
+            
+            messages.success(request, f"El edificio {edificio.nombre} ha sido dado de baja correctamente.")
+            return redirect('edificio-list')
+        
+        return render(request, self.template_name, {
+            'edificio': edificio,
+            'form': form,
+            'viviendas_activas': viviendas_activas
+        })
+
+# Eliminar completamente EdificioDeleteView
 
 class EdificioDetailView(LoginRequiredMixin, DetailView):
     model = Edificio

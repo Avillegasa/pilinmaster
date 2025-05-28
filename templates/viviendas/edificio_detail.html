@@ -157,9 +157,16 @@
                         <a href="{% url 'edificio-update' edificio.id %}" class="btn btn-warning">
                             <i class="fas fa-edit"></i> Editar
                         </a>
-                        <a href="{% url 'edificio-delete' edificio.id %}" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Eliminar
+                        {% if edificio.activo %}
+                        <a href="{% url 'edificio-baja' edificio.id %}" class="btn btn-warning">
+                            <i class="fas fa-archive"></i> Dar de Baja
                         </a>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <strong>Edificio dado de baja:</strong> {{ edificio.fecha_baja|date:"d/m/Y" }}<br>
+                            <strong>Motivo:</strong> {{ edificio.motivo_baja }}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

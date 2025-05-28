@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Dar de Baja Edificio | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Dar de Baja Edificio{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h5><i class="fas fa-exclamation-triangle"></i> Confirmar Baja de Edificio</h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">¿Estás seguro que deseas dar de baja el edificio?</p>
+                <div class="alert alert-warning">
+                    <strong>{{ edificio.nombre }}</strong><br>
+                    Dirección: {{ edificio.direccion }}
+                </div>
+                
+                {% if viviendas_activas > 0 %}
+                <div class="alert alert-danger">
+                    <strong>¡Advertencia!</strong> Este edificio tiene {{ viviendas_activas }} vivienda{% if viviendas_activas > 1 %}s{% endif %} activa{% if viviendas_activas > 1 %}s{% endif %}. 
+                    Al dar de baja el edificio, todas las viviendas también serán dadas de baja automáticamente.
+                </div>
+                {% endif %}
+                
+                <p>Un edificio dado de baja no será eliminado del sistema, pero ya no estará disponible para nuevas operaciones.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.motivo_baja|as_crispy_field }}
+                    {{ form.fecha_baja|as_crispy_field }}
+                    
+                    {% if viviendas_activas > 0 %}
+                    {{ form.confirmar_viviendas|as_crispy_field }}
+                    {% endif %}
+                    
+                    <div class="mt-4 d-flex justify-content-center gap-3">
+                        <a href="{% url 'edificio-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-archive"></i> Dar de Baja
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

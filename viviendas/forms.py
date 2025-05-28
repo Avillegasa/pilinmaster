@@ -9,7 +9,30 @@ class EdificioForm(forms.ModelForm):
         widgets = {
             'fecha_construccion': forms.DateInput(attrs={'type': 'date'})
         }
-
+class EdificioBajaForm(forms.ModelForm):
+    fecha_baja = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        initial=timezone.now().date(),
+        help_text="Fecha en la que se da de baja el edificio."
+    )
+    
+    motivo_baja = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3}),
+        required=True,
+        help_text="Motivo por el cual se da de baja el edificio."
+    )
+    
+    confirmar_viviendas = forms.BooleanField(
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(),
+        help_text="Confirmo que he revisado las viviendas asociadas a este edificio."
+    )
+    
+    class Meta:
+        model = Edificio
+        fields = ['fecha_baja', 'motivo_baja']
+        
 class ViviendaForm(forms.ModelForm):
     class Meta:
         model = Vivienda

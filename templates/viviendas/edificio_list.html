@@ -41,9 +41,13 @@
                                 <a href="{% url 'edificio-update' edificio.id %}" class="btn btn-warning">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'edificio-delete' edificio.id %}" class="btn btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                {% if edificio.activo %}
+                                <a href="{% url 'edificio-baja' edificio.id %}" class="btn btn-warning">
+                                    <i class="fas fa-archive"></i>
                                 </a>
+                                {% else %}
+                                <span class="badge bg-secondary">Dado de baja</span>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

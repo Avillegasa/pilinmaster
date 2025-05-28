@@ -8,6 +8,17 @@ class Edificio(models.Model):
     direccion = models.TextField()
     pisos = models.PositiveIntegerField()
     fecha_construccion = models.DateField(blank=True, null=True)
+    # ✅ NUEVOS CAMPOS (agregar estos):
+    activo = models.BooleanField(default=True, help_text="Indica si el edificio está activo o ha sido dado de baja")
+    fecha_baja = models.DateField(null=True, blank=True, help_text="Fecha en la que se dio de baja el edificio")
+    motivo_baja = models.TextField(blank=True, null=True, help_text="Motivo por el cual se dio de baja el edificio")
+    
+    # ✅ MÉTODO SAVE (agregar este método completo):
+    def save(self, *args, **kwargs):
+        if not self.activo and self.fecha_baja is None:
+            from django.utils import timezone
+            self.fecha_baja = timezone.now().date()
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return self.nombre
