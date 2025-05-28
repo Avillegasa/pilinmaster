@@ -55,7 +55,7 @@ class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView)
         usuario = form.save(commit=False)
         usuario.is_active = True  # Bloquea el acceso hasta confirmar
         usuario.save()
-        messages.success(self.request, "Usuario creado. Podrá activar su cuenta al intentar iniciar sesión desde la app móvil.")
+        messages.success(self.request, "Usuario creado. Podrá activar su cuenta al intentar iniciar sesión.")
         return super().form_valid(form)
 
 class CustomLoginView(LoginView):
