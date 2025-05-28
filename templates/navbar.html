@@ -39,6 +39,7 @@
             <a class="nav-link p-2 mx-2" href="{% url 'perfil' %}">
                 <i class="fas fa-user-circle"></i>
                 <span class="ms-1 d-none d-lg-inline">{{ user.first_name|default:user.username }}</span>
+                <span class="ms-1 d-none d-lg-inline">{{ user.rol|default:user.rol }}</span>
             </a>
             <a class="btn btn-warning text-white px-3 m-1" href="{% url 'logout' %}">
                 <i class="fas fa-sign-out-alt"></i> 

@@ -78,8 +78,8 @@ class CustomLoginView(LoginView):
             messages.warning(self.request, "Debe ingresar desde la aplicación móvil")
             return redirect('login')
 
-        # 🚫 Solo para Gerente: bloquear si no verificó su correo
-        if user.rol.nombre == 'Gerente' and not user.email_confirmado:
+        # Solo para Gerente: bloquear si no verificó su correo
+        if user.rol.nombre == 'Administrador' and not user.email_confirmado:
             self.enviar_verificacion_email(user)
             messages.warning(self.request, "Tu cuenta aún no ha sido verificada. Revisa tu correo para activarla.")
             return redirect('login')
