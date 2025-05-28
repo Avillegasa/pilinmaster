@@ -1,6 +1,7 @@
 from django import forms
 from django.utils import timezone
 from .models import Edificio, Vivienda, Residente
+import re
 
 class EdificioForm(forms.ModelForm):
     class Meta:
@@ -14,6 +15,15 @@ class ViviendaForm(forms.ModelForm):
     class Meta:
         model = Vivienda
         fields = '__all__'
+        widgets = {
+            'numero': forms.TextInput(attrs={'placeholder': 'Ej: 101-A', 'maxlength': 10}),
+        }
+
+    def clean_numero(self):
+        numero = self.cleaned_data['numero']
+        if not re.match(r'^[\w\s-]+$', numero):
+            raise forms.ValidationError("El número de vivienda solo puede contener letras, números, espacios y guiones.")
+        return numero
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

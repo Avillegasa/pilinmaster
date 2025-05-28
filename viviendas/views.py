@@ -39,7 +39,7 @@ class EdificioDetailView(LoginRequiredMixin, DetailView):
 
 # Vistas de Viviendas
 
-class ViviendaListView(LoginRequiredMixin, ListView):
+class ViviendaListView(ListView):
     model = Vivienda
     template_name = 'viviendas/vivienda_list.html'
     context_object_name = 'viviendas'
@@ -55,7 +55,11 @@ class ViviendaListView(LoginRequiredMixin, ListView):
         # Filtrar por piso si se proporciona
         piso = self.request.GET.get('piso')
         if piso:
-            queryset = queryset.filter(piso=piso)
+            try:
+                piso_int = int(piso)
+                queryset = queryset.filter(piso=piso_int)
+            except ValueError:
+                pass  # Si no es un número, ignora el filtro
             
         # Filtrar por estado si se proporciona
         estado = self.request.GET.get('estado')
@@ -70,6 +74,11 @@ class ViviendaListView(LoginRequiredMixin, ListView):
         else:
             # Por defecto mostrar solo viviendas activas
             queryset = queryset.filter(activo=True)
+            
+        # Filtrar por búsqueda de número de vivienda
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(numero__icontains=search)
             
         return queryset
     
@@ -98,7 +107,7 @@ class ViviendaListView(LoginRequiredMixin, ListView):
         
         return context
 
-class ViviendaCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
+class ViviendaCreateView(CreateView):
     model = Vivienda
     form_class = ViviendaForm
     template_name = 'viviendas/vivienda_form.html'
