@@ -18,6 +18,49 @@
     </a>
 </div>
 
+<!-- ✅ NUEVO: Formulario de búsqueda y filtros -->
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-search me-2"></i>Búsqueda y Filtros
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="buscar" class="form-label">Buscar</label>
+                <input type="text" class="form-control" id="buscar" name="buscar" 
+                       placeholder="Nombre, usuario, email..." value="{{ request.GET.buscar }}">
+            </div>
+            <div class="col-md-3">
+                <label for="rol" class="form-label">Rol</label>
+                <select class="form-select" id="rol" name="rol">
+                    <option value="">Todos los roles</option>
+                    {% for rol_option in roles %}
+                        <option value="{{ rol_option.id }}" 
+                                {% if request.GET.rol == rol_option.id|stringformat:"s" %}selected{% endif %}>
+                            {{ rol_option.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="estado" class="form-label">Estado</label>
+                <select class="form-select" id="estado" name="estado">
+                    <option value="">Todos</option>
+                    <option value="activo" {% if request.GET.estado == "activo" %}selected{% endif %}>Activos</option>
+                    <option value="inactivo" {% if request.GET.estado == "inactivo" %}selected{% endif %}>Inactivos</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i>Aplicar Filtros
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% if messages %}
     {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -44,12 +87,27 @@
                 </thead>
                 <tbody>
                     {% for usuario in usuarios %}
-                    <tr class="{% if not usuario.is_active %}usuario-inactivo d-none{% endif %}">
+                    <tr class="{% if not usuario.is_active %}usuario-inactivo d-none{% endif %}
+                              {% if usuario.rol.nombre == 'Administrador' %}table-warning{% endif %}">
                         <td>{{ usuario.id }}</td>
-                        <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
+                        <td>
+                            {{ usuario.first_name }} {{ usuario.last_name }}
+                            {% if usuario.rol.nombre == 'Administrador' %}
+                                <i class="fas fa-crown text-warning ms-1" 
+                                   title="Usuario Administrador - Protegido" 
+                                   data-bs-toggle="tooltip"></i>
+                            {% endif %}
+                        </td>
                         <td>{{ usuario.username }}</td>
                         <td>{{ usuario.email }}</td>
-                        <td>{{ usuario.rol.nombre|default:"Sin rol" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if usuario.rol.nombre == 'Administrador' %}bg-warning text-dark
+                                {% elif usuario.rol.nombre == 'Gerente' %}bg-info
+                                {% else %}bg-secondary{% endif %}">
+                                {{ usuario.rol.nombre|default:"Sin rol" }}
+                            </span>
+                        </td>
                         <td>
                             {% if usuario.is_active %}
                                 <span class="badge text-bg-success">Activo</span>
@@ -59,15 +117,46 @@
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="{% url 'usuario-detail' usuario.id %}" class="btn btn-info" title="Ver detalles">
+                                <a href="{% url 'usuario-detail' usuario.id %}" 
+                                   class="btn btn-info" title="Ver detalles">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{% url 'usuario-update' usuario.id %}" class="btn btn-warning" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{% url 'usuario-change-state' usuario.id %}" class="btn {% if usuario.is_active %}btn-danger{% else %}btn-success{% endif %}" title="{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}">
-                                    <i class="fas {% if usuario.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
-                                </a>
+                                
+                                {% comment "✅ PROTECCIÓN: Solo mostrar editar si no es administrador diferente al usuario actual" %}
+                                {% if usuario.rol.nombre != 'Administrador' or usuario == user %}
+                                    <a href="{% url 'usuario-update' usuario.id %}" 
+                                       class="btn btn-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-warning disabled" 
+                                            title="Usuario Administrador protegido" 
+                                            data-bs-toggle="tooltip">
+                                        <i class="fas fa-lock"></i>
+                                    </button>
+                                {% endif %}
+                                
+                                {% comment "✅ PROTECCIÓN CRÍTICA: No mostrar cambio de estado para administradores" %}
+                                {% if usuario.rol.nombre == 'Administrador' %}
+                                    <button class="btn btn-secondary disabled" 
+                                            title="Los usuarios Administradores no pueden ser desactivados por seguridad" 
+                                            data-bs-toggle="tooltip">
+                                        <i class="fas fa-shield-alt"></i>
+                                    </button>
+                                {% elif usuario == user %}
+                                    <button class="btn btn-secondary disabled" 
+                                            title="No puedes cambiar tu propio estado" 
+                                            data-bs-toggle="tooltip">
+                                        <i class="fas fa-user-circle"></i>
+                                    </button>
+                                {% else %}
+                                    <a href="{% url 'usuario-change-state' usuario.id %}" 
+                                       class="btn {% if usuario.is_active %}btn-danger{% else %}btn-success{% endif %}" 
+                                       title="{% if usuario.is_active %}Desactivar{% else %}Activar{% endif %}"
+                                       onclick="return confirmarCambioEstado('{{ usuario.username }}', {{ usuario.is_active|yesno:'true,false' }})">
+                                        <i class="fas {% if usuario.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                    </a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
@@ -78,6 +167,21 @@
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ NUEVA: Leyenda de protección -->
+<div class="mt-3">
+    <div class="card border-warning">
+        <div class="card-body py-2">
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1"></i>
+                <strong>Leyenda:</strong>
+                <i class="fas fa-crown text-warning mx-2"></i> Usuario Administrador (Protegido por seguridad)
+                <i class="fas fa-shield-alt text-secondary mx-2"></i> Acción no permitida
+                <i class="fas fa-lock text-warning mx-2"></i> Solo edición limitada
+            </small>
         </div>
     </div>
 </div>
@@ -98,6 +202,38 @@
                     usuario.classList.add('d-none');
                 }
             });
+        });
+        
+        // ✅ NUEVA FUNCIONALIDAD: Confirmar cambio de estado
+        window.confirmarCambioEstado = function(username, esActivo) {
+            const accion = esActivo ? 'desactivar' : 'activar';
+            const mensaje = `¿Estás seguro de que deseas ${accion} al usuario "${username}"?`;
+            
+            if (accion === 'desactivar') {
+                return confirm(mensaje + '\n\n⚠️ El usuario no podrá acceder al sistema hasta que sea reactivado.');
+            }
+            return confirm(mensaje);
+        };
+        
+        // ✅ VALIDACIÓN ADICIONAL: Verificar protecciones del lado cliente
+        const botonesAccion = document.querySelectorAll('a[href*="usuario-change-state"]');
+        botonesAccion.forEach(boton => {
+            boton.addEventListener('click', function(e) {
+                const fila = this.closest('tr');
+                const esAdmin = fila.querySelector('.fa-crown') !== null;
+                
+                if (esAdmin) {
+                    e.preventDefault();
+                    alert('❌ OPERACIÓN DENEGADA: Los usuarios Administradores están protegidos por seguridad.');
+                    return false;
+                }
+            });
+        });
+        
+        // Inicializar tooltips de Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     });
 </script>
