@@ -21,14 +21,21 @@
                 {% if viviendas_activas > 0 %}
                 <div class="alert alert-danger">
                     <strong>¡Advertencia!</strong> Este edificio tiene {{ viviendas_activas }} vivienda{% if viviendas_activas > 1 %}s{% endif %} activa{% if viviendas_activas > 1 %}s{% endif %}. 
-                    Al dar de baja el edificio, todas las viviendas también serán dadas de baja automáticamente.
+                    Al dar de baja este edificio:
+                    <ul class="mt-2 mb-0">
+                        <li>Todas las viviendas del edificio serán dadas de baja automáticamente</li>
+                        <li>Los residentes perderán su asignación de vivienda</li>
+                        <li>No se podrán crear nuevas viviendas en este edificio</li>
+                    </ul>
                 </div>
                 {% endif %}
                 
-                <p>Un edificio dado de baja no será eliminado del sistema, pero ya no estará disponible para nuevas operaciones.</p>
+                <p>Un edificio dado de baja no será eliminado del sistema, pero ya no estará disponible para nuevas viviendas. 
+                   Este proceso no se puede deshacer fácilmente.</p>
                 
                 <form method="post">
                     {% csrf_token %}
+                    
                     {{ form.motivo_baja|as_crispy_field }}
                     {{ form.fecha_baja|as_crispy_field }}
                     

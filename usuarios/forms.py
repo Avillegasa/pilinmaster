@@ -143,3 +143,27 @@ class RolForm(forms.ModelForm):
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+class UsuarioChangeStateForm(forms.ModelForm):
+    """
+    Formulario específico para cambiar solo el estado is_active de un usuario
+    Sin validaciones adicionales de email o rol
+    """
+    
+    class Meta:
+        model = Usuario
+        fields = ['is_active']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # No necesitamos mostrar el campo, solo procesarlo
+        self.fields['is_active'].widget = forms.HiddenInput()
+    
+    def save(self, commit=True):
+        # Solo cambiar el estado is_active
+        usuario = super().save(commit=False)
+        usuario.is_active = not usuario.is_active  # Alternar estado
+        
+        if commit:
+            usuario.save(update_fields=['is_active'])
+        return usuario

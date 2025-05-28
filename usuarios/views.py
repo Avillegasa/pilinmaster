@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
 from django.db.models import Q
 from .models import Usuario, Rol
-from .forms import UsuarioCreationForm, UsuarioChangeForm, RolForm
+from .forms import UsuarioCreationForm, UsuarioChangeForm, RolForm, UsuarioChangeStateForm
 from django.core.exceptions import PermissionDenied
 
 # Función auxiliar para comprobar si es administrador
@@ -21,13 +21,13 @@ def es_admin(user):
 def es_usuario_administrador(usuario):
     return (hasattr(usuario, 'rol') and 
             usuario.rol is not None and 
-            usuario.rol.nombre == 'Administrador')
+            usuario.rol.nombre == 'Administrador')  
 
 class AdminRequiredMixin(UserPassesTestMixin):
     def test_func(self):
         return es_admin(self.request.user)
 
-# Vistas de Usuarios
+# Vistas de Usuarios    
 class UsuarioListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
     model = Usuario
     template_name = 'usuarios/usuario_list.html'
@@ -100,9 +100,20 @@ class UsuarioChangeStateView(LoginRequiredMixin, AdminRequiredMixin, View):
         # ✅ PROTECCIÓN CRÍTICA: No permitir cambio de estado a administradores
         if es_usuario_administrador(usuario):
             messages.error(request, "❌ No se puede cambiar el estado de un usuario Administrador por razones de seguridad.")
-            return HttpResponseRedirect(reverse_lazy('usuario-list'))
+            return self._redirect_back(request)
         
-        return render(request, 'usuarios/usuario_change_state.html', {'usuario': usuario})
+        # ✅ PROTECCIÓN: No permitir que el usuario se desactive a sí mismo
+        if usuario == request.user:
+            messages.error(request, "❌ No puedes cambiar tu propio estado.")
+            return self._redirect_back(request)
+        
+        # ✅ OBTENER LA URL DE RETORNO
+        next_url = request.GET.get('next', reverse_lazy('usuario-list'))
+        
+        return render(request, 'usuarios/usuario_change_state.html', {
+            'usuario': usuario,
+            'next_url': next_url
+        })
     
     def post(self, request, pk):
         usuario = get_object_or_404(Usuario, pk=pk)
@@ -110,32 +121,62 @@ class UsuarioChangeStateView(LoginRequiredMixin, AdminRequiredMixin, View):
         # ✅ PROTECCIÓN CRÍTICA: Verificar que no sea administrador
         if es_usuario_administrador(usuario):
             messages.error(request, "❌ OPERACIÓN DENEGADA: No se puede modificar el estado de un usuario Administrador.")
-            return HttpResponseRedirect(reverse_lazy('usuario-list'))
+            return self._redirect_back(request)
         
         # ✅ PROTECCIÓN ADICIONAL: Verificar si es el mismo usuario
         if usuario == request.user:
             messages.error(request, "❌ No puedes cambiar tu propio estado.")
-            return HttpResponseRedirect(reverse_lazy('usuario-list'))
+            return self._redirect_back(request)
         
         # ✅ PROTECCIÓN ADICIONAL: Verificar que quede al menos un administrador activo
-        if es_usuario_administrador(request.user) and usuario.is_active:
-            # Contar administradores activos
-            admins_activos = Usuario.objects.filter(
+        if usuario.is_active and usuario.rol and usuario.rol.nombre == 'Administrador':
+            # Contar otros administradores activos
+            otros_admins_activos = Usuario.objects.filter(
                 rol__nombre='Administrador', 
                 is_active=True
             ).exclude(pk=usuario.pk).count()
             
-            if admins_activos == 0:
+            if otros_admins_activos == 0:
                 messages.error(request, "❌ No se puede desactivar este usuario porque debe quedar al menos un Administrador activo en el sistema.")
-                return HttpResponseRedirect(reverse_lazy('usuario-list'))
+                return self._redirect_back(request)
         
-        # Proceder con el cambio de estado
-        usuario.is_active = not usuario.is_active
-        usuario.save()
+        try:
+            # ✅ CAMBIO DIRECTO DE ESTADO SIN FORMULARIO COMPLEJO
+            nuevo_estado = not usuario.is_active
+            usuario.is_active = nuevo_estado
+            usuario.save(update_fields=['is_active'])
+            
+            estado_texto = "activado" if nuevo_estado else "desactivado"
+            messages.success(request, f'✅ El usuario {usuario.username} ha sido {estado_texto} correctamente.')
+            
+        except Exception as e:
+            messages.error(request, f"❌ Error al cambiar el estado del usuario: {str(e)}")
         
-        estado = "activado" if usuario.is_active else "desactivado"
-        messages.success(request, f'✅ El usuario {usuario.username} ha sido {estado} correctamente.')
-        return HttpResponseRedirect(reverse_lazy('usuario-list'))
+        # ✅ REDIRECCIÓN INTELIGENTE
+        return self._redirect_back(request)
+    
+    def _redirect_back(self, request):
+        """
+        ✅ FUNCIÓN: Maneja la redirección inteligente
+        """
+        # Obtener la URL de retorno del POST o GET
+        next_url = request.POST.get('next') or request.GET.get('next')
+        
+        if next_url:
+            # Validar que sea una URL segura del mismo dominio
+            from django.utils.http import url_has_allowed_host_and_scheme
+            if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                return HttpResponseRedirect(next_url)
+        
+        # ✅ REDIRECCIÓN INTELIGENTE BASADA EN REFERRER
+        referer = request.META.get('HTTP_REFERER', '')
+        
+        if 'residente' in referer.lower():
+            return HttpResponseRedirect(reverse_lazy('residente-list'))
+        elif 'empleado' in referer.lower():
+            return HttpResponseRedirect(reverse_lazy('empleado-list'))
+        else:
+            return HttpResponseRedirect(reverse_lazy('usuario-list'))
 
 class UsuarioDetailView(LoginRequiredMixin, DetailView):
     model = Usuario

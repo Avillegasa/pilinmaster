@@ -5,100 +5,113 @@
 {% block header %}Gestión de Residentes{% endblock %}
 
 {% block content %}
-<!-- Filtros mejorados para responsividad -->
+<!-- ✅ FILTROS MEJORADOS CON APLICACIÓN AL HACER CLIC -->
 <div class="card shadow mb-4 filter-card">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
-        <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
-            <i class="fas fa-filter"></i> <span class="d-none d-md-inline">Mostrar/Ocultar</span>
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-filter me-2"></i>Filtros de Búsqueda
+        </h6>
+        <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="true" aria-controls="collapseFilters">
+            <i class="fas fa-chevron-up"></i> <span class="d-none d-md-inline">Ocultar/Mostrar</span>
         </button>
     </div>
     <div class="collapse show" id="collapseFilters">
         <div class="card-body">
             <form method="get" id="filtroForm" class="row g-3">
-                <!-- Filtro por edificio -->
+                <!-- ✅ FILTRO DE BÚSQUEDA -->
+                <div class="col-md-4">
+                    <label for="buscar" class="form-label">Buscar Residente</label>
+                    <input type="text" class="form-control" id="buscar" name="buscar" 
+                           placeholder="Nombre, usuario, email, vivienda..." 
+                           value="{{ filtros.buscar }}">
+                </div>
+                
+                <!-- ✅ FILTRO POR EDIFICIO -->
                 <div class="col-md-3 col-sm-6">
                     <label for="edificio" class="form-label">Edificio</label>
-                    <select name="edificio" id="edificio" class="form-select" data-autosubmit="false">
+                    <select name="edificio" id="edificio" class="form-select">
                         <option value="">Todos los edificios</option>
                         {% for edificio in edificios %}
-                            <option value="{{ edificio.id }}" {% if filtro_edificio == edificio.id|stringformat:"i" %}selected{% endif %}>
+                            <option value="{{ edificio.id }}" 
+                                    {% if filtros.edificio == edificio.id|stringformat:"s" %}selected{% endif %}>
                                 {{ edificio.nombre }}
                             </option>
                         {% endfor %}
                     </select>
                 </div>
                 
-                <!-- Filtro por vivienda -->
+                <!-- ✅ FILTRO POR VIVIENDA -->
                 <div class="col-md-3 col-sm-6">
                     <label for="vivienda" class="form-label">Vivienda</label>
-                    <select name="vivienda" id="vivienda" class="form-select" {% if not filtro_edificio %}disabled{% endif %}>
+                    <select name="vivienda" id="vivienda" class="form-select">
                         <option value="">Todas las viviendas</option>
                         {% for vivienda in viviendas %}
-                            <option value="{{ vivienda.id }}" {% if filtro_vivienda == vivienda.id|stringformat:"i" %}selected{% endif %}>
-                                {{ vivienda.numero }} (Piso {{ vivienda.piso }})
+                            <option value="{{ vivienda.id }}" 
+                                    {% if filtros.vivienda == vivienda.id|stringformat:"s" %}selected{% endif %}>
+                                {{ vivienda.edificio.nombre }} - {{ vivienda.numero }} (Piso {{ vivienda.piso }})
                             </option>
                         {% endfor %}
                     </select>
                 </div>
                 
-                <!-- Filtro por propietario/inquilino -->
-                <div class="col-md-3 col-sm-6">
-                    <label for="es_propietario" class="form-label">Tipo</label>
-                    <select name="es_propietario" id="es_propietario" class="form-select">
+                <!-- ✅ FILTRO POR TIPO -->
+                <div class="col-md-2 col-sm-6">
+                    <label for="tipo_residente" class="form-label">Tipo</label>
+                    <select name="tipo_residente" id="tipo_residente" class="form-select">
                         <option value="">Todos</option>
-                        <option value="true" {% if filtro_es_propietario == 'true' %}selected{% endif %}>Propietarios</option>
-                        <option value="false" {% if filtro_es_propietario == 'false' %}selected{% endif %}>Inquilinos</option>
+                        <option value="propietario" {% if filtros.tipo_residente == 'propietario' %}selected{% endif %}>Propietarios</option>
+                        <option value="inquilino" {% if filtros.tipo_residente == 'inquilino' %}selected{% endif %}>Inquilinos</option>
                     </select>
                 </div>
                 
-                <!-- Filtro por estado -->
-                <div class="col-md-3 col-sm-6">
-                    <label for="estado" class="form-label">Estado</label>
-                    <select name="estado" id="estado" class="form-select">
-                        <option value="">Todos</option>
-                        <option value="activo" {% if filtro_estado == 'activo' %}selected{% endif %}>Activos</option>
-                        <option value="inactivo" {% if filtro_estado == 'inactivo' %}selected{% endif %}>Inactivos</option>
-                    </select>
-                </div>
-                
-                <!-- Botones de acción - responsivos -->
-                <div class="col-12 d-flex flex-column flex-md-row justify-content-md-end gap-2 mt-3">
-                    <button type="submit" class="btn btn-primary w-100 w-md-auto mb-2 mb-md-0">
-                        <i class="fas fa-filter"></i> Filtrar
-                    </button>
-                    <a href="{% url 'residente-list' %}" class="btn btn-secondary w-100 w-md-auto">
-                        <i class="fas fa-broom"></i> Limpiar
-                    </a>
+                <!-- ✅ FILTRO POR ESTADO -->
+                <div class="col-md-12 mb-3">
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6">
+                            <label for="estado" class="form-label">Estado</label>
+                            <select name="estado" id="estado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                <option value="activo" {% if filtros.estado == 'activo' %}selected{% endif %}>Solo Activos</option>
+                                <option value="inactivo" {% if filtros.estado == 'inactivo' %}selected{% endif %}>Solo Inactivos</option>
+                            </select>
+                        </div>
+                        
+                        <!-- ✅ BOTONES DE ACCIÓN -->
+                        <div class="col-md-9 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>Aplicar Filtros
+                            </button>
+                            <a href="{% url 'residente-list' %}" class="btn btn-secondary">
+                                <i class="fas fa-broom me-1"></i>Limpiar
+                            </a>
+                            <div class="ms-auto">
+                                <a href="{% url 'residente-create' %}" class="btn btn-success">
+                                    <i class="fas fa-user-plus me-1"></i>Nuevo Residente
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Información de totales y botón para crear nuevo residente -->
-<div class="content-header mb-4">
+<!-- ✅ INFORMACIÓN DE TOTALES -->
+<div class="alert alert-info mb-4 d-flex justify-content-between align-items-center">
     <div>
-        <p class="text-muted mb-0">Total: {{ residentes.count }} residentes</p>
-        <!-- Diseño optimizado para móviles -->
-        <div class="form-check form-switch d-md-none mt-2">
-            <input class="form-check-input" type="checkbox" id="mostrarInactivos">
-            <label class="form-check-label" for="mostrarInactivos">Mostrar inactivos</label>
-        </div>
-    </div>
-    <div class="d-flex align-items-center">
-        <!-- Switch para versión desktop -->
-        <div class="form-check form-switch me-3 d-none d-md-block">
-            <input class="form-check-input" type="checkbox" id="mostrarInactivos">
-            <label class="form-check-label" for="mostrarInactivos">Mostrar inactivos</label>
-        </div>
-        <a href="{% url 'residente-create' %}" class="btn btn-primary">
-            <i class="fas fa-user-plus"></i> <span class="d-none d-md-inline">Nuevo Residente</span>
-        </a>
+        <strong>Total:</strong> {{ residentes.count }} residentes
+        {% if filtros.estado == 'activo' %}
+            (mostrando solo activos)
+        {% elif filtros.estado == 'inactivo' %}
+            (mostrando solo inactivos)
+        {% else %}
+            ({{ residentes_activos }} activos, {{ residentes_inactivos }} inactivos)
+        {% endif %}
     </div>
 </div>
 
-<!-- Tabla responsiva de residentes -->
+<!-- ✅ TABLA DE RESIDENTES MEJORADA -->
 <div class="card shadow">
     <div class="card-body">
         <div class="table-responsive">
@@ -109,7 +122,7 @@
                         <th>Nombre</th>
                         <th>Vivienda</th>
                         <th>Tipo</th>
-                        <th class="d-none d-md-table-cell">Fecha Ingreso</th>
+                        <th class="d-none d-lg-table-cell">Fecha Ingreso</th>
                         <th class="d-none d-md-table-cell">Vehículos</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -117,12 +130,18 @@
                 </thead>
                 <tbody>
                     {% for residente in residentes %}
-                    <tr class="{% if not residente.activo %}residente-inactivo d-none{% endif %}">
+                    <tr class="{% if not residente.activo or not residente.usuario.is_active %}residente-inactivo{% endif %}">
                         <td data-label="#" class="d-none d-md-table-cell">{{ residente.id }}</td>
-                        <td data-label="Nombre">{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</td>
+                        <td data-label="Nombre">
+                            {{ residente.usuario.first_name }} {{ residente.usuario.last_name }}
+                            <div class="small text-muted d-md-none">{{ residente.usuario.username }}</div>
+                        </td>
                         <td data-label="Vivienda">
                             {% if residente.vivienda %}
-                                {{ residente.vivienda.edificio.nombre }} - {{ residente.vivienda.numero }}
+                                <a href="{% url 'vivienda-detail' residente.vivienda.id %}" class="text-decoration-none">
+                                    {{ residente.vivienda.edificio.nombre }} - {{ residente.vivienda.numero }}
+                                </a>
+                                <div class="small text-muted">Piso {{ residente.vivienda.piso }}</div>
                             {% else %}
                                 <span class="text-muted">Sin asignar</span>
                             {% endif %}
@@ -134,49 +153,157 @@
                                 <span class="badge text-bg-secondary">Inquilino</span>
                             {% endif %}
                         </td>
-                        <td data-label="Fecha Ingreso" class="d-none d-md-table-cell">{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
+                        <td data-label="Fecha Ingreso" class="d-none d-lg-table-cell">{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
                         <td data-label="Vehículos" class="d-none d-md-table-cell">{{ residente.vehiculos }}</td>
                         <td data-label="Estado">
-                            {% if residente.activo %}
+                            {% if residente.activo and residente.usuario.is_active %}
                                 <span class="badge text-bg-success">Activo</span>
                             {% else %}
                                 <span class="badge text-bg-danger">Inactivo</span>
+                                {% if not residente.usuario.is_active %}
+                                    <div class="small text-muted">Usuario desactivado</div>
+                                {% endif %}
                             {% endif %}
                         </td>
                         <td data-label="Acciones">
-                            <div class="btn-group btn-group-sm action-buttons">
-                                <a href="{% url 'residente-detail' residente.id %}" class="btn btn-info" title="Ver detalles">
+                            <div class="btn-group btn-group-sm action-buttons" role="group">
+                                <a href="{% url 'residente-detail' residente.id %}" 
+                                   class="btn btn-info" title="Ver detalles">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{% url 'residente-update' residente.id %}" class="btn btn-warning" title="Editar">
+                                <a href="{% url 'residente-update' residente.id %}" 
+                                   class="btn btn-warning" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'usuario-change-state' residente.usuario.id %}" class="btn {% if residente.activo %}btn-danger{% else %}btn-success{% endif %}" title="{% if residente.activo %}Desactivar{% else %}Activar{% endif %}">
-                                    <i class="fas {% if residente.activo %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                
+                                <!-- ✅ BOTÓN DE CAMBIO DE ESTADO CON REDIRECCIÓN CORRECTA -->
+                                <a href="{% url 'usuario-change-state' residente.usuario.id %}?next={{ request.get_full_path|urlencode }}" 
+                                   class="btn {% if residente.usuario.is_active %}btn-danger{% else %}btn-success{% endif %}" 
+                                   title="{% if residente.usuario.is_active %}Desactivar{% else %}Activar{% endif %}"
+                                   onclick="return confirmarCambioEstadoResidente('{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}', {{ residente.usuario.is_active|yesno:'true,false' }})">
+                                    <i class="fas {% if residente.usuario.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
                                 </a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center">No hay residentes registrados</td>
+                        <td colspan="8" class="text-center">
+                            {% if filtros.buscar or filtros.edificio or filtros.vivienda or filtros.tipo_residente or filtros.estado %}
+                                No hay residentes que coincidan con los filtros seleccionados.
+                                <div class="mt-2">
+                                    <a href="{% url 'residente-list' %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-broom me-1"></i>Limpiar filtros
+                                    </a>
+                                </div>
+                            {% else %}
+                                No hay residentes registrados
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        
+        <!-- ✅ PAGINACIÓN -->
+        {% if is_paginated %}
+        <div class="d-flex justify-content-center mt-4">
+            <nav aria-label="Navegación de páginas de residentes">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
     </div>
 </div>
 
-<!-- Botón flotante para crear nuevo residente en móviles -->
+<!-- ✅ BOTÓN FLOTANTE PARA MÓVILES -->
 <div class="d-md-none position-fixed bottom-0 end-0 m-3">
-    <a href="{% url 'residente-create' %}" class="btn btn-primary btn-lg rounded-circle shadow-lg">
+    <a href="{% url 'residente-create' %}" class="btn btn-success btn-lg rounded-circle shadow-lg">
         <i class="fas fa-user-plus"></i>
     </a>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Asegúrate de incluir el JavaScript estático correctamente -->
 <script src="{% static 'js/residentes_filters.js' %}"></script>
+<script>
+    // ✅ FUNCIÓN ESPECÍFICA PARA CONFIRMACIÓN DE CAMBIO DE ESTADO DE RESIDENTES
+    function confirmarCambioEstadoResidente(nombreResidente, esActivo) {
+        const accion = esActivo ? 'desactivar' : 'activar';
+        const mensaje = `¿Estás seguro de que deseas ${accion} al residente "${nombreResidente}"?`;
+        
+        let detalle = '';
+        if (esActivo) {
+            detalle = '\n\n⚠️ El residente no podrá acceder al sistema y se marcará como inactivo en todas las áreas.';
+        } else {
+            detalle = '\n\n✅ El residente podrá volver a acceder al sistema y se marcará como activo.';
+        }
+        
+        return confirm(mensaje + detalle);
+    }
+    
+    // ✅ MEJORAR LA EXPERIENCIA DE FILTROS
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('filtroForm');
+        const inputs = form.querySelectorAll('input, select');
+        
+        // Aplicar filtros al presionar Enter en campos de texto
+        inputs.forEach(input => {
+            if (input.type === 'text') {
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        form.submit();
+                    }
+                });
+            }
+        });
+        
+        // Limpiar filtros individualmente
+        const limpiarBtn = document.createElement('button');
+        limpiarBtn.type = 'button';
+        limpiarBtn.className = 'btn btn-outline-secondary btn-sm ms-2';
+        limpiarBtn.innerHTML = '<i class="fas fa-times"></i>';
+        limpiarBtn.title = 'Limpiar este filtro';
+        
+        // Indicar filtros activos
+        inputs.forEach(input => {
+            if (input.value && input.name !== 'page') {
+                input.style.borderColor = '#0d6efd';
+                input.style.boxShadow = '0 0 5px rgba(13, 110, 253, 0.3)';
+            }
+        });
+    });
+</script>
 {% endblock %}

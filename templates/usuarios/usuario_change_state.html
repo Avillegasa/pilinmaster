@@ -11,32 +11,86 @@
                 <h5><i class="fas fa-exclamation-triangle"></i> Confirmar Cambio de Estado</h5>
             </div>
             <div class="card-body text-center">
+                <!-- ✅ INFORMACIÓN DEL USUARIO -->
+                <div class="mb-4">
+                    {% if usuario.foto %}
+                        <img src="{{ usuario.foto.url }}" alt="{{ usuario }}" 
+                             class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-2x text-secondary"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h6 class="mb-0">{{ usuario.first_name }} {{ usuario.last_name }}</h6>
+                    <small class="text-muted">{{ usuario.username }}</small>
+                    {% if usuario.email %}
+                        <br><small class="text-muted">{{ usuario.email }}</small>
+                    {% endif %}
+                    
+                    {% if usuario.rol %}
+                        <div class="mt-2">
+                            <span class="badge bg-info">{{ usuario.rol.nombre }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
                 {% if usuario.is_active %}
-                    <p class="lead">¿Estás seguro que deseas desactivar este usuario?</p>
+                    <p class="lead text-warning">¿Estás seguro que deseas <strong>desactivar</strong> este usuario?</p>
                     <div class="alert alert-warning">
-                        <strong>{{ usuario.first_name }} {{ usuario.last_name }}</strong> ({{ usuario.username }})
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Consecuencias de la desactivación:</strong>
+                        <ul class="text-start mt-2 mb-0">
+                            <li>El usuario no podrá iniciar sesión en el sistema</li>
+                            <li>Se marcará como inactivo en todas las secciones</li>
+                            <li>Si es residente, se marcará como residente inactivo</li>
+                            <li>Si es empleado, se marcará como empleado inactivo</li>
+                            <li>No se eliminará del sistema, solo se desactivará</li>
+                        </ul>
                     </div>
-                    <p>El usuario no será eliminado, pero no podrá iniciar sesión ni realizar acciones en el sistema.</p>
                 {% else %}
-                    <p class="lead">¿Estás seguro que deseas reactivar este usuario?</p>
+                    <p class="lead text-success">¿Estás seguro que deseas <strong>reactivar</strong> este usuario?</p>
                     <div class="alert alert-success">
-                        <strong>{{ usuario.first_name }} {{ usuario.last_name }}</strong> ({{ usuario.username }})
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Consecuencias de la reactivación:</strong>
+                        <ul class="text-start mt-2 mb-0">
+                            <li>El usuario podrá volver a iniciar sesión</li>
+                            <li>Se marcará como activo en todas las secciones</li>
+                            <li>Si es residente, se reactivará automáticamente</li>
+                            <li>Si es empleado, se reactivará automáticamente</li>
+                            <li>Recuperará todos sus permisos y accesos</li>
+                        </ul>
                     </div>
-                    <p>El usuario podrá volver a iniciar sesión y usar el sistema normalmente.</p>
                 {% endif %}
                 
+                <!-- ✅ FORMULARIO SIMPLIFICADO SIN VALIDACIONES -->
                 <form method="post">
                     {% csrf_token %}
+                    
+                    <!-- ✅ CAMPO OCULTO PARA REDIRECCIÓN -->
+                    {% if next_url %}
+                        <input type="hidden" name="next" value="{{ next_url }}">
+                    {% endif %}
+                    
+                    <!-- ✅ CAMPO OCULTO PARA CONFIRMACIÓN -->
+                    <input type="hidden" name="confirm_change" value="1">
+                    
                     <div class="mt-4 d-flex justify-content-center gap-3">
-                        <a href="{% url 'usuario-list' %}" class="btn btn-secondary">
+                        <!-- ✅ BOTÓN CANCELAR CON REDIRECCIÓN INTELIGENTE -->
+                        <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'usuario-list' %}{% endif %}" 
+                           class="btn btn-secondary">
                             <i class="fas fa-times"></i> Cancelar
                         </a>
+                        
                         {% if usuario.is_active %}
-                            <button type="submit" class="btn btn-warning">
+                            <button type="submit" class="btn btn-warning" 
+                                    onclick="return confirmarDesactivacion()">
                                 <i class="fas fa-user-slash"></i> Desactivar Usuario
                             </button>
                         {% else %}
-                            <button type="submit" class="btn btn-success">
+                            <button type="submit" class="btn btn-success"
+                                    onclick="return confirmarActivacion()">
                                 <i class="fas fa-user-check"></i> Reactivar Usuario
                             </button>
                         {% endif %}
@@ -46,4 +100,75 @@
         </div>
     </div>
 </div>
+
+<!-- ✅ INFORMACIÓN ADICIONAL -->
+<div class="row mt-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card border-info">
+            <div class="card-body">
+                <h6 class="card-title text-info">
+                    <i class="fas fa-info-circle me-2"></i>Información Adicional
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <strong>Fecha de registro:</strong> {{ usuario.date_joined|date:"d/m/Y H:i" }}<br>
+                            <strong>Último acceso:</strong> {{ usuario.last_login|date:"d/m/Y H:i"|default:"Nunca" }}<br>
+                            {% if usuario.telefono %}
+                                <strong>Teléfono:</strong> {{ usuario.telefono }}<br>
+                            {% endif %}
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            {% if usuario.numero_documento %}
+                                <strong>Documento:</strong> {{ usuario.get_tipo_documento_display }} {{ usuario.numero_documento }}<br>
+                            {% endif %}
+                            
+                            <!-- ✅ MOSTRAR INFORMACIÓN DE RESIDENTE/EMPLEADO -->
+                            {% if usuario.residente %}
+                                <strong>Es residente:</strong> 
+                                {% if usuario.residente.vivienda %}
+                                    {{ usuario.residente.vivienda.edificio.nombre }} - {{ usuario.residente.vivienda.numero }}
+                                {% else %}
+                                    Sin vivienda asignada
+                                {% endif %}
+                                <br>
+                            {% endif %}
+                            
+                            {% if usuario.empleado %}
+                                <strong>Es empleado:</strong> {{ usuario.empleado.puesto.nombre|default:"Sin puesto asignado" }}<br>
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function confirmarDesactivacion() {
+        return confirm('⚠️ CONFIRMAR DESACTIVACIÓN\n\n' +
+                      'Esta acción desactivará al usuario "{{ usuario.username }}" en todo el sistema.\n\n' +
+                      '¿Estás completamente seguro de continuar?');
+    }
+    
+    function confirmarActivacion() {
+        return confirm('✅ CONFIRMAR REACTIVACIÓN\n\n' +
+                      'Esta acción reactivará al usuario "{{ usuario.username }}" en todo el sistema.\n\n' +
+                      '¿Estás seguro de continuar?');
+    }
+    
+    // ✅ VALIDACIÓN ADICIONAL PARA ADMINISTRADORES
+    {% if usuario.rol.nombre == 'Administrador' %}
+    document.addEventListener('DOMContentLoaded', function() {
+        // Si por alguna razón un administrador llega aquí, mostrar advertencia
+        alert('⚠️ ADVERTENCIA: Este es un usuario Administrador protegido por el sistema.');
+        window.history.back();
+    });
+    {% endif %}
+</script>
 {% endblock %}

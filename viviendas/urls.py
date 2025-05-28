@@ -10,6 +10,7 @@ urlpatterns = [
     path('<int:pk>/editar/', views.ViviendaUpdateView.as_view(), name='vivienda-update'),
     path('<int:pk>/eliminar/', views.ViviendaDeleteView.as_view(), name='vivienda-delete'),
     path('<int:pk>/baja/', views.ViviendaBajaView.as_view(), name='vivienda-baja'),
+    path('<int:pk>/alta/', views.ViviendaAltaView.as_view(), name='vivienda-alta'),
     
     # Vistas de edificios
     path('edificios/', views.EdificioListView.as_view(), name='edificio-list'),

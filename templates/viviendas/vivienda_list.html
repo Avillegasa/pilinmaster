@@ -5,21 +5,24 @@
 {% block header %}Gestión de Viviendas{% endblock %}
 
 {% block content %}
-<!-- Filtros optimizados para móviles -->
+<!-- ✅ FILTROS CORREGIDOS con funcionalidad de mostrar/ocultar -->
 <div class="card shadow mb-4 filter-card">
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
-        <h6 class="m-0 font-weight-bold text-primary">Filtros</h6>
-        <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
-            <i class="fas fa-filter"></i> <span class="d-none d-md-inline">Mostrar/Ocultar</span>
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-filter me-2"></i>Filtros
+        </h6>
+        <button class="btn btn-sm btn-outline-primary" type="button" id="toggleFiltersBtn">
+            <i class="fas fa-eye-slash" id="toggleIcon"></i> 
+            <span id="toggleText">Ocultar Filtros</span>
         </button>
     </div>
-    <div class="collapse show" id="collapseFilters">
+    <div id="collapseFilters" class="collapse show">
         <div class="card-body">
             <form method="get" id="filtroForm" class="row g-3">
                 <!-- Filtro por edificio -->
                 <div class="col-md-3 col-sm-6">
                     <label for="edificio" class="form-label">Edificio</label>
-                    <select name="edificio" id="edificio" class="form-select" data-autosubmit="false">
+                    <select name="edificio" id="edificio" class="form-select">
                         <option value="">Todos los edificios</option>
                         {% for edificio in edificios %}
                             <option value="{{ edificio.id }}" {% if filtro_edificio == edificio.id|stringformat:"i" %}selected{% endif %}>
@@ -69,12 +72,12 @@
                     </select>
                 </div>
                 
-                <!-- Botones de acción en responsivo -->
-                <div class="col-12 d-md-flex justify-content-md-end mt-3 gap-2">
-                    <button type="submit" class="btn btn-primary w-100 w-md-auto mb-2 mb-md-0">
-                        <i class="fas fa-filter"></i> Filtrar
+                <!-- ✅ BOTONES DE ACCIÓN CORREGIDOS -->
+                <div class="col-12 d-flex justify-content-end gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
                     </button>
-                    <a href="{% url 'vivienda-list' %}" class="btn btn-secondary w-100 w-md-auto">
+                    <a href="{% url 'vivienda-list' %}" class="btn btn-secondary">
                         <i class="fas fa-broom"></i> Limpiar
                     </a>
                 </div>
@@ -84,8 +87,8 @@
 </div>
 
 <!-- Información de totales y botón para crear nueva vivienda -->
-<div class="alert alert-info mb-4 content-header">
-    <div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="alert alert-info mb-0">
         <strong>Total viviendas:</strong> {{ viviendas.count }} 
         {% if filtro_activo == 'true' or filtro_activo == '' %}
         (de {{ total_activas }} activas)
@@ -93,12 +96,12 @@
         (de {{ total_inactivas }} dadas de baja)
         {% endif %}
     </div>
-    <a href="{% url 'vivienda-create' %}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> <span class="d-none d-md-inline">Nueva Vivienda</span>
+    <a href="{% url 'vivienda-create' %}" class="btn btn-success">
+        <i class="fas fa-plus"></i> Nueva Vivienda
     </a>
 </div>
 
-<!-- Tabla de viviendas con mejoras de responsividad -->
+<!-- Tabla de viviendas -->
 <div class="card shadow">
     <div class="card-body">
         <div class="table-responsive">
@@ -152,19 +155,20 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 {% if vivienda.activo %}
-                                <a href="{% url 'vivienda-update' vivienda.id %}" class="btn btn-warning" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{% url 'vivienda-baja' vivienda.id %}" class="btn btn-danger" title="Dar de baja">
-                                    <i class="fas fa-archive"></i>
-                                </a>
+                                    <a href="{% url 'vivienda-update' vivienda.id %}" class="btn btn-warning" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'vivienda-baja' vivienda.id %}" class="btn btn-danger" title="Dar de baja">
+                                        <i class="fas fa-archive"></i>
+                                    </a>
                                 {% else %}
-                                <button class="btn btn-secondary" disabled title="Vivienda dada de baja">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-secondary" disabled title="Vivienda dada de baja">
-                                    <i class="fas fa-archive"></i>
-                                </button>
+                                    <!-- ✅ NUEVA FUNCIONALIDAD: Botón para dar de alta vivienda -->
+                                    <a href="{% url 'vivienda-alta' vivienda.id %}" class="btn btn-success" title="Dar de alta">
+                                        <i class="fas fa-check-circle"></i>
+                                    </a>
+                                    <button class="btn btn-secondary" disabled title="Vivienda dada de baja">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
                                 {% endif %}
                             </div>
                         </td>
@@ -182,13 +186,192 @@
 
 <!-- Botón flotante para crear vivienda en móviles -->
 <div class="d-md-none position-fixed bottom-0 end-0 m-3">
-    <a href="{% url 'vivienda-create' %}" class="btn btn-primary btn-lg rounded-circle shadow-lg">
+    <a href="{% url 'vivienda-create' %}" class="btn btn-success btn-lg rounded-circle shadow-lg">
         <i class="fas fa-plus"></i>
     </a>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Asegúrate de incluir el JavaScript estático correctamente -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🏠 Inicializando filtros de viviendas...');
+    
+    // ✅ CORRECCIÓN CRÍTICA: Funcionalidad de mostrar/ocultar filtros SIN Bootstrap
+    const toggleButton = document.getElementById('toggleFiltersBtn');
+    const toggleIcon = document.getElementById('toggleIcon');
+    const toggleText = document.getElementById('toggleText');
+    const collapseFilters = document.getElementById('collapseFilters');
+    
+    let filtrosVisibles = true; // Estado inicial: filtros visibles
+    
+    if (toggleButton && collapseFilters && toggleIcon && toggleText) {
+        toggleButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🔄 Cambiando visibilidad de filtros...');
+            
+            if (filtrosVisibles) {
+                // Ocultar filtros
+                collapseFilters.style.display = 'none';
+                toggleIcon.className = 'fas fa-eye';
+                toggleText.textContent = 'Mostrar Filtros';
+                filtrosVisibles = false;
+                console.log('👁️ Filtros ocultados');
+            } else {
+                // Mostrar filtros
+                collapseFilters.style.display = 'block';
+                toggleIcon.className = 'fas fa-eye-slash';
+                toggleText.textContent = 'Ocultar Filtros';
+                filtrosVisibles = true;
+                console.log('👁️ Filtros mostrados');
+            }
+        });
+    } else {
+        console.error('❌ No se encontraron elementos para toggle de filtros');
+    }
+    
+    // ✅ LÓGICA DE FILTROS (sin auto-envío)
+    const filtroForm = document.getElementById('filtroForm');
+    const edificioSelect = document.getElementById('edificio');
+    const pisoSelect = document.getElementById('piso');
+    const estadoSelect = document.getElementById('estado');
+    const activoSelect = document.getElementById('activo');
+    
+    // Función para actualizar los pisos disponibles según el edificio seleccionado
+    function actualizarPisos() {
+        if (!edificioSelect || !pisoSelect) {
+            console.log('⚠️ No se encontraron los elementos edificio o piso');
+            return;
+        }
+        
+        const edificioId = edificioSelect.value || 0;
+        const pisoSeleccionado = pisoSelect.value;
+        
+        console.log(`🔄 Actualizando pisos para edificio: ${edificioId}`);
+        
+        // Deshabilitar temporalmente el select de pisos
+        pisoSelect.disabled = true;
+        pisoSelect.innerHTML = '<option value="">Cargando pisos...</option>';
+        
+        // Hacer la petición para obtener los pisos del edificio seleccionado
+        fetch(`/viviendas/api/edificio/${edificioId}/pisos/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('✅ Pisos cargados:', data);
+                
+                // Limpiar las opciones actuales
+                pisoSelect.innerHTML = '<option value="">Todos los pisos</option>';
+                
+                // Añadir los nuevos pisos
+                data.forEach(piso => {
+                    const option = document.createElement('option');
+                    option.value = piso;
+                    option.textContent = `Piso ${piso}`;
+                    pisoSelect.appendChild(option);
+                });
+                
+                // Intentar restaurar el piso seleccionado previamente
+                if (pisoSeleccionado && data.includes(parseInt(pisoSeleccionado))) {
+                    pisoSelect.value = pisoSeleccionado;
+                    console.log(`🔄 Piso restaurado: ${pisoSeleccionado}`);
+                }
+                
+                // Habilitar el select de pisos
+                pisoSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('❌ Error al cargar pisos:', error);
+                
+                // Restaurar estado por defecto en caso de error
+                pisoSelect.innerHTML = '<option value="">Todos los pisos</option>';
+                pisoSelect.disabled = false;
+                
+                // Mostrar mensaje de error al usuario
+                alert('Error al cargar los pisos del edificio. Por favor, recargue la página.');
+            });
+    }
+    
+    // Función para manejar la relación entre estado y activo
+    function sincronizarEstadoActivo() {
+        if (!estadoSelect || !activoSelect) return;
+        
+        // Si se selecciona BAJA, automáticamente cambiar activo a false
+        if (estadoSelect.value === 'BAJA') {
+            activoSelect.value = 'false';
+            console.log('🔄 Estado BAJA seleccionado, cambiando a inactivo');
+        }
+        
+        // Si se selecciona inactivo, solo permitir BAJA como estado
+        if (activoSelect.value === 'false') {
+            if (estadoSelect.value !== 'BAJA' && estadoSelect.value !== '') {
+                estadoSelect.value = 'BAJA';
+                console.log('🔄 Inactivo seleccionado, cambiando estado a BAJA');
+            }
+        }
+    }
+    
+    // ✅ Event listeners sin auto-envío
+    if (edificioSelect) {
+        edificioSelect.addEventListener('change', function() {
+            console.log(`🏢 Edificio cambiado a: ${this.value}`);
+            actualizarPisos();
+            // NO auto-enviar formulario
+        });
+        
+        // Cargar pisos iniciales si hay edificio preseleccionado
+        if (edificioSelect.value) {
+            console.log('🔄 Cargando pisos iniciales para edificio preseleccionado');
+            actualizarPisos();
+        }
+    }
+    
+    if (estadoSelect) {
+        estadoSelect.addEventListener('change', function() {
+            console.log(`📊 Estado cambiado a: ${this.value}`);
+            sincronizarEstadoActivo();
+            // NO auto-enviar formulario
+        });
+    }
+    
+    if (activoSelect) {
+        activoSelect.addEventListener('change', function() {
+            console.log(`✅ Activo cambiado a: ${this.value}`);
+            sincronizarEstadoActivo();
+            // NO auto-enviar formulario
+        });
+    }
+    
+    // ✅ Solo enviar formulario con botón de submit
+    const submitButton = filtroForm.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.addEventListener('click', function(e) {
+            console.log('🔍 Aplicando filtros...');
+            // El formulario se enviará normalmente
+        });
+    }
+    
+    // Prevenir envío accidental
+    filtroForm.addEventListener('submit', function(e) {
+        if (!e.submitter || e.submitter.type !== 'submit') {
+            console.log('⚠️ Envío de formulario bloqueado - debe usar el botón "Aplicar Filtros"');
+            e.preventDefault();
+            return false;
+        }
+        console.log('✅ Formulario enviado correctamente');
+    });
+    
+    // Inicializar
+    sincronizarEstadoActivo();
+    
+    console.log('✅ Filtros de viviendas inicializados correctamente');
+});
+</script>
+
+<!-- ✅ INCLUIR EL ARCHIVO JS EXTERNO -->
 <script src="{% static 'js/viviendas_filters.js' %}"></script>
 {% endblock %}
