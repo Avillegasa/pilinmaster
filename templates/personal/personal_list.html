@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Personal | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Gestión de Personal{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-users me-2"></i>Personal del Condominio
+        </h6>
+        <div class="d-flex align-items-center">
+            <div class="form-check form-switch me-3">
+                <input class="form-check-input" type="checkbox" id="mostrarInactivosPersonal">
+                <label class="form-check-label" for="mostrarInactivosPersonal">
+                    Mostrar personal inactivo
+                </label>
+            </div>
+            <button class="btn btn-sm btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
+                <i class="fas fa-filter"></i> Filtros
+            </button>
+        </div>
+    </div>
+    <div class="collapse show" id="collapseFilters">
+        <div class="card-body">
+            <form method="get" id="filtroForm" class="row g-3">
+                <!-- Filtro por puesto -->
+                <div class="col-md-3">
+                    <label for="puesto" class="form-label">Puesto</label>
+                    <select name="puesto" id="puesto" class="form-select">
+                        <option value="">Todos los puestos</option>
+                        {% for puesto in puestos %}
+                            <option value="{{ puesto.id }}" {% if filtro_puesto == puesto.id|stringformat:"i" %}selected{% endif %}>
+                                {{ puesto.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Filtro por tipo de contrato -->
+                <div class="col-md-3">
+                    <label for="tipo_contrato" class="form-label">Tipo de Contrato</label>
+                    <select name="tipo_contrato" id="tipo_contrato" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="PERMANENTE" {% if filtro_tipo_contrato == 'PERMANENTE' %}selected{% endif %}>Permanente</option>
+                        <option value="TEMPORAL" {% if filtro_tipo_contrato == 'TEMPORAL' %}selected{% endif %}>Temporal</option>
+                        <option value="EXTERNO" {% if filtro_tipo_contrato == 'EXTERNO' %}selected{% endif %}>Externo</option>
+                    </select>
+                </div>
+                
+                <!-- Filtro por estado -->
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Estado</label>
+                    <select name="estado" id="estado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="activo" {% if filtro_estado == 'activo' %}selected{% endif %}>Activos</option>
+                        <option value="inactivo" {% if filtro_estado == 'inactivo' %}selected{% endif %}>Inactivos</option>
+                    </select>
+                </div>
+                
+                <!-- Búsqueda por texto -->
+                <div class="col-md-3">
+                    <label for="q" class="form-label">Buscar</label>
+                    <input type="text" class="form-control" name="q" id="q" value="{{ query }}" placeholder="Nombre, apellido o especialidad...">
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="col-12 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search"></i> Aplicar Filtros
+                    </button>
+                    <a href="{% url 'personal-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-broom"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <p class="text-muted mb-1">
+            <i class="fas fa-users me-1"></i>
+            Total: <strong>{{ personal.count }}</strong> miembros del personal
+        </p>
+        <div class="small text-muted">
+            <span class="me-3">
+                <i class="fas fa-user-check text-success me-1"></i>
+                Activos: {{ personal_activo_count }}
+            </span>
+            <span>
+                <i class="fas fa-user-slash text-danger me-1"></i>
+                Inactivos: {{ personal_inactivo_count }}
+            </span>
+        </div>
+    </div>
+    <div>
+        <a href="{% url 'empleado-create' %}" class="btn btn-success">
+            <i class="fas fa-user-plus"></i> Nuevo Personal
+        </a>
+        <a href="{% url 'puesto-list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-briefcase"></i> Gestionar Puestos
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Foto</th>
+                        <th>Nombre</th>
+                        <th>Puesto</th>
+                        <th>Tipo Contrato</th>
+                        <th>Especialidad</th>
+                        <th>Fecha Ingreso</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for empleado in personal %}
+                    <tr class="{% if not empleado.activo %}personal-inactivo d-none{% endif %}">
+                        <td>
+                            {% if empleado.usuario.foto %}
+                                <img src="{{ empleado.usuario.foto.url }}" alt="{{ empleado.usuario }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-user text-secondary"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>
+                                <strong>{{ empleado.usuario.first_name }} {{ empleado.usuario.last_name }}</strong>
+                                {% if empleado.usuario.rol.nombre == 'Personal' %}
+                                    <i class="fas fa-tools text-primary ms-1" title="Personal del Condominio" data-bs-toggle="tooltip"></i>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ empleado.usuario.username }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ empleado.puesto.nombre }}</span>
+                            {% if empleado.puesto.requiere_especializacion %}
+                                <i class="fas fa-star text-warning ms-1" title="Requiere especialización" data-bs-toggle="tooltip"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if empleado.tipo_contrato == 'PERMANENTE' %}
+                                <span class="badge bg-success">Permanente</span>
+                            {% elif empleado.tipo_contrato == 'TEMPORAL' %}
+                                <span class="badge bg-warning text-dark">Temporal</span>
+                            {% else %}
+                                <span class="badge bg-info">Externo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if empleado.especialidad %}
+                                <span class="text-primary">{{ empleado.especialidad }}</span>
+                            {% else %}
+                                <span class="text-muted">Sin especialidad</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>{{ empleado.fecha_contratacion|date:"d/m/Y" }}</div>
+                            <small class="text-muted">
+                                {% if empleado.antiguedad_anos > 0 %}
+                                    {{ empleado.antiguedad_anos }} año{{ empleado.antiguedad_anos|pluralize }}
+                                {% else %}
+                                    Menos de 1 año
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            {% if empleado.activo %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Activo
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>Inactivo
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'empleado-detail' empleado.id %}" class="btn btn-info" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'empleado-update' empleado.id %}" class="btn btn-warning" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'empleado-change-state' empleado.id %}" 
+                                   class="btn {% if empleado.activo %}btn-danger{% else %}btn-success{% endif %}" 
+                                   title="{% if empleado.activo %}Desactivar{% else %}Activar{% endif %}"
+                                   onclick="return confirmarCambioEstadoPersonal('{{ empleado.usuario.first_name }} {{ empleado.usuario.last_name }}', {{ empleado.activo|yesno:'true,false' }})">
+                                    <i class="fas {% if empleado.activo %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-users fa-3x mb-3"></i>
+                                <h5>No hay personal registrado</h5>
+                                <p>Comienza agregando el primer miembro del personal del condominio.</p>
+                                <a href="{% url 'empleado-create' %}" class="btn btn-success">
+                                    <i class="fas fa-user-plus"></i> Agregar Personal
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Información adicional -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Distribución por Puesto
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if puestos_stats %}
+                    {% for puesto_stat in puestos_stats %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ puesto_stat.puesto__nombre }}</span>
+                        <span class="badge bg-primary">{{ puesto_stat.cantidad }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No hay datos disponibles</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Información
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <strong>✅ Corrección aplicada:</strong> El rol "Mantenimiento" ha sido corregido por "Personal"
+                </p>
+                <p class="mb-2">
+                    <strong>👥 Personal del Condominio:</strong> Incluye todo el personal de mantenimiento, limpieza, seguridad y servicios generales.
+                </p>
+                <p class="mb-0">
+                    <strong>🔧 Módulo Personal:</strong> Gestiona empleados, puestos de trabajo y asignaciones de tareas.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Control para mostrar/ocultar personal inactivo
+        const checkboxInactivos = document.getElementById('mostrarInactivosPersonal');
+        const personalInactivo = document.querySelectorAll('.personal-inactivo');
+        
+        if (checkboxInactivos) {
+            checkboxInactivos.addEventListener('change', function() {
+                personalInactivo.forEach(function(elemento) {
+                    if (checkboxInactivos.checked) {
+                        elemento.classList.remove('d-none');
+                    } else {
+                        elemento.classList.add('d-none');
+                    }
+                });
+                
+                // Actualizar etiqueta
+                const label = checkboxInactivos.closest('.form-check').querySelector('.form-check-label');
+                if (label) {
+                    label.textContent = checkboxInactivos.checked ? 'Ocultar personal inactivo' : 'Mostrar personal inactivo';
+                }
+            });
+        }
+        
+        // Auto-submit del formulario al cambiar los selects (solo en desktop)
+        if (window.innerWidth >= 768) {
+            const selectInputs = document.querySelectorAll('#filtroForm select');
+            selectInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    document.getElementById('filtroForm').submit();
+                });
+            });
+        }
+        
+        // Función para confirmar cambio de estado del personal
+        window.confirmarCambioEstadoPersonal = function(nombrePersonal, esActivo) {
+            const accion = esActivo ? 'desactivar' : 'activar';
+            const mensaje = `¿Estás seguro de que deseas ${accion} a ${nombrePersonal}?`;
+            const advertencia = esActivo 
+                ? '\n\n⚠️ El personal no podrá acceder al sistema hasta que sea reactivado.'
+                : '\n\n✅ El personal podrá acceder nuevamente al sistema.';
+            
+            if (typeof Swal !== 'undefined') {
+                return new Promise((resolve) => {
+                    Swal.fire({
+                        icon: esActivo ? 'warning' : 'question',
+                        title: esActivo ? '⚠️ Desactivar Personal' : '✅ Activar Personal',
+                        text: mensaje + advertencia,
+                        showCancelButton: true,
+                        confirmButtonText: esActivo ? 'Sí, desactivar' : 'Sí, activar',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: esActivo ? '#dc3545' : '#28a745',
+                        cancelButtonColor: '#6c757d'
+                    }).then((result) => {
+                        resolve(result.isConfirmed);
+                    });
+                });
+            } else {
+                return confirm(mensaje + advertencia);
+            }
+        };
+        
+        // Inicializar tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

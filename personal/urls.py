@@ -15,6 +15,9 @@ urlpatterns = [
     path('empleados/<int:pk>/editar/', views.EmpleadoUpdateView.as_view(), name='empleado-update'),
     path('empleados/<int:pk>/estado/', views.empleado_change_state, name='empleado-change-state'),
     
+    # ✅ CORRECCIÓN: Alias para "personal-list" que apunta a empleado-list
+    path('', views.EmpleadoListView.as_view(), name='personal-list'),
+    
     # Vistas de asignaciones
     path('asignaciones/', views.AsignacionListView.as_view(), name='asignacion-list'),
     path('asignaciones/crear/', views.AsignacionCreateView.as_view(), name='asignacion-create'),
