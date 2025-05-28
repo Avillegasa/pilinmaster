@@ -140,6 +140,19 @@
                             <span>Estados de cuenta</span>
                         </a>
                     </li>
+                    <li class="nav-item mt-2">
+                        <div class="dropdown-divider border-top border-secondary"></div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white {% if '/financiero/conceptos/' in request.path %}active bg-primary{% endif %}" href="{% url 'concepto-list' %}">
+                            <i class="fas fa-tags me-2"></i> Conceptos de Cuota
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white {% if '/financiero/categorias-gasto/' in request.path %}active bg-primary{% endif %}" href="{% url 'categoria-gasto-list' %}">
+                            <i class="fas fa-list-alt me-2"></i> Categorías de Gasto
+                        </a>
+                    </li>
                 </ul>
             </div>
             <div class="sidebar-section">
@@ -212,19 +225,7 @@
                             <span>Puestos de Trabajo</span>
                         </a>
                     </li>
-                    <li class="nav-item mt-2">
-                        <div class="dropdown-divider border-top border-secondary"></div>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white {% if '/financiero/conceptos/' in request.path %}active bg-primary{% endif %}" href="{% url 'concepto-list' %}">
-                            <i class="fas fa-tags me-2"></i> Conceptos de Cuota
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white {% if '/financiero/categorias-gasto/' in request.path %}active bg-primary{% endif %}" href="{% url 'categoria-gasto-list' %}">
-                            <i class="fas fa-list-alt me-2"></i> Categorías de Gasto
-                        </a>
-                    </li>
+                    
                 </ul>
             </div>
             {% endif %}
