@@ -94,7 +94,10 @@
                 <div class="progress mb-3" style="height: 8px;">
                     <div class="progress-bar {% if porcentaje_utilizado > 100 %}bg-danger{% elif porcentaje_utilizado > 80 %}bg-warning{% else %}bg-success{% endif %}" 
                          role="progressbar" 
-                         style="width: {{ porcentaje_utilizado|min_value:100 }}%;" 
+                         {# Línea original comentada - Se usaba un filtro personalizado que no existía #}
+                         {# style="width: {{ porcentaje_utilizado|min_value:100 }}%;" #}
+                         {# Nueva implementación usando lógica de template directa #} 
+                         style="width: {% if porcentaje_utilizado > 100 %}100{% else %}{{ porcentaje_utilizado }}{% endif %}%;"
                          aria-valuenow="{{ porcentaje_utilizado|floatformat:0 }}" 
                          aria-valuemin="0" 
                          aria-valuemax="100"></div>
