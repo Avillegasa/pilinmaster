@@ -8,6 +8,15 @@ from django.http import HttpResponseRedirect
 from .models import Usuario, Rol
 from .forms import UsuarioCreationForm, UsuarioEditForm, RolForm
 from django.contrib.auth.views import LoginView
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+from django.urls import reverse
+from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import get_user_model
 # Función auxiliar para comprobar si es administrador
 def tiene_acceso_web(user):
     return (
@@ -58,19 +67,49 @@ class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView)
         messages.success(self.request, "Usuario creado. Podrá activar su cuenta al intentar iniciar sesión.")
         return super().form_valid(form)
 
+
 class CustomLoginView(LoginView):
     template_name = 'login.html'
 
     def form_valid(self, form):
         user = form.get_user()
+
         if user.rol is None or user.rol.nombre not in ['Administrador', 'Gerente']:
-            messages.add_message(
-            self.request, messages.ERROR,
-            "Debe ingresar desde la aplicación móvil.",
-            extra_tags='danger'
-            )
-            return redirect(reverse_lazy('login'))
+            messages.warning(self.request, "Debe ingresar desde la aplicación móvil")
+            return redirect('login')
+
+        # 🚫 Solo para Gerente: bloquear si no verificó su correo
+        if user.rol.nombre == 'Gerente' and not user.email_confirmado:
+            self.enviar_verificacion_email(user)
+            messages.warning(self.request, "Tu cuenta aún no ha sido verificada. Revisa tu correo para activarla.")
+            return redirect('login')
+
         return super().form_valid(form)
+
+    def enviar_verificacion_email(self, user):
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        url = self.request.build_absolute_uri(reverse('verificar-email', kwargs={'uidb64': uid, 'token': token}))
+        subject = 'Verificación de correo para TorreSegura'
+        message = f'Hola {user.first_name},\n\nPor favor verifica tu cuenta haciendo clic en el siguiente enlace:\n\n{url}'
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+
+
+class VerificarEmailView(View):
+    def get(self, request, uidb64, token):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = get_user_model().objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, Usuario.DoesNotExist):
+            user = None
+
+        if user and default_token_generator.check_token(user, token):
+            user.email_confirmado = True
+            user.save()
+            messages.success(request, "Correo verificado correctamente. Ahora puedes iniciar sesión.")
+        else:
+            messages.error(request, "El enlace de verificación no es válido o ha expirado.")
+        return redirect('login')
 
 class UsuarioUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Usuario

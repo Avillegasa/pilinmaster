@@ -21,6 +21,7 @@ class Usuario(AbstractUser):
     tipo_documento = models.CharField(max_length=10, choices=TIPOS_DOCUMENTO, default='DNI')
     numero_documento = models.CharField(max_length=20, blank=True)
     foto = models.ImageField(upload_to='usuarios/', blank=True, null=True)
+    email_confirmado = models.BooleanField(default=False)
 
     # Agregar validaciones personalizadas
     def clean(self):

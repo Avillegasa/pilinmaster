@@ -20,4 +20,7 @@ urlpatterns = [
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/me/', usuario_actual, name='usuario_actual'),
+    
+    path('verificar-email/<uidb64>/<token>/', views.VerificarEmailView.as_view(), name='verificar-email'),
+
 ]
