@@ -815,7 +815,9 @@ class EstadoCuentaCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView)
     model = EstadoCuenta
     form_class = EstadoCuentaForm
     template_name = 'financiero/estado_cuenta_form.html'
-    success_url = reverse_lazy('estado-cuenta-list')
+    
+    def get_success_url(self):
+        return reverse_lazy('estado-cuenta-detail', kwargs={'pk': self.object.pk})
     
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -1254,14 +1256,34 @@ def dashboard_financiero(request):
         total=Coalesce(Sum(F('monto') + F('recargo')), Decimal('0'))
     )['total']
     
-    # Calcular distribución de gastos por categoría en el mes actual
-    gastos_por_categoria = Gasto.objects.filter(
-        fecha__gte=inicio_mes_actual,
-        fecha__lte=fin_mes_actual,
-        estado='PAGADO'
-    ).values('categoria__nombre', 'categoria__color').annotate(
-        total=Sum('monto', output_field=DecimalField())
-    ).order_by('-total')
+    if vivienda_id:
+        # Obtener gastos solo de esa vivienda (si hay relación)
+        gastos_por_categoria = Gasto.objects.filter(
+            fecha__gte=inicio_mes_actual,
+            fecha__lte=fin_mes_actual,
+            estado='PAGADO'
+            # Aquí necesitarías una relación entre Gasto y Vivienda/Edificio
+        ).values('categoria__nombre', 'categoria__color').annotate(
+            total=Sum('monto', output_field=DecimalField())
+        ).order_by('-total')
+    elif edificio_id:
+        # Similar para edificio
+        gastos_por_categoria = Gasto.objects.filter(
+            fecha__gte=inicio_mes_actual,
+            fecha__lte=fin_mes_actual,
+            estado='PAGADO'
+        ).values('categoria__nombre', 'categoria__color').annotate(
+            total=Sum('monto', output_field=DecimalField())
+        ).order_by('-total')
+    else:
+        # Gastos generales (sin filtro específico)
+        gastos_por_categoria = Gasto.objects.filter(
+            fecha__gte=inicio_mes_actual,
+            fecha__lte=fin_mes_actual,
+            estado='PAGADO'
+        ).values('categoria__nombre', 'categoria__color').annotate(
+            total=Sum('monto', output_field=DecimalField())
+        ).order_by('-total')
     
     # Convertir a formato para gráficos
     datos_categorias = []
@@ -1438,3 +1460,41 @@ def api_resumen_financiero(request):
     }
     
     return JsonResponse(data)
+
+@login_required
+def api_concepto_detail(request, concepto_id):
+    """API para obtener detalles de un concepto"""
+    try:
+        concepto = ConceptoCuota.objects.get(pk=concepto_id)
+        data = {
+            'id': concepto.id,
+            'nombre': concepto.nombre,
+            'monto_base': float(concepto.monto_base),
+            'periodicidad': concepto.periodicidad,
+            'aplica_recargo': concepto.aplica_recargo,
+            'porcentaje_recargo': float(concepto.porcentaje_recargo)
+        }
+        return JsonResponse(data)
+    except ConceptoCuota.DoesNotExist:
+        return JsonResponse({'error': 'Concepto no encontrado'}, status=404)
+    
+
+@login_required
+def api_residentes_por_vivienda(request, vivienda_id):
+    """API para obtener residentes de una vivienda"""
+    try:
+        vivienda = Vivienda.objects.get(pk=vivienda_id)
+        residentes = Residente.objects.filter(vivienda=vivienda, activo=True)
+        
+        data = []
+        for residente in residentes:
+            data.append({
+                'id': residente.id,
+                'nombre': f"{residente.usuario.first_name} {residente.usuario.last_name}",
+                'es_propietario': residente.es_propietario,
+                'activo': residente.activo
+            })
+        
+        return JsonResponse({'residentes': data})
+    except Vivienda.DoesNotExist:
+        return JsonResponse({'error': 'Vivienda no encontrada'}, status=404)

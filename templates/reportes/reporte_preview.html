@@ -552,7 +552,7 @@
                 <h5 class="mb-0"><i class="fas fa-file-export"></i> Exportar Reporte</h5>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" action="{% url 'reporte-exportar' reporte.id %}">
                     {% csrf_token %}
                     {{ export_form|crispy }}
                     

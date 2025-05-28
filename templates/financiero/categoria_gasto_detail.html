@@ -1,6 +1,7 @@
 <!-- templates/financiero/categoria_gasto_detail.html -->
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Detalle de Categoría de Gasto | Sistema de Administración de Condominios{% endblock %}
 {% block header %}Categoría: {{ categoria.nombre }}{% endblock %}
@@ -93,7 +94,7 @@
                 <div class="progress mb-3" style="height: 8px;">
                     <div class="progress-bar {% if porcentaje_utilizado > 100 %}bg-danger{% elif porcentaje_utilizado > 80 %}bg-warning{% else %}bg-success{% endif %}" 
                          role="progressbar" 
-                         style="width: {{ porcentaje_utilizado|min:100 }}%;" 
+                         style="width: {{ porcentaje_utilizado|min_value:100 }}%;" 
                          aria-valuenow="{{ porcentaje_utilizado|floatformat:0 }}" 
                          aria-valuemin="0" 
                          aria-valuemax="100"></div>

@@ -13,7 +13,7 @@ def es_admin(user):
     return (user.is_authenticated and 
             hasattr(user, 'rol') and 
             user.rol is not None and 
-            user.rol.nombre == 'Administrador')
+            user.rol.nombre in ['Administrador', 'Gerente'])
 
 class AdminRequiredMixin(UserPassesTestMixin):
     def test_func(self):

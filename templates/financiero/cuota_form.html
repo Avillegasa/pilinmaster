@@ -95,12 +95,17 @@
                 fetch(`/financiero/api/concepto/${conceptoId}/`)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.monto_base && !montoInput.value) {
+                        if (data.monto_base && (!montoInput.value || montoInput.value == '0')) {
                             montoInput.value = data.monto_base;
                         }
                     })
                     .catch(error => console.log('Info: No se pudo obtener el monto base automáticamente'));
             });
+            
+            // Si ya hay un concepto seleccionado al cargar, obtener su monto
+            if (conceptoSelect.value && (!montoInput.value || montoInput.value == '0')) {
+                conceptoSelect.dispatchEvent(new Event('change'));
+            }
         }
         
         // Validación de fechas

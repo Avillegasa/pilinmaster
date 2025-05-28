@@ -68,12 +68,15 @@ class Cuota(models.Model):
             # Asegurar que al menos hay un mes de retraso
             meses_retraso = max(1, meses_retraso)
             
-            # Calcular recargo acumulado
+            # Calcular recargo acumulado con precisión decimal
             porcentaje_recargo_mensual = self.concepto.porcentaje_recargo / 100
             recargo_acumulado = self.monto * porcentaje_recargo_mensual * meses_retraso
             
-            return recargo_acumulado
-        return 0
+            # Redondear a 2 decimales para evitar errores de precisión
+            from decimal import Decimal, ROUND_HALF_UP
+            return recargo_acumulado.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return Decimal('0.00')
+
     
     def actualizar_recargo(self):
         """Actualiza el campo recargo según el cálculo actual"""

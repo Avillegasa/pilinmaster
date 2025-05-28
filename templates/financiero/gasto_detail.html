@@ -1,6 +1,7 @@
 <!-- templates/financiero/gasto_detail.html -->
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Detalle de Gasto | Sistema de Administración de Condominios{% endblock %}
 {% block header %}Detalle de Gasto{% endblock %}
@@ -164,7 +165,7 @@
                     {% with porcentaje=gasto.categoria.porcentaje_presupuesto_utilizado %}
                     <div class="progress-bar {% if porcentaje > 100 %}bg-danger{% elif porcentaje > 80 %}bg-warning{% else %}bg-success{% endif %}" 
                          role="progressbar" 
-                         style="width: {{ porcentaje|min:100 }}%;" 
+                         style="width: {{ porcentaje|min_value:100 }}%;" 
                          aria-valuenow="{{ porcentaje|floatformat:0 }}" 
                          aria-valuemin="0" 
                          aria-valuemax="100"></div>

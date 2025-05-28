@@ -52,5 +52,10 @@ urlpatterns = [
     
     # APIs para actualización asíncrona
     path('api/cuotas-por-vivienda/<int:vivienda_id>/', views.api_cuotas_por_vivienda, name='api-cuotas-por-vivienda'),
+    #API para resumen financiero
     path('api/resumen-financiero/', views.api_resumen_financiero, name='api-resumen-financiero'),
+    #API para conceptos
+    path('api/concepto/<int:concepto_id>/', views.api_concepto_detail, name='api-concepto-detail'),
+    # API para residentes por vivienda
+    path('api/vivienda/<int:vivienda_id>/residentes/', views.api_residentes_por_vivienda, name='api-residentes-por-vivienda'),
 ]

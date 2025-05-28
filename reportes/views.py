@@ -114,11 +114,221 @@ class ReporteDeleteView(DeleteView):
         return redirect(self.success_url)
 
 def reporte_preview(request, pk):
+    from viviendas.models import Residente, Vivienda
+    from personal.models import Empleado
+    from accesos.models import Visita
+    from financiero.models import Pago, Gasto
+    
     reporte = get_object_or_404(Reporte, pk=pk)
+    
+    # Contexto base
     context = {
         'reporte': reporte,
+        'fecha_generacion': timezone.now(),
+        'today': timezone.now().date(),
     }
+    
+    # Obtener nombre del edificio si está filtrado
+    if reporte.edificio:
+        context['nombre_edificio'] = reporte.edificio.nombre
+    else:
+        context['nombre_edificio'] = 'Todos los edificios'
+    
+    # Procesamiento según tipo de reporte
+    if reporte.tipo == 'RESIDENTES':
+        # Filtrar residentes
+        residentes = Residente.objects.all()
+        if reporte.edificio:
+            residentes = residentes.filter(vivienda__edificio=reporte.edificio)
+        
+        context.update({
+            'residentes': residentes[:10],  # Solo primeros 10 para preview
+            'total_residentes': residentes.count(),
+            'activos': residentes.filter(activo=True).count(),
+            'inactivos': residentes.filter(activo=False).count(),
+            'propietarios': residentes.filter(es_propietario=True).count(),
+            'inquilinos': residentes.filter(es_propietario=False).count(),
+        })
+        
+        # Datos para gráficos
+        context['chart_data'] = {
+            'tipos_residentes': {
+                'titulo': 'Residentes por Tipo',
+                'labels': ['Propietarios', 'Inquilinos'],
+                'data': [context['propietarios'], context['inquilinos']]
+            },
+            'propietarios_inquilinos': {
+                'titulo': 'Propietarios vs Inquilinos',
+                'labels': ['Propietarios', 'Inquilinos'],
+                'data': [context['propietarios'], context['inquilinos']]
+            },
+            'estado_residentes': {
+                'titulo': 'Estado de Residentes',
+                'labels': ['Activos', 'Inactivos'],
+                'data': [context['activos'], context['inactivos']]
+            }
+        }
+    
+    elif reporte.tipo == 'VIVIENDAS':
+        # Filtrar viviendas
+        viviendas = Vivienda.objects.filter(activo=True)
+        if reporte.edificio:
+            viviendas = viviendas.filter(edificio=reporte.edificio)
+        
+        ocupadas = viviendas.filter(estado='OCUPADO').count()
+        desocupadas = viviendas.filter(estado='DESOCUPADO').count()
+        mantenimiento = viviendas.filter(estado='MANTENIMIENTO').count()
+        total = viviendas.count()
+        
+        porcentaje_ocupacion = (ocupadas / total * 100) if total > 0 else 0
+        
+        context.update({
+            'viviendas': viviendas[:10],
+            'total_viviendas': total,
+            'ocupadas': ocupadas,
+            'desocupadas': desocupadas,
+            'mantenimiento': mantenimiento,
+            'porcentaje_ocupacion': porcentaje_ocupacion,
+        })
+        
+        # Datos para gráficos
+        context['chart_data'] = {
+            'estado_viviendas': {
+                'titulo': 'Estado de Viviendas',
+                'labels': ['Ocupadas', 'Desocupadas', 'Mantenimiento'],
+                'data': [ocupadas, desocupadas, mantenimiento]
+            },
+            'viviendas_por_edificio': {
+                'titulo': 'Viviendas por Edificio',
+                'labels': [reporte.edificio.nombre if reporte.edificio else 'Todos'],
+                'data': [total]
+            }
+        }
+    
+    elif reporte.tipo == 'PERSONAL':
+        # Filtrar personal
+        empleados = Empleado.objects.all()
+        
+        context.update({
+            'empleados': empleados[:10],
+            'total_empleados': empleados.count(),
+            'activos': empleados.filter(activo=True).count(),
+            'inactivos': empleados.filter(activo=False).count(),
+        })
+        
+        # Estadísticas por puesto
+        from django.db.models import Count
+        puestos_stats = empleados.values('puesto__nombre').annotate(
+            cantidad=Count('id')
+        ).order_by('-cantidad')
+        
+        context['puestos_stats'] = puestos_stats
+        
+        # Datos para gráficos
+        context['chart_data'] = {
+            'empleados_por_puesto': {
+                'titulo': 'Empleados por Puesto',
+                'labels': [p['puesto__nombre'] for p in puestos_stats],
+                'data': [p['cantidad'] for p in puestos_stats]
+            },
+            'estado_empleados': {
+                'titulo': 'Estado de Empleados',
+                'labels': ['Activos', 'Inactivos'],
+                'data': [context['activos'], context['inactivos']]
+            }
+        }
+    
+    elif reporte.tipo == 'ACCESOS':
+        # Filtrar visitas
+        visitas = Visita.objects.all()
+        
+        if reporte.fecha_desde:
+            visitas = visitas.filter(fecha_hora_entrada__date__gte=reporte.fecha_desde)
+        if reporte.fecha_hasta:
+            visitas = visitas.filter(fecha_hora_entrada__date__lte=reporte.fecha_hasta)
+        if reporte.edificio:
+            visitas = visitas.filter(vivienda_destino__edificio=reporte.edificio)
+        
+        activas = visitas.filter(fecha_hora_salida__isnull=True).count()
+        finalizadas = visitas.filter(fecha_hora_salida__isnull=False).count()
+        
+        context.update({
+            'visitas': visitas[:10],
+            'total_visitas': visitas.count(),
+            'visitas_activas': activas,
+            'visitas_finalizadas': finalizadas,
+        })
+        
+        # Calcular duración promedio
+        visitas_con_duracion = visitas.filter(fecha_hora_salida__isnull=False)
+        if visitas_con_duracion.exists():
+            duraciones = []
+            for visita in visitas_con_duracion:
+                if visita.fecha_hora_salida and visita.fecha_hora_entrada:
+                    duracion = visita.fecha_hora_salida - visita.fecha_hora_entrada
+                    duraciones.append(duracion.total_seconds() / 3600)  # en horas
+            
+            if duraciones:
+                context['duracion_promedio'] = sum(duraciones) / len(duraciones)
+        
+        # Datos para gráficos
+        context['chart_data'] = {
+            'estado_visitas': {
+                'titulo': 'Estado de Visitas',
+                'labels': ['Activas', 'Finalizadas'],
+                'data': [activas, finalizadas]
+            },
+            'visitas_por_edificio': {
+                'titulo': 'Visitas por Edificio',
+                'labels': [reporte.edificio.nombre if reporte.edificio else 'Todos'],
+                'data': [visitas.count()]
+            }
+        }
+    
+    elif reporte.tipo == 'FINANCIERO':
+        # Datos financieros
+        fecha_desde = reporte.fecha_desde or timezone.now().date().replace(day=1)
+        fecha_hasta = reporte.fecha_hasta or timezone.now().date()
+        
+        # Ingresos (pagos verificados)
+        ingresos = Pago.objects.filter(
+            estado='VERIFICADO',
+            fecha_pago__range=[fecha_desde, fecha_hasta]
+        )
+        
+        # Egresos (gastos pagados)
+        egresos = Gasto.objects.filter(
+            estado='PAGADO',
+            fecha__range=[fecha_desde, fecha_hasta]
+        )
+        
+        total_ingresos = sum(p.monto for p in ingresos)
+        total_egresos = sum(g.monto for g in egresos)
+        balance = total_ingresos - total_egresos
+        
+        context.update({
+            'total_ingresos': total_ingresos,
+            'total_egresos': total_egresos,
+            'balance': balance,
+            'ingresos': ingresos[:5],
+            'egresos': egresos[:5],
+        })
+        
+        # Datos para gráficos
+        context['chart_data'] = {
+            'ingresos_egresos': {
+                'titulo': 'Ingresos vs Egresos',
+                'labels': ['Ingresos', 'Egresos'],
+                'data': [float(total_ingresos), float(total_egresos)]
+            }
+        }
+    
+    # Exportar form para vista previa
+    from .forms import ExportForm
+    context['export_form'] = ExportForm()
+    
     return render(request, 'reportes/reporte_preview.html', context)
+
 
 def reporte_toggle_favorito(request, pk):
     reporte = get_object_or_404(Reporte, pk=pk)

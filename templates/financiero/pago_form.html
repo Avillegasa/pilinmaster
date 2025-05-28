@@ -102,100 +102,296 @@
         const viviendaSelect = document.getElementById('id_vivienda');
         const residenteSelect = document.getElementById('id_residente');
         const montoInput = document.getElementById('id_monto');
+        const cuotasSection = document.getElementById('cuotasSection');
         
-        // Función para actualizar las cuotas pendientes cuando cambia la vivienda
-        function actualizarCuotas() {
-            const viviendaId = viviendaSelect.value;
-            const cuotasSection = document.getElementById('cuotasSection');
-            
+        // Función para actualizar residentes cuando cambia la vivienda
+        function actualizarResidentes(viviendaId) {
             if (!viviendaId) {
+                residenteSelect.innerHTML = '<option value="">---------</option>';
                 return;
             }
             
-            // Actualizar residentes
-            fetch(`/api/viviendas/${viviendaId}/residentes/`)
+            fetch(`/financiero/api/vivienda/${viviendaId}/residentes/`)
                 .then(response => response.json())
                 .then(data => {
                     // Limpiar opciones actuales
                     residenteSelect.innerHTML = '<option value="">---------</option>';
                     
                     // Agregar opciones de residentes
-                    data.forEach(residente => {
-                        if (residente.activo) {
+                    if (data.residentes && data.residentes.length > 0) {
+                        data.residentes.forEach(residente => {
                             const option = document.createElement('option');
                             option.value = residente.id;
                             option.textContent = residente.nombre;
+                            if (residente.es_propietario) {
+                                option.textContent += ' (Propietario)';
+                            }
                             residenteSelect.appendChild(option);
-                        }
-                    });
+                        });
+                    } else {
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No hay residentes activos en esta vivienda';
+                        option.disabled = true;
+                        residenteSelect.appendChild(option);
+                    }
                 })
-                .catch(error => console.error('Error al cargar residentes:', error));
+                .catch(error => {
+                    console.error('Error al cargar residentes:', error);
+                    residenteSelect.innerHTML = '<option value="">Error al cargar residentes</option>';
+                });
+        }
+        
+        // Función para actualizar las cuotas pendientes cuando cambia la vivienda
+        function actualizarCuotas(viviendaId) {
+            const cuotasContainer = cuotasSection.querySelector('.card-body');
             
-            // Actualizar cuotas pendientes
+            if (!viviendaId) {
+                if (cuotasContainer) {
+                    cuotasContainer.innerHTML = '<div class="alert alert-warning mb-0">Primero seleccione una vivienda para ver sus cuotas pendientes.</div>';
+                }
+                return;
+            }
+            
             fetch(`/financiero/api/cuotas-por-vivienda/${viviendaId}/?estado=pendientes`)
                 .then(response => response.json())
                 .then(data => {
-                    const cuotasContainer = cuotasSection.querySelector('.card-body');
-                    
-                    // Si no hay contenedor, crear uno
                     if (!cuotasContainer) {
-                        cuotasSection.innerHTML = '<div class="col-md-12"><label class="form-label fw-bold">Aplicar a Cuotas Pendientes:</label><div class="card"><div class="card-body"></div></div></div>';
+                        // Crear estructura si no existe
+                        const newStructure = `
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Aplicar a Cuotas Pendientes:</label>
+                                <div class="card">
+                                    <div class="card-body"></div>
+                                </div>
+                            </div>
+                        `;
+                        cuotasSection.innerHTML = newStructure;
                         cuotasContainer = cuotasSection.querySelector('.card-body');
                     }
                     
                     if (data.cuotas && data.cuotas.length > 0) {
                         let html = '';
+                        let montoTotal = 0;
+                        
                         data.cuotas.forEach(cuota => {
+                            const vencida = new Date(cuota.fecha_vencimiento) < new Date();
+                            const badgeClass = vencida ? 'bg-danger' : 'bg-warning';
+                            const estadoTexto = vencida ? 'VENCIDA' : 'PENDIENTE';
+                            
                             html += `
-                            <div class="form-check mb-2">
-                                <input class="form-check-input cuota-checkbox" type="checkbox" name="aplicar_a_cuotas" value="${cuota.id}" id="cuota_${cuota.id}">
-                                <label class="form-check-label" for="cuota_${cuota.id}">
-                                    ${cuota.concepto} - Vence: ${cuota.fecha_vencimiento} - $${cuota.total.toFixed(2)}
-                                </label>
-                            </div>`;
+                                <div class="form-check mb-2 p-3 border rounded ${vencida ? 'border-danger' : 'border-warning'}">
+                                    <input class="form-check-input cuota-checkbox" type="checkbox" 
+                                           name="aplicar_a_cuotas" value="${cuota.id}" 
+                                           id="cuota_${cuota.id}" data-monto="${cuota.total}">
+                                    <label class="form-check-label w-100" for="cuota_${cuota.id}">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong>${cuota.concepto}</strong><br>
+                                                <small class="text-muted">
+                                                    Vence: ${new Date(cuota.fecha_vencimiento).toLocaleDateString('es-ES')}
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge ${badgeClass} mb-1">${estadoTexto}</span><br>
+                                                <strong>${cuota.total.toFixed(2)}</strong>
+                                                ${cuota.recargo > 0 ? `<br><small class="text-danger">Recargo: ${cuota.recargo.toFixed(2)}</small>` : ''}
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            `;
+                            montoTotal += cuota.total;
                         });
+                        
+                        html += `
+                            <div class="mt-3 p-2 bg-light rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span><strong>Total seleccionado:</strong></span>
+                                    <span id="totalSeleccionado" class="fw-bold text-primary">$0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <span>Total de todas las cuotas:</span>
+                                    <span class="text-muted">${montoTotal.toFixed(2)}</span>
+                                </div>
+                                <div class="mt-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-2" id="seleccionarTodas">
+                                        Seleccionar Todas
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="limpiarSeleccion">
+                                        Limpiar Selección
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" id="seleccionarVencidas">
+                                        Solo Vencidas
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        
                         cuotasContainer.innerHTML = html;
                         
                         // Agregar event listeners a los checkboxes
-                        const checkboxes = document.querySelectorAll('.cuota-checkbox');
-                        checkboxes.forEach(checkbox => {
-                            checkbox.addEventListener('change', actualizarMontoTotal);
-                        });
+                        actualizarEventListeners();
+                        
                     } else {
-                        cuotasContainer.innerHTML = '<div class="alert alert-info mb-0">No hay cuotas pendientes para esta vivienda.</div>';
+                        cuotasContainer.innerHTML = '<div class="alert alert-success mb-0"><i class="fas fa-check-circle"></i> No hay cuotas pendientes para esta vivienda.</div>';
                     }
                 })
-                .catch(error => console.error('Error al cargar cuotas:', error));
+                .catch(error => {
+                    console.error('Error al cargar cuotas:', error);
+                    if (cuotasContainer) {
+                        cuotasContainer.innerHTML = '<div class="alert alert-danger mb-0">Error al cargar las cuotas pendientes.</div>';
+                    }
+                });
         }
         
-        // Función para actualizar el monto total basado en las cuotas seleccionadas
-        function actualizarMontoTotal() {
-            const checkboxes = document.querySelectorAll('.cuota-checkbox:checked');
-            let montoTotal = 0;
+        // Función para actualizar event listeners de cuotas
+        function actualizarEventListeners() {
+            const checkboxes = document.querySelectorAll('.cuota-checkbox');
+            const totalElement = document.getElementById('totalSeleccionado');
+            const seleccionarTodasBtn = document.getElementById('seleccionarTodas');
+            const limpiarSeleccionBtn = document.getElementById('limpiarSeleccion');
+            const seleccionarVencidasBtn = document.getElementById('seleccionarVencidas');
             
-            if (checkboxes.length > 0) {
-                // Sumar montos de cuotas seleccionadas
+            // Función para actualizar el total
+            function actualizarTotal() {
+                let total = 0;
                 checkboxes.forEach(checkbox => {
-                    const label = checkbox.nextElementSibling.textContent;
-                    const montoStr = label.split('$')[1];
-                    if (montoStr) {
-                        montoTotal += parseFloat(montoStr);
+                    if (checkbox.checked) {
+                        total += parseFloat(checkbox.dataset.monto);
                     }
                 });
                 
-                // Actualizar el campo de monto
-                montoInput.value = montoTotal.toFixed(2);
+                if (totalElement) {
+                    totalElement.textContent = `${total.toFixed(2)}`;
+                }
+                
+                // Actualizar monto del pago si no está modificado manualmente
+                if (montoInput && (montoInput.value === '' || montoInput.value === '0')) {
+                    montoInput.value = total.toFixed(2);
+                }
+            }
+            
+            // Event listeners para checkboxes
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', actualizarTotal);
+            });
+            
+            // Botón seleccionar todas
+            if (seleccionarTodasBtn) {
+                seleccionarTodasBtn.addEventListener('click', function() {
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = true;
+                    });
+                    actualizarTotal();
+                });
+            }
+            
+            // Botón limpiar selección
+            if (limpiarSeleccionBtn) {
+                limpiarSeleccionBtn.addEventListener('click', function() {
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    actualizarTotal();
+                });
+            }
+            
+            // Botón seleccionar vencidas
+            if (seleccionarVencidasBtn) {
+                seleccionarVencidasBtn.addEventListener('click', function() {
+                    checkboxes.forEach(checkbox => {
+                        const parentDiv = checkbox.closest('.form-check');
+                        const isVencida = parentDiv.classList.contains('border-danger');
+                        checkbox.checked = isVencida;
+                    });
+                    actualizarTotal();
+                });
             }
         }
         
-        // Event listeners
+        // Event listener principal para cambio de vivienda
         if (viviendaSelect) {
-            viviendaSelect.addEventListener('change', actualizarCuotas);
+            viviendaSelect.addEventListener('change', function() {
+                const viviendaId = this.value;
+                
+                if (viviendaId) {
+                    // Limpiar residente seleccionado
+                    residenteSelect.value = '';
+                    
+                    // Actualizar residentes y cuotas
+                    actualizarResidentes(viviendaId);
+                    actualizarCuotas(viviendaId);
+                } else {
+                    // Limpiar todo si no hay vivienda seleccionada
+                    residenteSelect.innerHTML = '<option value="">---------</option>';
+                    const cuotasContainer = cuotasSection.querySelector('.card-body');
+                    if (cuotasContainer) {
+                        cuotasContainer.innerHTML = '<div class="alert alert-warning mb-0">Primero seleccione una vivienda para ver sus cuotas pendientes.</div>';
+                    }
+                }
+            });
             
             // Si ya hay una vivienda seleccionada al cargar la página
             if (viviendaSelect.value) {
-                actualizarCuotas();
+                actualizarResidentes(viviendaSelect.value);
+                actualizarCuotas(viviendaSelect.value);
             }
+        }
+        
+        // Validación adicional del formulario
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const vivienda = viviendaSelect.value;
+                const monto = parseFloat(montoInput.value);
+                
+                if (!vivienda) {
+                    e.preventDefault();
+                    alert('Por favor seleccione una vivienda.');
+                    viviendaSelect.focus();
+                    return false;
+                }
+                
+                if (!monto || monto <= 0) {
+                    e.preventDefault();
+                    alert('Por favor ingrese un monto válido mayor a 0.');
+                    montoInput.focus();
+                    return false;
+                }
+                
+                // Verificar si hay cuotas seleccionadas
+                const cuotasSeleccionadas = document.querySelectorAll('.cuota-checkbox:checked');
+                if (cuotasSeleccionadas.length === 0) {
+                    const confirmar = confirm('No ha seleccionado ninguna cuota para aplicar el pago. ¿Desea continuar de todos modos?');
+                    if (!confirmar) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+        }
+        
+        // Formatear monto mientras se escribe
+        if (montoInput) {
+            montoInput.addEventListener('input', function() {
+                let value = this.value.replace(/[^\d.]/g, '');
+                
+                // Asegurar solo un punto decimal
+                const parts = value.split('.');
+                if (parts.length > 2) {
+                    value = parts[0] + '.' + parts.slice(1).join('');
+                }
+                
+                // Limitar decimales a 2
+                if (parts[1] && parts[1].length > 2) {
+                    value = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+                
+                this.value = value;
+            });
         }
     });
 </script>

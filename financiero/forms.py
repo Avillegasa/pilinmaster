@@ -1,6 +1,8 @@
 from django import forms
 from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+import re
 from django.utils.translation import gettext_lazy as _
 from .models import (
     ConceptoCuota, Cuota, Pago, PagoCuota, 
@@ -142,7 +144,7 @@ class PagoForm(forms.ModelForm):
         
         # Configurar campos
         self.fields['vivienda'].queryset = Vivienda.objects.filter(activo=True)
-        self.fields['residente'].queryset = Residente.objects.filter(activo=True)
+        self.fields['residente'].queryset = Residente.objects.none()  # Inicialmente vacío
         
         # Agregar clases de Bootstrap
         for field_name, field in self.fields.items():
@@ -157,7 +159,7 @@ class PagoForm(forms.ModelForm):
         vivienda_id = None
         if kwargs.get('instance'):
             vivienda_id = kwargs['instance'].vivienda_id
-        elif args and 'vivienda' in args[0]:
+        elif len(args) > 0 and isinstance(args[0], dict) and 'vivienda' in args[0]:
             vivienda_id = args[0]['vivienda']
         
         if vivienda_id:
