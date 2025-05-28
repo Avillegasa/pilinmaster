@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
+from django.db.models import Q
 from .models import Usuario, Rol
 from .forms import UsuarioCreationForm, UsuarioChangeForm, RolForm
 from django.core.exceptions import PermissionDenied
@@ -31,6 +32,53 @@ class UsuarioListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
     model = Usuario
     template_name = 'usuarios/usuario_list.html'
     context_object_name = 'usuarios'
+    paginate_by = 20
+
+    def get_queryset(self):
+        queryset = Usuario.objects.select_related('rol').all()
+        
+        # ✅ FILTROS MEJORADOS
+        buscar = self.request.GET.get('buscar', '').strip()
+        rol_id = self.request.GET.get('rol', '').strip()
+        estado = self.request.GET.get('estado', '').strip()
+        
+        # Filtro por búsqueda
+        if buscar:
+            queryset = queryset.filter(
+                Q(first_name__icontains=buscar) |
+                Q(last_name__icontains=buscar) |
+                Q(username__icontains=buscar) |
+                Q(email__icontains=buscar) |
+                Q(numero_documento__icontains=buscar)
+            )
+        
+        # Filtro por rol
+        if rol_id:
+            try:
+                rol_id = int(rol_id)
+                queryset = queryset.filter(rol_id=rol_id)
+            except (ValueError, TypeError):
+                pass
+        
+        # Filtro por estado
+        if estado == 'activo':
+            queryset = queryset.filter(is_active=True)
+        elif estado == 'inactivo':
+            queryset = queryset.filter(is_active=False)
+        
+        return queryset.order_by('-date_joined')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # ✅ AGREGAR ROLES AL CONTEXTO
+        context['roles'] = Rol.objects.all().order_by('nombre')
+        # ✅ MANTENER VALORES DE FILTROS
+        context['filtros'] = {
+            'buscar': self.request.GET.get('buscar', ''),
+            'rol': self.request.GET.get('rol', ''),
+            'estado': self.request.GET.get('estado', ''),
+        }
+        return context
 
 class UsuarioCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
     model = Usuario

@@ -330,7 +330,60 @@ document.addEventListener('DOMContentLoaded', function() {
     setupInactivosSwitch('mostrarInactivos', 'residente-inactivo');
     setupInactivosSwitch('mostrarInactivosEmpleado', 'empleado-inactivo');
     
-    // ✅ NUEVA FUNCIONALIDAD: Validación en tiempo real para número de documento
+    // ✅ NUEVA FUNCIONALIDAD: Validación en tiempo real para teléfono
+    const telefonoInput = document.getElementById('id_telefono');
+    if (telefonoInput) {
+        telefonoInput.addEventListener('input', function(e) {
+            // Permitir solo números
+            let value = e.target.value.replace(/\D/g, '');
+            e.target.value = value;
+            
+            // Validación visual
+            const feedback = e.target.parentNode.querySelector('.invalid-feedback') || 
+                           e.target.parentNode.querySelector('.form-text');
+            
+            if (value.length > 0 && value.length < 7) {
+                e.target.classList.add('is-invalid');
+                if (feedback) {
+                    feedback.textContent = 'Debe tener al menos 7 dígitos';
+                    feedback.className = 'text-danger small';
+                }
+            } else if (value.length >= 7 && value.length <= 15) {
+                e.target.classList.remove('is-invalid');
+                e.target.classList.add('is-valid');
+                if (feedback) {
+                    feedback.textContent = '✓ Teléfono válido';
+                    feedback.className = 'text-success small';
+                }
+            } else if (value.length > 15) {
+                e.target.classList.add('is-invalid');
+                if (feedback) {
+                    feedback.textContent = 'Máximo 15 dígitos';
+                    feedback.className = 'text-danger small';
+                }
+                // Truncar a 15 dígitos
+                e.target.value = value.substring(0, 15);
+            } else {
+                e.target.classList.remove('is-invalid', 'is-valid');
+                if (feedback) {
+                    feedback.textContent = 'Solo números. Mínimo 7, máximo 15 caracteres.';
+                    feedback.className = 'form-text text-muted';
+                }
+            }
+        });
+        
+        // Validación adicional al pegar contenido
+        telefonoInput.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 15) {
+                    value = value.substring(0, 15);
+                }
+                e.target.value = value;
+                e.target.dispatchEvent(new Event('input'));
+            }, 10);
+        });
+    }
     const numeroDocumentoInput = document.getElementById('id_numero_documento');
     if (numeroDocumentoInput) {
         numeroDocumentoInput.addEventListener('input', function(e) {
@@ -722,12 +775,31 @@ window.formatearNumeroDocumento = function(input) {
     input.dispatchEvent(new Event('input'));
 };
 
-// ✅ AUTO-APLICAR formateo a campos de documento existentes
+// ✅ AUTO-APLICAR formateo a campos de documento y teléfono
 document.addEventListener('input', function(e) {
     if (e.target.id === 'id_numero_documento' || e.target.name === 'numero_documento') {
         window.formatearNumeroDocumento(e.target);
     }
+    if (e.target.id === 'id_telefono' || e.target.name === 'telefono') {
+        window.formatearTelefono(e.target);
+    }
 });
+
+// ✅ FUNCIÓN GLOBAL: Formatear números de teléfono
+window.formatearTelefono = function(input) {
+    // Permitir solo números
+    let value = input.value.replace(/\D/g, '');
+    
+    // Limitar a 15 caracteres máximo
+    if (value.length > 15) {
+        value = value.substring(0, 15);
+    }
+    
+    input.value = value;
+    
+    // Disparar evento de validación
+    input.dispatchEvent(new Event('input'));
+};
 
 // ✅ MANEJO DE ERRORES GLOBALES
 window.addEventListener('error', function(e) {

@@ -30,7 +30,7 @@
             <div class="col-md-4">
                 <label for="buscar" class="form-label">Buscar</label>
                 <input type="text" class="form-control" id="buscar" name="buscar" 
-                       placeholder="Nombre, usuario, email..." value="{{ request.GET.buscar }}">
+                       placeholder="Nombre, usuario, email..." value="{{ filtros.buscar }}">
             </div>
             <div class="col-md-3">
                 <label for="rol" class="form-label">Rol</label>
@@ -38,7 +38,7 @@
                     <option value="">Todos los roles</option>
                     {% for rol_option in roles %}
                         <option value="{{ rol_option.id }}" 
-                                {% if request.GET.rol == rol_option.id|stringformat:"s" %}selected{% endif %}>
+                                {% if filtros.rol == rol_option.id|stringformat:"s" %}selected{% endif %}>
                             {{ rol_option.nombre }}
                         </option>
                     {% endfor %}
@@ -48,8 +48,8 @@
                 <label for="estado" class="form-label">Estado</label>
                 <select class="form-select" id="estado" name="estado">
                     <option value="">Todos</option>
-                    <option value="activo" {% if request.GET.estado == "activo" %}selected{% endif %}>Activos</option>
-                    <option value="inactivo" {% if request.GET.estado == "inactivo" %}selected{% endif %}>Inactivos</option>
+                    <option value="activo" {% if filtros.estado == "activo" %}selected{% endif %}>Activos</option>
+                    <option value="inactivo" {% if filtros.estado == "inactivo" %}selected{% endif %}>Inactivos</option>
                 </select>
             </div>
             <div class="col-md-2 d-flex align-items-end">
@@ -122,7 +122,7 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 
-                                {% comment "✅ PROTECCIÓN: Solo mostrar editar si no es administrador diferente al usuario actual" %}
+                                {# ✅ PROTECCIÓN: Solo mostrar editar si no es administrador diferente al usuario actual #}
                                 {% if usuario.rol.nombre != 'Administrador' or usuario == user %}
                                     <a href="{% url 'usuario-update' usuario.id %}" 
                                        class="btn btn-warning" title="Editar">
@@ -136,7 +136,7 @@
                                     </button>
                                 {% endif %}
                                 
-                                {% comment "✅ PROTECCIÓN CRÍTICA: No mostrar cambio de estado para administradores" %}
+                                {# ✅ PROTECCIÓN CRÍTICA: No mostrar cambio de estado para administradores #}
                                 {% if usuario.rol.nombre == 'Administrador' %}
                                     <button class="btn btn-secondary disabled" 
                                             title="Los usuarios Administradores no pueden ser desactivados por seguridad" 
