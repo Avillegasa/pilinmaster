@@ -88,12 +88,10 @@ def generar_roles():
     # Lista de posibles roles
     roles_data = [
         {'nombre': 'Gerente', 'descripcion': 'Acceso a funciones administrativas y financieras'},
-        {'nombre': 'Recepcionista', 'descripcion': 'Registro de visitas y control de accesos'},
         {'nombre': 'Residente', 'descripcion': 'Acceso a información de su vivienda y áreas comunes'},
-        {'nombre': 'Mantenimiento', 'descripcion': 'Acceso al módulo de mantenimiento'},
-        {'nombre': 'Seguridad', 'descripcion': 'Control de accesos y seguridad'},
-        {'nombre': 'Contador', 'descripcion': 'Acceso al módulo financiero'},
-        {'nombre': 'Invitado', 'descripcion': 'Acceso limitado solo a lectura'}
+        {'nombre': 'Personal', 'descripcion': 'Acceso al módulo de mantenimiento'},
+        {'nombre': 'Vigilante', 'descripcion': 'Control de accesos y seguridad'},
+        {'nombre': 'Administrador', 'descripcion': 'Control total del sistema'},
     ]
     
     roles_creados = []
@@ -117,7 +115,7 @@ def generar_usuarios(roles, num_usuarios=NUM_USUARIOS):
               'Lucía', 'Fernanda', 'Gabriel', 'Jorge', 'Diana', 'Patricia', 'Andrés', 'Eduardo']
     
     apellidos = ['García', 'Pérez', 'Rodríguez', 'López', 'Martínez', 'González', 'Hernández', 'Sánchez', 
-                'Ramírez', 'Torres', 'Flores', 'Rivera', 'Cruz', 'Morales', 'Reyes', 'Díaz', 'Mendoza']
+                'Ramírez', 'Torres', 'Flores'   , 'Rivera', 'Cruz', 'Morales', 'Reyes', 'Díaz', 'Mendoza']
     
     tipo_docs = ['DNI', 'PASAPORTE', 'CEDULA']
     
@@ -340,7 +338,6 @@ def generar_puestos(num_puestos=NUM_PUESTOS):
         {'nombre': 'Seguridad', 'descripcion': 'Control de accesos y vigilancia', 'requiere_especializacion': True},
         {'nombre': 'Recepcionista', 'descripcion': 'Atención en lobby y registro de visitas', 'requiere_especializacion': False},
         {'nombre': 'Técnico de Mantenimiento', 'descripcion': 'Reparaciones y mantenimiento especializado', 'requiere_especializacion': True},
-        {'nombre': 'Administrador', 'descripcion': 'Gestión administrativa del condominio', 'requiere_especializacion': True},
         {'nombre': 'Auxiliar Administrativo', 'descripcion': 'Apoyo en tareas administrativas', 'requiere_especializacion': False},
         {'nombre': 'Plomero', 'descripcion': 'Mantenimiento y reparación de sistemas de agua', 'requiere_especializacion': True},
         {'nombre': 'Electricista', 'descripcion': 'Mantenimiento eléctrico', 'requiere_especializacion': True},
