@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',  # Necesario para django-allauth
-    
+    'django_extensions',
     # Apps de terceros
     'crispy_forms',
     'crispy_bootstrap4',

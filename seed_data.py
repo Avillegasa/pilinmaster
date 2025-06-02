@@ -81,33 +81,6 @@ def crear_datos_base():
     return admin_rol, admin_user
 
 
-def generar_roles():
-    """Generar roles para el sistema"""
-    print("\nGenerando roles...")
-    
-    # Lista de posibles roles
-    roles_data = [
-        {'nombre': 'Gerente', 'descripcion': 'Acceso a funciones administrativas y financieras'},
-        {'nombre': 'Recepcionista', 'descripcion': 'Registro de visitas y control de accesos'},
-        {'nombre': 'Residente', 'descripcion': 'Acceso a información de su vivienda y áreas comunes'},
-        {'nombre': 'Mantenimiento', 'descripcion': 'Acceso al módulo de mantenimiento'},
-        {'nombre': 'Seguridad', 'descripcion': 'Control de accesos y seguridad'},
-        {'nombre': 'Contador', 'descripcion': 'Acceso al módulo financiero'},
-        {'nombre': 'Invitado', 'descripcion': 'Acceso limitado solo a lectura'}
-    ]
-    
-    roles_creados = []
-    for data in roles_data[:NUM_ROLES]:
-        rol, created = Rol.objects.get_or_create(
-            nombre=data['nombre'],
-            defaults={'descripcion': data['descripcion']}
-        )
-        roles_creados.append(rol)
-        print(f"Rol {rol.nombre} {'creado' if created else 'ya existe'}")
-    
-    return roles_creados
-
-
 def generar_usuarios(roles, num_usuarios=NUM_USUARIOS):
     """Generar usuarios ficticios para el sistema"""
     print(f"\nGenerando {num_usuarios} usuarios...")
@@ -117,7 +90,7 @@ def generar_usuarios(roles, num_usuarios=NUM_USUARIOS):
               'Lucía', 'Fernanda', 'Gabriel', 'Jorge', 'Diana', 'Patricia', 'Andrés', 'Eduardo']
     
     apellidos = ['García', 'Pérez', 'Rodríguez', 'López', 'Martínez', 'González', 'Hernández', 'Sánchez', 
-                'Ramírez', 'Torres', 'Flores', 'Rivera', 'Cruz', 'Morales', 'Reyes', 'Díaz', 'Mendoza']
+                'Ramírez', 'Torres', 'Flores'   , 'Rivera', 'Cruz', 'Morales', 'Reyes', 'Díaz', 'Mendoza']
     
     tipo_docs = ['DNI', 'PASAPORTE', 'CEDULA']
     
@@ -340,7 +313,6 @@ def generar_puestos(num_puestos=NUM_PUESTOS):
         {'nombre': 'Seguridad', 'descripcion': 'Control de accesos y vigilancia', 'requiere_especializacion': True},
         {'nombre': 'Recepcionista', 'descripcion': 'Atención en lobby y registro de visitas', 'requiere_especializacion': False},
         {'nombre': 'Técnico de Mantenimiento', 'descripcion': 'Reparaciones y mantenimiento especializado', 'requiere_especializacion': True},
-        {'nombre': 'Administrador', 'descripcion': 'Gestión administrativa del condominio', 'requiere_especializacion': True},
         {'nombre': 'Auxiliar Administrativo', 'descripcion': 'Apoyo en tareas administrativas', 'requiere_especializacion': False},
         {'nombre': 'Plomero', 'descripcion': 'Mantenimiento y reparación de sistemas de agua', 'requiere_especializacion': True},
         {'nombre': 'Electricista', 'descripcion': 'Mantenimiento eléctrico', 'requiere_especializacion': True},

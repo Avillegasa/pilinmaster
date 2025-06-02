@@ -1,10 +1,11 @@
+#views.py de usuarios
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from .models import Usuario, Rol
 from .forms import UsuarioCreationForm, UsuarioEditForm, RolForm
 from django.contrib.auth.views import LoginView
@@ -17,6 +18,9 @@ from django.urls import reverse
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
+from viviendas.models import Edificio, Residente,Vivienda
+from usuarios.models import Gerente, Vigilante
+from uuid import uuid4
 # Función auxiliar para comprobar si es administrador
 def tiene_acceso_web(user):
     return (
@@ -25,6 +29,12 @@ def tiene_acceso_web(user):
         user.rol is not None and
         user.rol.nombre in ['Administrador', 'Gerente']
     )
+
+def cargar_viviendas(request):
+    edificio_id = request.GET.get('edificio_id')
+    viviendas = Vivienda.objects.filter(edificio_id=edificio_id, estado='DESOCUPADO', activo=True).order_by('numero')
+    viviendas_json = [{"id": v.id, "nombre": f"{v.numero} - Piso {v.piso}"} for v in viviendas]
+    return JsonResponse(viviendas_json, safe=False)
 
 class AccesoWebPermitidoMixin(UserPassesTestMixin):
     def test_func(self):
@@ -54,6 +64,8 @@ class UsuarioListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
         return context
 
 
+
+
 class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Usuario
     form_class = UsuarioCreationForm
@@ -61,11 +73,71 @@ class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView)
     success_url = reverse_lazy('usuario-list')
 
     def form_valid(self, form):
+        rol = form.cleaned_data.get("rol")
+
+        if rol and rol.nombre == "Personal":
+            # Crear usuario fantasma sin acceso
+            usuario = Usuario.objects.create(
+                username=f"personal_{uuid4().hex[:6]}",  # nombre aleatorio
+                first_name=form.cleaned_data.get("first_name") or "Empleado",
+                last_name=form.cleaned_data.get("last_name") or "Condominio",
+                is_active=False,
+                rol=rol
+            )
+            usuario.set_unusable_password()
+            usuario.save()
+            self.object = usuario
+            messages.success(self.request, "Empleado registrado sin acceso al sistema.")
+            return redirect(self.success_url)
+        
+        
+        
+        
         usuario = form.save(commit=False)
-        usuario.is_active = True  # Bloquea el acceso hasta confirmar
+        usuario.is_active = True
         usuario.save()
-        messages.success(self.request, "Usuario creado. Podrá activar su cuenta al intentar iniciar sesión.")
+
+        if usuario.rol and usuario.rol.nombre == "Residente":
+            edificio = form.cleaned_data.get("edificio")
+            vivienda = form.cleaned_data.get("vivienda")
+
+            if hasattr(usuario, "residente"):
+                form.add_error(None, "Este usuario ya está asignado como residente.")
+                return self.form_invalid(form)
+
+            # Crear el residente
+            Residente.objects.create(usuario=usuario, vivienda=vivienda)
+    
+            # ✅ ACTUALIZAR EL ESTADO DE LA VIVIENDA A OCUPADO
+            vivienda.estado = 'OCUPADO'
+            vivienda.save()
+        
+        if usuario.rol and usuario.rol.nombre == "Gerente":
+            edificio = form.cleaned_data.get("edificio")
+
+            # Verificar si el usuario ya tiene Gerente
+            if hasattr(usuario, "gerente"):
+                form.add_error(None, "Este usuario ya está asignado como gerente.")
+                return self.form_invalid(form)
+
+            # Crear el gerente
+            Gerente.objects.create(usuario=usuario, edificio=edificio)
+            
+        
+        if usuario.rol and usuario.rol.nombre == "Vigilante":
+            edificio = form.cleaned_data.get("edificio")
+
+            if hasattr(usuario, "vigilante"):
+                form.add_error(None, "Este usuario ya está asignado como vigilante.")
+                return self.form_invalid(form)
+
+            Vigilante.objects.create(usuario=usuario, edificio=edificio)
+        messages.success(self.request, "Usuario creado correctamente.")
         return super().form_valid(form)
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user_actual'] = self.request.user  # <- Esto es esencial
+        return kwargs
 
 
 class CustomLoginView(LoginView):
@@ -79,10 +151,11 @@ class CustomLoginView(LoginView):
             return redirect('login')
 
         # Solo para Gerente: bloquear si no verificó su correo
-        if user.rol.nombre == 'Administrador' and not user.email_confirmado:
+        if user.rol.nombre in ['Administrador', 'Gerente'] and not user.email_confirmado:
             self.enviar_verificacion_email(user)
             messages.warning(self.request, "Tu cuenta aún no ha sido verificada. Revisa tu correo para activarla.")
             return redirect('login')
+
 
         return super().form_valid(form)
 
@@ -140,6 +213,12 @@ class UsuarioChangeStateView(LoginRequiredMixin, AccesoWebPermitidoMixin, View):
             messages.add_message(request, messages.ERROR, f"No puedes desactivar a un usuario con rol '{usuario.rol.nombre}'.", extra_tags='danger')
             return HttpResponseRedirect(reverse_lazy('usuario-list'))
 
+        # ✅ Si es residente y se va a desactivar, liberar la vivienda
+        if not usuario.is_active and usuario.es_residente and hasattr(usuario, 'residente'):
+            vivienda = usuario.residente.vivienda
+            vivienda.estado = 'DESOCUPADO'
+            vivienda.save()
+
         # Alternar estado activo
         usuario.is_active = not usuario.is_active
         usuario.save()
@@ -147,7 +226,6 @@ class UsuarioChangeStateView(LoginRequiredMixin, AccesoWebPermitidoMixin, View):
         estado = "activado" if usuario.is_active else "desactivado"
         messages.success(request, f'El usuario {usuario.username} ha sido {estado} correctamente.')
         return HttpResponseRedirect(reverse_lazy('usuario-list'))
-
 
 class UsuarioDetailView(LoginRequiredMixin, DetailView):
     model = Usuario

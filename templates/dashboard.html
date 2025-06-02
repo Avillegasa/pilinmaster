@@ -13,16 +13,18 @@
             <select id="edificioSelect" name="edificio" class="form-select" style="width: 300px;">
                 <option value="">Todos los edificios</option>
                 {% for edificio in edificios %}
-                    <option value="{{ edificio.id }}" {% if edificio_seleccionado == edificio.id %}selected{% endif %}>{{ edificio.nombre }}</option>
+                <option value="{{ edificio.id }}" {% if edificio_seleccionado == edificio.id %}selected{% endif %}>
+                    {{ edificio.nombre }}
+                </option>
                 {% endfor %}
             </select>
             <button type="submit" class="btn btn-primary ms-2">
                 <i class="fas fa-filter"></i> Filtrar
             </button>
             {% if edificio_seleccionado %}
-                <a href="{% url 'dashboard' %}" class="btn btn-secondary ms-2">
-                    <i class="fas fa-broom"></i> Limpiar
-                </a>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary ms-2">
+                <i class="fas fa-broom"></i> Limpiar
+            </a>
             {% endif %}
         </form>
     </div>
@@ -31,7 +33,8 @@
 <!-- Título del dashboard con edificio seleccionado -->
 {% if edificio_seleccionado %}
 <div class="alert alert-info mb-4">
-    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Mostrando información de: <strong>{{ edificio_nombre }}</strong></h5>
+    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Mostrando información de: <strong>{{ edificio_nombre }}</strong>
+    </h5>
 </div>
 {% endif %}
 
@@ -48,7 +51,8 @@
                     <i class="fas fa-home fa-3x"></i>
                 </div>
                 <div class="progress mt-2" style="height: 8px;">
-                    <div class="progress-bar bg-light" role="progressbar" style="width: {{ porcentaje_ocupacion }}%"></div>
+                    <div class="progress-bar bg-light" role="progressbar" style="width: {{ porcentaje_ocupacion }}%">
+                    </div>
                 </div>
                 <div class="small mt-1">{{ porcentaje_ocupacion|floatformat:1 }}% ocupadas</div>
             </div>
@@ -82,7 +86,8 @@
                     <i class="fas fa-id-badge fa-3x"></i>
                 </div>
                 <div class="small mt-3">
-                    <span class="me-2"><i class="fas fa-tasks"></i> {{ total_asignaciones_pendientes }} tareas pendientes</span>
+                    <span class="me-2"><i class="fas fa-tasks"></i> {{ total_asignaciones_pendientes }} tareas
+                        pendientes</span>
                 </div>
             </div>
         </div>
@@ -120,7 +125,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Estadísticas de tipos de residentes -->
     <div class="col-md-6">
         <div class="card shadow-sm">
@@ -132,11 +137,11 @@
             </div>
             <div class="card-body">
                 {% if total_residentes > 0 %}
-                    <canvas id="residentesChart" height="250"></canvas>
+                <canvas id="residentesChart" height="250"></canvas>
                 {% else %}
-                    <div class="alert alert-info">
-                        <p class="mb-0 text-center">No hay residentes registrados</p>
-                    </div>
+                <div class="alert alert-info">
+                    <p class="mb-0 text-center">No hay residentes registrados</p>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -168,30 +173,32 @@
                             {% for asignacion in ultimas_asignaciones %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'asignacion-detail' asignacion.id %}">{{ asignacion.titulo|truncatechars:30 }}</a>
+                                    <a href="{% url 'asignacion-detail' asignacion.id %}">{{
+                                        asignacion.titulo|truncatechars:30 }}</a>
                                     <div class="small text-muted">{{ asignacion.fecha_inicio|date:"d/m/Y" }}</div>
                                 </td>
-                                <td>{{ asignacion.empleado.usuario.first_name }} {{ asignacion.empleado.usuario.last_name }}</td>
+                                <td>{{ asignacion.empleado.usuario.first_name }} {{
+                                    asignacion.empleado.usuario.last_name }}</td>
                                 <td>
                                     {% if asignacion.estado == 'PENDIENTE' %}
-                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
                                     {% elif asignacion.estado == 'EN_PROGRESO' %}
-                                        <span class="badge bg-info text-dark">En Progreso</span>
+                                    <span class="badge bg-info text-dark">En Progreso</span>
                                     {% elif asignacion.estado == 'COMPLETADA' %}
-                                        <span class="badge bg-success">Completada</span>
+                                    <span class="badge bg-success">Completada</span>
                                     {% else %}
-                                        <span class="badge bg-danger">Cancelada</span>
+                                    <span class="badge bg-danger">Cancelada</span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% if asignacion.prioridad == 1 %}
-                                        <span class="badge bg-secondary">Baja</span>
+                                    <span class="badge bg-secondary">Baja</span>
                                     {% elif asignacion.prioridad == 2 %}
-                                        <span class="badge bg-primary">Normal</span>
+                                    <span class="badge bg-primary">Normal</span>
                                     {% elif asignacion.prioridad == 3 %}
-                                        <span class="badge bg-warning text-dark">Alta</span>
+                                    <span class="badge bg-warning text-dark">Alta</span>
                                     {% else %}
-                                        <span class="badge bg-danger">Urgente</span>
+                                    <span class="badge bg-danger">Urgente</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -238,9 +245,9 @@
                                 <td>{{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}</td>
                                 <td>
                                     {% if visita.fecha_hora_salida %}
-                                        <span class="badge bg-secondary">Finalizada</span>
+                                    <span class="badge bg-secondary">Finalizada</span>
                                     {% else %}
-                                        <span class="badge bg-success">Activa</span>
+                                    <span class="badge bg-success">Activa</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -290,14 +297,7 @@
                             </div>
                         </a>
                     </div>
-                    <div class="col-md-2 col-sm-4 col-6 mb-3">
-                        <a href="{% url 'residente-create' %}" class="text-decoration-none">
-                            <div class="p-3 rounded bg-light">
-                                <i class="fas fa-user-friends fa-2x text-danger mb-2"></i>
-                                <div>Nuevo Residente</div>
-                            </div>
-                        </a>
-                    </div>
+                    
                     <div class="col-md-2 col-sm-4 col-6 mb-3">
                         <a href="{% url 'vivienda-create' %}" class="text-decoration-none">
                             <div class="p-3 rounded bg-light">
@@ -314,6 +314,17 @@
                             </div>
                         </a>
                     </div>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        
+                        {% if request.user.rol and request.user.rol.nombre == "Gerente" %}
+                        <a href="{% url 'residente-create' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">
+                                <i class="fas fa-user-friends fa-2x text-danger mb-2"></i>
+                                <div>Nuevo Residente</div>
+                            </div>
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -324,10 +335,10 @@
 {% block extra_js %}
 <script>
     // Auto-enviar el formulario cuando cambia el selector
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const edificioSelect = document.getElementById('edificioSelect');
         if (edificioSelect) {
-            edificioSelect.addEventListener('change', function() {
+            edificioSelect.addEventListener('change', function () {
                 document.getElementById('edificioFilterForm').submit();
             });
         }
@@ -341,9 +352,9 @@
             labels: ['Ocupadas', 'Desocupadas', 'En Mantenimiento'],
             datasets: [{
                 data: [
-                    {{ viviendas_ocupadas }}, 
-                    {{ viviendas_desocupadas|default:"0" }}, 
-                    {{ viviendas_mantenimiento|default:"0" }}
+                    {{ viviendas_ocupadas|default:0 }},
+                    {{ viviendas_desocupadas|default:0 }},
+                    {{ viviendas_mantenimiento|default:0 }}
                 ],
                 backgroundColor: [
                     'rgba(40, 167, 69, 0.8)',  // Verde para ocupadas
@@ -383,7 +394,7 @@
         data: {
             labels: ['Propietarios', 'Inquilinos'],
             datasets: [{
-                data: [{{ propietarios_count }}, {{ inquilinos_count }}],
+                data: [{{ propietarios_count|default:0 }}, {{ inquilinos_count|default:0 }}],
                 backgroundColor: [
                     'rgba(0, 123, 255, 0.7)',  // Azul para propietarios
                     'rgba(23, 162, 184, 0.7)', // Cian para inquilinos

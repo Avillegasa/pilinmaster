@@ -1,3 +1,4 @@
+# views.py de viviendas
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, View
@@ -7,7 +8,7 @@ from django.contrib import messages
 from django.utils import timezone
 from usuarios.views import AccesoWebPermitidoMixin
 from .models import Edificio, Vivienda, Residente
-from .forms import EdificioForm, ViviendaForm, ResidenteForm, ViviendaBajaForm
+from .forms import EdificioForm, ViviendaForm, ViviendaBajaForm, ResidenteCreationForm
 
 # Vistas de Edificios
 class EdificioListView(LoginRequiredMixin, ListView):
@@ -198,13 +199,26 @@ class ResidenteListView(LoginRequiredMixin, ListView):
 
 class ResidenteCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Residente
-    form_class = ResidenteForm
+    form_class = ResidenteCreationForm
     template_name = 'viviendas/residente_form.html'
     success_url = reverse_lazy('residente-list')
 
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Residente creado correctamente.")
+        return response
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Por favor corrige los errores en el formulario.")
+        return super().form_invalid(form)
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user_actual'] = self.request.user
+        return kwargs
+
 class ResidenteUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Residente
-    form_class = ResidenteForm
+    form_class = ResidenteCreationForm
     template_name = 'viviendas/residente_form.html'
     success_url = reverse_lazy('residente-list')
 

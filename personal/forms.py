@@ -32,7 +32,7 @@ class EmpleadoForm(forms.ModelForm):
     class Meta:
         model = Empleado
         fields = [
-            'usuario', 'puesto', 'fecha_contratacion', 'tipo_contrato', 
+            'usuario', 'puesto', 'edificio','fecha_contratacion', 'tipo_contrato', 
             'salario', 'contacto_emergencia', 'telefono_emergencia', 
             'especialidad', 'activo'
         ]
@@ -45,6 +45,7 @@ class EmpleadoForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)  # <- importante para acceder al usuario
         super().__init__(*args, **kwargs)
         
         # Filtrar usuarios que no estén ya asignados a un empleado existente
@@ -57,7 +58,15 @@ class EmpleadoForm(forms.ModelForm):
         self.fields['usuario'].queryset = Usuario.objects.exclude(
             id__in=usuarios_ids
         ).filter(is_active=True).order_by('first_name', 'last_name')
-        
+        # Limitar edificios si el usuario es gerente
+        if self.request and self.request.user.rol and self.request.user.rol.nombre == 'Gerente':
+            gerente_edificio = getattr(self.request.user, 'gerente', None)
+            if gerente_edificio:
+                self.fields['edificio'].queryset = Edificio.objects.filter(id=gerente_edificio.edificio.id)
+            else:
+                self.fields['edificio'].queryset = Edificio.objects.none()
+        else:
+            self.fields['edificio'].queryset = Edificio.objects.all().order_by('nombre')
         # ✅ CORRECCIÓN: Mejorar labels y help_text
         self.fields['usuario'].label = 'Usuario del Sistema'
         self.fields['usuario'].help_text = 'Seleccione el usuario que será empleado'
@@ -90,7 +99,12 @@ class EmpleadoForm(forms.ModelForm):
         cleaned_data = super().clean()
         contacto_emergencia = cleaned_data.get('contacto_emergencia')
         telefono_emergencia = cleaned_data.get('telefono_emergencia')
-        
+        if self.request and self.request.user.rol.nombre == 'Gerente':
+            edificio_asignado = cleaned_data.get('edificio')
+            gerente_edificio = getattr(self.request.user, 'gerente', None)
+            if gerente_edificio and edificio_asignado != gerente_edificio.edificio:
+                raise ValidationError("Solo puedes asignar empleados a tu propio edificio.")
+
         # Si se proporciona uno, se debe proporcionar el otro
         if contacto_emergencia and not telefono_emergencia:
             raise ValidationError('Si proporciona un contacto de emergencia, debe incluir el teléfono.')

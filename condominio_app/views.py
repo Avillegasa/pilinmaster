@@ -1,3 +1,4 @@
+# views.py en condominio_app que condominio app es el que tiene el archivo settings.py
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
@@ -178,13 +179,13 @@ def dashboard(request):
     
     # Preparar contexto para el template
     context = {
+        'viviendas_ocupadas': viviendas_ocupadas or 0,
+        'viviendas_desocupadas': viviendas_desocupadas or 0,
+        'viviendas_mantenimiento': viviendas_mantenimiento or 0,
         'edificios': edificios,
         'edificio_seleccionado': edificio_seleccionado,
         'edificio_nombre': edificio_nombre,
         'total_viviendas': total_viviendas,
-        'viviendas_ocupadas': viviendas_ocupadas,
-        'viviendas_desocupadas': viviendas_desocupadas,
-        'viviendas_mantenimiento': viviendas_mantenimiento,
         'porcentaje_ocupacion': porcentaje_ocupacion,
         'total_residentes': total_residentes,
         'propietarios_count': propietarios_count,
