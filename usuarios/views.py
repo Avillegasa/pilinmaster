@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from .models import Usuario, Rol
 from .forms import UsuarioCreationForm, UsuarioChangeForm, RolForm
+from alertas.models import Alerta 
 
 # Función auxiliar para comprobar si es administrador
 def es_admin(user):
@@ -85,3 +86,10 @@ class RolDeleteView(LoginRequiredMixin, AdminRequiredMixin, DeleteView):
     success_url = reverse_lazy('rol-list')
 
 
+#aqui estoy poniendo las alertas 
+
+class AlertaListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+    model = Alerta
+    template_name = 'alertas/lista_alertas.html'
+    context_object_name = 'alertas'
+    ordering = ['-fecha_creacion']
