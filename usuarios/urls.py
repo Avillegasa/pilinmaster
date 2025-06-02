@@ -16,6 +16,8 @@ urlpatterns = [
     path('roles/<int:pk>/editar/', views.RolUpdateView.as_view(), name='rol-update'),
     path('roles/<int:pk>/eliminar/', views.RolDeleteView.as_view(), name='rol-delete'),
 
+    # carga de viviendas url
+    path('ajax/cargar-viviendas/', views.cargar_viviendas, name='ajax-cargar-viviendas'),
     #URLs para movil usuario
     path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

@@ -7,6 +7,8 @@ from django.contrib import messages
 from django.db.models import Q
 from django.utils import timezone
 from django.http import JsonResponse
+from uuid import uuid4
+from usuarios.models import Usuario
 
 from usuarios.views import AccesoWebPermitidoMixin
 from .models import Puesto, Empleado, Asignacion, ComentarioAsignacion, Vivienda
@@ -96,15 +98,36 @@ class EmpleadoListView(LoginRequiredMixin, ListView):
         context['query'] = self.request.GET.get('q', '')
         return context
 
+
 class EmpleadoCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
     model = Empleado
     form_class = EmpleadoForm
     template_name = 'personal/empleado_form.html'
     success_url = reverse_lazy('empleado-list')
-    
     def form_valid(self, form):
+        puesto = form.cleaned_data.get('puesto')
+
+        if puesto and puesto.nombre.lower() == "personal":
+            # Crear un usuario fantasma para personal (sin acceso al sistema)
+            nombres = form.cleaned_data.get('usuario').first_name
+            apellidos = form.cleaned_data.get('usuario').last_name
+            usuario = Usuario.objects.create(
+                username=f"personal_{uuid4().hex[:6]}",
+                first_name=nombres or "Empleado",
+                last_name=apellidos or "Condominio",
+                is_active=False
+            )
+            usuario.set_unusable_password()
+            usuario.save()
+            form.instance.usuario = usuario
+
         messages.success(self.request, 'Empleado creado exitosamente.')
         return super().form_valid(form)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
 
 class EmpleadoUpdateView(LoginRequiredMixin, AccesoWebPermitidoMixin, UpdateView):
     model = Empleado

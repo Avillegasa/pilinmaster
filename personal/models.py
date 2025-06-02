@@ -59,6 +59,7 @@ class Empleado(models.Model):
     
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='empleado')
     puesto = models.ForeignKey(Puesto, on_delete=models.PROTECT, related_name='empleados')
+    edificio = models.ForeignKey(Edificio, on_delete=models.SET_NULL, null=True, blank=True, related_name='empleados')
     fecha_contratacion = models.DateField()
     tipo_contrato = models.CharField(max_length=15, choices=TIPOS_CONTRATO, default='PERMANENTE')
     salario = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
@@ -80,6 +81,9 @@ class Empleado(models.Model):
     def clean(self):
         """Validaciones personalizadas"""
         super().clean()
+        if self.usuario.rol and self.usuario.rol.nombre != "Personal":
+            raise ValidationError("Solo los usuarios con rol 'Personal' pueden ser asignados como empleados.")
+
         
         # Validar fecha de contratación
         if self.fecha_contratacion:
