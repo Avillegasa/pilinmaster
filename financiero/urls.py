@@ -2,6 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Dashboard Financiero - DEBE IR PRIMERO
+    path('', views.dashboard_financiero, name='dashboard-financiero'),
+    
     # ConceptoCuota URLS
     path('conceptos/', views.ConceptoCuotaListView.as_view(), name='concepto-list'),
     path('conceptos/crear/', views.ConceptoCuotaCreateView.as_view(), name='concepto-create'),
@@ -46,9 +49,6 @@ urlpatterns = [
     path('estados-cuenta/<int:pk>/pdf/', views.estado_cuenta_pdf, name='estado-cuenta-pdf'),
     path('estados-cuenta/<int:pk>/enviar/', views.enviar_estado_cuenta, name='estado-cuenta-enviar'),
     path('estados-cuenta/generar-masivos/', views.generar_estados_cuenta, name='estado-cuenta-generar-masivos'),
-    
-    # Dashboard Financiero
-    path('', views.dashboard_financiero, name='dashboard-financiero'),
     
     # APIs para actualización asíncrona
     path('api/cuotas-por-vivienda/<int:vivienda_id>/', views.api_cuotas_por_vivienda, name='api-cuotas-por-vivienda'),

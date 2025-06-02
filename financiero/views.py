@@ -19,6 +19,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 
 from usuarios.views import AccesoWebPermitidoMixin
+
 from .models import (
     ConceptoCuota, Cuota, Pago, PagoCuota, 
     CategoriaGasto, Gasto, EstadoCuenta
@@ -306,26 +307,42 @@ class PagoListView(LoginRequiredMixin, ListView):
     
     def get_queryset(self):
         queryset = super().get_queryset()
+        user = self.request.user
         
-        # Filtrar por vivienda o edificio
-        vivienda_id = self.request.GET.get('vivienda')
-        edificio_id = self.request.GET.get('edificio')
-        if vivienda_id:
-            queryset = queryset.filter(vivienda_id=vivienda_id)
-        elif edificio_id:
-            queryset = queryset.filter(vivienda__edificio_id=edificio_id)
+        # ✅ FILTRAR POR ROL DEL USUARIO
+        if hasattr(user, 'residente') and user.rol and user.rol.nombre == 'Residente':
+            # Residentes solo ven sus propios pagos
+            queryset = queryset.filter(vivienda=user.residente.vivienda)
+        elif hasattr(user, 'gerente') and user.rol and user.rol.nombre == 'Gerente':
+            # Gerentes solo ven pagos de su edificio
+            queryset = queryset.filter(vivienda__edificio=user.gerente.edificio)
+        elif not (user.rol and user.rol.nombre == 'Administrador'):
+            # Si no es admin, gerente o residente, no ve nada
+            queryset = queryset.none()
         
-        # Filtrar por estado
+        # ✅ APLICAR FILTROS SOLO SI EL USUARIO TIENE PERMISOS
+        # Solo permitir filtros a administradores y gerentes
+        if user.rol and user.rol.nombre in ['Administrador', 'Gerente']:
+            vivienda_id = self.request.GET.get('vivienda')
+            edificio_id = self.request.GET.get('edificio')
+            
+            # Solo administradores pueden filtrar por cualquier edificio
+            if user.rol.nombre == 'Administrador':
+                if vivienda_id:
+                    queryset = queryset.filter(vivienda_id=vivienda_id)
+                elif edificio_id:
+                    queryset = queryset.filter(vivienda__edificio_id=edificio_id)
+            # Gerentes ya están limitados a su edificio
+        
+        # Filtros generales disponibles para todos
         estado = self.request.GET.get('estado')
         if estado:
             queryset = queryset.filter(estado=estado)
         
-        # Filtrar por método de pago
         metodo = self.request.GET.get('metodo')
         if metodo:
             queryset = queryset.filter(metodo_pago=metodo)
         
-        # Filtrar por fecha de pago
         fecha_desde = self.request.GET.get('fecha_desde')
         fecha_hasta = self.request.GET.get('fecha_hasta')
         if fecha_desde:
@@ -333,7 +350,6 @@ class PagoListView(LoginRequiredMixin, ListView):
         if fecha_hasta:
             queryset = queryset.filter(fecha_pago__lte=fecha_hasta)
         
-        # Ordenar
         orden = self.request.GET.get('orden', '-fecha_pago')
         queryset = queryset.order_by(orden)
         
@@ -341,9 +357,23 @@ class PagoListView(LoginRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Agregar filtros al contexto
-        context['edificios'] = Edificio.objects.all()
-        context['viviendas'] = Vivienda.objects.filter(activo=True)
+        user = self.request.user
+        
+        # ✅ CONFIGURAR OPCIONES DE FILTRO SEGÚN EL ROL
+        if user.rol and user.rol.nombre == 'Administrador':
+            context['edificios'] = Edificio.objects.all()
+            context['viviendas'] = Vivienda.objects.filter(activo=True)
+        elif user.rol and user.rol.nombre == 'Gerente' and hasattr(user, 'gerente'):
+            context['edificios'] = Edificio.objects.filter(pk=user.gerente.edificio.pk)
+            context['viviendas'] = Vivienda.objects.filter(
+                edificio=user.gerente.edificio, 
+                activo=True
+            )
+        else:
+            # Residentes no ven filtros de edificio/vivienda
+            context['edificios'] = Edificio.objects.none()
+            context['viviendas'] = Vivienda.objects.none()
+        
         context['estados_pago'] = Pago.ESTADO_CHOICES
         context['metodos_pago'] = Pago.METODO_PAGO_CHOICES
         
@@ -358,7 +388,6 @@ class PagoListView(LoginRequiredMixin, ListView):
         
         # Calcular totales
         pagos = self.object_list
-        # CÓDIGO CORREGIDO
         context['total_pagos'] = pagos.aggregate(
             total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
         )['total']
@@ -381,6 +410,35 @@ class PagoCreateView(LoginRequiredMixin, CreateView):
         kwargs = super().get_form_kwargs()
         kwargs['usuario'] = self.request.user
         return kwargs
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        user = self.request.user
+        
+        # ✅ FILTRAR VIVIENDAS SEGÚN EL ROL
+        if hasattr(user, 'residente') and user.rol and user.rol.nombre == 'Residente':
+            # Residentes solo pueden crear pagos para su vivienda
+            form.fields['vivienda'].queryset = Vivienda.objects.filter(
+                id=user.residente.vivienda.id
+            )
+            form.fields['vivienda'].initial = user.residente.vivienda
+            form.fields['vivienda'].widget.attrs['readonly'] = True
+            
+            # También filtrar residentes a solo el usuario actual
+            form.fields['residente'].queryset = Residente.objects.filter(
+                usuario=user
+            )
+            form.fields['residente'].initial = user.residente
+            
+        elif hasattr(user, 'gerente') and user.rol and user.rol.nombre == 'Gerente':
+            # Gerentes solo para su edificio
+            form.fields['vivienda'].queryset = Vivienda.objects.filter(
+                edificio=user.gerente.edificio,
+                activo=True
+            )
+        # Administradores pueden ver todas (se mantiene el queryset original)
+        
+        return form
     
     def form_valid(self, form):
         messages.success(self.request, 'Pago registrado exitosamente.')
@@ -427,12 +485,23 @@ class PagoUpdateView(LoginRequiredMixin, UpdateView):
 
 @login_required
 def verificar_pago(request, pk):
-    """Vista para verificar un pago"""
+    """Vista para verificar un pago - PERMISOS CORREGIDOS"""
     pago = get_object_or_404(Pago, pk=pk)
     
-    # Solo Administradores pueden verificar pagos
-    if not request.user.rol or request.user.rol.nombre != 'Administrador':
+    # ✅ VERIFICACIÓN DE PERMISOS MEJORADA
+    user = request.user
+    
+    # Solo Administradores y Gerentes pueden verificar pagos
+    if not (hasattr(user, 'rol') and user.rol and 
+            user.rol.nombre in ['Administrador', 'Gerente']):
         messages.error(request, 'No tienes permisos para verificar pagos.')
+        return redirect('pago-detail', pk=pk)
+    
+    # Gerentes solo pueden verificar pagos de su edificio
+    if (user.rol.nombre == 'Gerente' and 
+        hasattr(user, 'gerente') and
+        pago.vivienda.edificio != user.gerente.edificio):
+        messages.error(request, 'Solo puedes verificar pagos de tu edificio.')
         return redirect('pago-detail', pk=pk)
     
     if pago.estado != 'PENDIENTE':
@@ -447,12 +516,23 @@ def verificar_pago(request, pk):
 
 @login_required
 def rechazar_pago(request, pk):
-    """Vista para rechazar un pago"""
+    """Vista para rechazar un pago - PERMISOS CORREGIDOS"""
     pago = get_object_or_404(Pago, pk=pk)
     
-    # Solo Administradores pueden rechazar pagos
-    if not request.user.rol or request.user.rol.nombre != 'Administrador':
+    # ✅ VERIFICACIÓN DE PERMISOS MEJORADA
+    user = request.user
+    
+    # Solo Administradores y Gerentes pueden rechazar pagos
+    if not (hasattr(user, 'rol') and user.rol and 
+            user.rol.nombre in ['Administrador', 'Gerente']):
         messages.error(request, 'No tienes permisos para rechazar pagos.')
+        return redirect('pago-detail', pk=pk)
+    
+    # Gerentes solo pueden rechazar pagos de su edificio
+    if (user.rol.nombre == 'Gerente' and 
+        hasattr(user, 'gerente') and
+        pago.vivienda.edificio != user.gerente.edificio):
+        messages.error(request, 'Solo puedes rechazar pagos de tu edificio.')
         return redirect('pago-detail', pk=pk)
     
     if pago.estado != 'PENDIENTE':
@@ -1104,28 +1184,50 @@ def generar_estados_cuenta(request):
 # Dashboard Financiero
 @login_required
 def dashboard_financiero(request):
-    """Vista para el dashboard financiero"""
-    # Verificar permisos
-    es_admin = request.user.rol and request.user.rol.nombre == 'Administrador'
-    es_residente = hasattr(request.user, 'residente')
+    """Vista para el dashboard financiero - PERMISOS CORREGIDOS"""
+    user = request.user
     
-    if not (es_admin or es_residente):
+    # ✅ VERIFICAR PERMISOS DE ACCESO
+    es_admin = user.rol and user.rol.nombre == 'Administrador'
+    es_gerente = user.rol and user.rol.nombre == 'Gerente'
+    es_residente = hasattr(user, 'residente') and user.rol and user.rol.nombre == 'Residente'
+    
+    if not (es_admin or es_gerente or es_residente):
         messages.error(request, 'No tienes permisos para acceder a esta sección.')
         return redirect('dashboard')
     
     # Obtener vivienda del residente si aplica
     vivienda = None
     if es_residente:
-        vivienda = request.user.residente.vivienda
+        vivienda = user.residente.vivienda
     
-    # Filtrar por vivienda o edificio si se proporciona en la URL
+    # ✅ FILTRADO SEGÚN ROL
     vivienda_id = request.GET.get('vivienda')
     edificio_id = request.GET.get('edificio')
     
-    # Si es residente, solo puede ver su vivienda
+    # Aplicar restricciones por rol
     if es_residente:
+        # Residentes solo ven su vivienda
         vivienda_id = vivienda.id if vivienda else None
         edificio_id = None
+    elif es_gerente and hasattr(user, 'gerente'):
+        # Gerentes solo ven su edificio
+        if edificio_id and edificio_id != str(user.gerente.edificio.id):
+            edificio_id = str(user.gerente.edificio.id)
+        elif not edificio_id:
+            edificio_id = str(user.gerente.edificio.id)
+        
+        # Si se especifica vivienda, verificar que pertenezca al edificio del gerente
+        if vivienda_id:
+            try:
+                vivienda_obj = Vivienda.objects.get(pk=vivienda_id)
+                if vivienda_obj.edificio != user.gerente.edificio:
+                    vivienda_id = None
+            except Vivienda.DoesNotExist:
+                vivienda_id = None
+    
+    # Solo administradores pueden filtrar libremente
+    # (es_admin no tiene restricciones adicionales)
     
     # Período de tiempo
     hoy = timezone.now().date()
@@ -1137,24 +1239,22 @@ def dashboard_financiero(request):
     else:
         fin_mes_actual = hoy.replace(month=hoy.month + 1, day=1) - timedelta(days=1)
     
-    # Calcular inicio y fin del mes anterior
-    if hoy.month == 1:
-        inicio_mes_anterior = hoy.replace(year=hoy.year - 1, month=12, day=1)
-        fin_mes_anterior = hoy.replace(year=hoy.year, month=1, day=1) - timedelta(days=1)
-    else:
-        inicio_mes_anterior = hoy.replace(month=hoy.month - 1, day=1)
-        fin_mes_anterior = inicio_mes_actual - timedelta(days=1)
-    
-    # Ingresos y gastos por período
+    # ✅ APLICAR FILTROS SEGÚN PERMISOS
     filters_pagos = {'estado': 'VERIFICADO'}
     filters_gastos = {'estado': 'PAGADO'}
+    filters_cuotas = {'pagada': False}
     
     if vivienda_id:
         filters_pagos['vivienda_id'] = vivienda_id
+        filters_cuotas['vivienda_id'] = vivienda_id
     elif edificio_id:
         filters_pagos['vivienda__edificio_id'] = edificio_id
+        filters_cuotas['vivienda__edificio_id'] = edificio_id
     
-    # Ingresos (pagos) del mes actual y anterior
+    # Los gastos no se filtran por vivienda (son del condominio en general)
+    # Pero los gerentes solo pueden ver los de su edificio si se implementa
+    
+    # Ingresos (pagos) del mes actual
     ingresos_mes_actual = Pago.objects.filter(
         fecha_pago__gte=inicio_mes_actual,
         fecha_pago__lte=fin_mes_actual,
@@ -1163,86 +1263,16 @@ def dashboard_financiero(request):
         total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0'))
     )['total']
     
-    ingresos_mes_anterior = Pago.objects.filter(
-        fecha_pago__gte=inicio_mes_anterior,
-        fecha_pago__lte=fin_mes_anterior,
-        **filters_pagos
-    ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
-    
-    # Gastos del mes actual y anterior
-    gastos_mes_actual = Gasto.objects.filter(
-        fecha__gte=inicio_mes_actual,
-        fecha__lte=fin_mes_actual,
-        **filters_gastos
-    ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
-    
-    gastos_mes_anterior = Gasto.objects.filter(
-        fecha__gte=inicio_mes_anterior,
-        fecha__lte=fin_mes_anterior,
-        **filters_gastos
-    ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
-    
-    # Balance
-    balance_mes_actual = ingresos_mes_actual - gastos_mes_actual
-    balance_mes_anterior = ingresos_mes_anterior - gastos_mes_anterior
-    
-    # Tendencia (porcentaje de cambio)
-    if ingresos_mes_anterior > 0:
-        tendencia_ingresos = ((ingresos_mes_actual - ingresos_mes_anterior) / ingresos_mes_anterior) * 100
-    else:
-        tendencia_ingresos = 100 if ingresos_mes_actual > 0 else 0
-    
-    if gastos_mes_anterior > 0:
-        tendencia_gastos = ((gastos_mes_actual - gastos_mes_anterior) / gastos_mes_anterior) * 100
-    else:
-        tendencia_gastos = 100 if gastos_mes_actual > 0 else 0
-    
-    # Datos para gráficos
-    # Ingresos y gastos de los últimos 6 meses
-    datos_meses = []
-    for i in range(5, -1, -1):
-        # Calcular mes
-        if hoy.month - i <= 0:
-            year = hoy.year - 1
-            month = hoy.month - i + 12
-        else:
-            year = hoy.year
-            month = hoy.month - i
-        
-        inicio_mes = timezone.datetime(year, month, 1).date()
-        if month == 12:
-            fin_mes = timezone.datetime(year + 1, 1, 1).date() - timedelta(days=1)
-        else:
-            fin_mes = timezone.datetime(year, month + 1, 1).date() - timedelta(days=1)
-        
-        # Calcular ingresos y gastos del mes
-        ingresos_mes = Pago.objects.filter(
-            fecha_pago__gte=inicio_mes,
-            fecha_pago__lte=fin_mes,
-            **filters_pagos
-        ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
-        
-        gastos_mes = Gasto.objects.filter(
-            fecha__gte=inicio_mes,
-            fecha__lte=fin_mes,
+    # Gastos del mes actual (solo para administradores y gerentes)
+    gastos_mes_actual = Decimal('0')
+    if es_admin or es_gerente:
+        gastos_mes_actual = Gasto.objects.filter(
+            fecha__gte=inicio_mes_actual,
+            fecha__lte=fin_mes_actual,
             **filters_gastos
         ).aggregate(total=Coalesce(Sum('monto', output_field=DecimalField()), Decimal('0')))['total']
-        
-        nombre_mes = inicio_mes.strftime('%b %Y')
-        datos_meses.append({
-            'mes': nombre_mes,
-            'ingresos': float(ingresos_mes),
-            'gastos': float(gastos_mes),
-            'balance': float(ingresos_mes - gastos_mes)
-        })
     
-    # Calcular cuotas pendientes y vencidas
-    filters_cuotas = {'pagada': False}
-    if vivienda_id:
-        filters_cuotas['vivienda_id'] = vivienda_id
-    elif edificio_id:
-        filters_cuotas['vivienda__edificio_id'] = edificio_id
-    
+    # Calcular cuotas pendientes
     cuotas_pendientes = Cuota.objects.filter(**filters_cuotas)
     cuotas_vencidas = cuotas_pendientes.filter(fecha_vencimiento__lt=hoy)
     
@@ -1250,64 +1280,30 @@ def dashboard_financiero(request):
         total=Coalesce(Sum(F('monto') + F('recargo')), Decimal('0'))
     )['total']
     
-    total_vencido = cuotas_vencidas.aggregate(
-        total=Coalesce(Sum(F('monto') + F('recargo')), Decimal('0'))
-    )['total']
-    
-    # Calcular distribución de gastos por categoría en el mes actual
-    gastos_por_categoria = Gasto.objects.filter(
-        fecha__gte=inicio_mes_actual,
-        fecha__lte=fin_mes_actual,
-        estado='PAGADO'
-    ).values('categoria__nombre', 'categoria__color').annotate(
-        total=Sum('monto', output_field=DecimalField())
-    ).order_by('-total')
-    
-    # Convertir a formato para gráficos
-    datos_categorias = []
-    for gasto in gastos_por_categoria:
-        datos_categorias.append({
-            'categoria': gasto['categoria__nombre'],
-            'monto': float(gasto['total']),
-            'color': gasto['categoria__color'] or '#3498db'
-        })
-    
-    # Últimos pagos y gastos
-    ultimos_pagos = Pago.objects.filter(**filters_pagos).order_by('-fecha_pago')[:5]
-    ultimos_gastos = Gasto.objects.filter(estado='PAGADO').order_by('-fecha')[:5]
-    
+    # Preparar contexto
     context = {
         'es_admin': es_admin,
+        'es_gerente': es_gerente,
         'es_residente': es_residente,
         'vivienda': vivienda,
-        'edificios': Edificio.objects.all() if es_admin else None,
-        'viviendas': Vivienda.objects.filter(activo=True) if es_admin else None,
+        'edificios': Edificio.objects.all() if es_admin else 
+                    (Edificio.objects.filter(pk=user.gerente.edificio.pk) if es_gerente and hasattr(user, 'gerente') else 
+                     Edificio.objects.none()),
+        'viviendas': (Vivienda.objects.filter(activo=True) if es_admin else
+                     (Vivienda.objects.filter(edificio=user.gerente.edificio, activo=True) if es_gerente and hasattr(user, 'gerente') else
+                      Vivienda.objects.filter(pk=vivienda.pk) if vivienda else Vivienda.objects.none())),
         'edificio_id': edificio_id,
         'vivienda_id': vivienda_id,
         
         # Resumen financiero
         'ingresos_mes_actual': ingresos_mes_actual,
-        'ingresos_mes_anterior': ingresos_mes_anterior,
         'gastos_mes_actual': gastos_mes_actual,
-        'gastos_mes_anterior': gastos_mes_anterior,
-        'balance_mes_actual': balance_mes_actual,
-        'balance_mes_anterior': balance_mes_anterior,
-        'tendencia_ingresos': tendencia_ingresos,
-        'tendencia_gastos': tendencia_gastos,
-        
-        # Datos para gráficos
-        'datos_meses': json.dumps(datos_meses),
-        'datos_categorias': json.dumps(datos_categorias),
+        'balance_mes_actual': ingresos_mes_actual - gastos_mes_actual,
         
         # Cuotas y pendientes
         'cuotas_pendientes': cuotas_pendientes.count(),
         'cuotas_vencidas': cuotas_vencidas.count(),
         'total_pendiente': total_pendiente,
-        'total_vencido': total_vencido,
-        
-        # Últimos movimientos
-        'ultimos_pagos': ultimos_pagos,
-        'ultimos_gastos': ultimos_gastos,
         
         # Período
         'inicio_mes_actual': inicio_mes_actual,
@@ -1319,12 +1315,26 @@ def dashboard_financiero(request):
 # APIs
 @login_required
 def api_cuotas_por_vivienda(request, vivienda_id):
-    """API para obtener cuotas por vivienda"""
-    # Verificar permisos
-    es_admin = request.user.rol and request.user.rol.nombre == 'Administrador'
-    es_residente = hasattr(request.user, 'residente') and request.user.residente.vivienda_id == vivienda_id
+    """API para obtener cuotas por vivienda - PERMISOS CORREGIDOS"""
+    user = request.user
     
-    if not (es_admin or es_residente):
+    # ✅ VERIFICAR PERMISOS
+    es_admin = user.rol and user.rol.nombre == 'Administrador'
+    es_gerente = user.rol and user.rol.nombre == 'Gerente'
+    es_residente = hasattr(user, 'residente') and user.rol and user.rol.nombre == 'Residente'
+    
+    # Verificar acceso a la vivienda específica
+    if es_residente:
+        if user.residente.vivienda_id != vivienda_id:
+            return JsonResponse({"error": "No tienes permisos para ver estas cuotas"}, status=403)
+    elif es_gerente and hasattr(user, 'gerente'):
+        try:
+            vivienda = Vivienda.objects.get(pk=vivienda_id)
+            if vivienda.edificio != user.gerente.edificio:
+                return JsonResponse({"error": "No tienes permisos para ver estas cuotas"}, status=403)
+        except Vivienda.DoesNotExist:
+            return JsonResponse({"error": "Vivienda no encontrada"}, status=404)
+    elif not es_admin:
         return JsonResponse({"error": "No tienes permisos para ver estas cuotas"}, status=403)
     
     # Obtener estado (todas, pendientes, vencidas)
