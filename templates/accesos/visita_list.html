@@ -5,7 +5,13 @@
 
 {% block content %}
 <div class="mb-4 d-flex justify-content-between align-items-center">
-    <p class="text-muted">Total: {{ visitas.count }} visitas activas</p>
+    <div>
+        <p class="text-muted">Total: {{ visitas.count }} visitas activas</p>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="mostrarHistorial">
+            <label class="form-check-label" for="mostrarHistorial">Mostrar historial ({{ visitas_historicas }} visitas completadas)</label>
+        </div>
+    </div>
     <a href="{% url 'visita-create' %}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Registrar Visita
     </a>
@@ -23,10 +29,11 @@
                         <th>Vivienda</th>
                         <th>Residente Autoriza</th>
                         <th>Entrada</th>
+                        <th>Salida</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="visitasActivas">
                     {% for visita in visitas %}
                     <tr>
                         <td>{{ visita.id }}</td>
@@ -35,6 +42,7 @@
                         <td>{{ visita.vivienda_destino }}</td>
                         <td>{{ visita.residente_autoriza }}</td>
                         <td>{{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}</td>
+                        <td>-</td>
                         <td>
                             <a href="{% url 'visita-salida' visita.id %}" class="btn btn-sm btn-success">
                                 <i class="fas fa-sign-out-alt"></i> Registrar Salida
@@ -43,12 +51,104 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center">No hay visitas activas</td>
+                        <td colspan="8" class="text-center">No hay visitas activas</td>
                     </tr>
                     {% endfor %}
+                </tbody>
+                <tbody id="visitasHistorial" class="d-none">
+                    <!-- Aquí se cargarán las visitas históricas por AJAX -->
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxHistorial = document.getElementById('mostrarHistorial');
+        const visitasHistorial = document.getElementById('visitasHistorial');
+        const visitasActivas = document.getElementById('visitasActivas');
+        
+        let historialCargado = false;
+        
+        checkboxHistorial.addEventListener('change', function() {
+            if (checkboxHistorial.checked) {
+                // Mostrar historial
+                if (!historialCargado) {
+                    // Cargar historial mediante AJAX si no está cargado
+                    fetch('/api/visitas/historial/')
+                        .then(response => response.json())
+                        .then(data => {
+                            // Limpiar contenido actual
+                            visitasHistorial.innerHTML = '';
+                            
+                            if (data.length === 0) {
+                                // Si no hay historial, mostrar mensaje
+                                const row = document.createElement('tr');
+                                row.innerHTML = '<td colspan="8" class="text-center">No hay visitas históricas</td>';
+                                visitasHistorial.appendChild(row);
+                            } else {
+                                // Agregar cada visita al historial
+                                data.forEach(visita => {
+                                    const row = document.createElement('tr');
+                                    row.classList.add('bg-light');
+                                    
+                                    // Calcular duración de la visita
+                                    const entrada = new Date(visita.fecha_hora_entrada);
+                                    const salida = new Date(visita.fecha_hora_salida);
+                                    const duracion = Math.round((salida - entrada) / (1000 * 60)); // Duración en minutos
+                                    
+                                    // Formatear fechas
+                                    const entradaStr = new Intl.DateTimeFormat('es', { 
+                                        day: '2-digit', month: '2-digit', year: 'numeric', 
+                                        hour: '2-digit', minute: '2-digit' 
+                                    }).format(entrada);
+                                    
+                                    const salidaStr = new Intl.DateTimeFormat('es', { 
+                                        day: '2-digit', month: '2-digit', year: 'numeric', 
+                                        hour: '2-digit', minute: '2-digit' 
+                                    }).format(salida);
+                                    
+                                    row.innerHTML = `
+                                        <td>${visita.id}</td>
+                                        <td>${visita.nombre_visitante}</td>
+                                        <td>${visita.documento_visitante}</td>
+                                        <td>${visita.vivienda_destino}</td>
+                                        <td>${visita.residente_autoriza}</td>
+                                        <td>${entradaStr}</td>
+                                        <td>${salidaStr}</td>
+                                        <td><span class="badge text-bg-secondary">${duracion} min.</span></td>
+                                    `;
+                                    
+                                    visitasHistorial.appendChild(row);
+                                });
+                            }
+                            
+                            historialCargado = true;
+                            visitasHistorial.classList.remove('d-none');
+                        })
+                        .catch(error => {
+                            console.error('Error al cargar historial de visitas:', error);
+                            // Mostrar mensaje de error
+                            visitasHistorial.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar historial</td></tr>';
+                            visitasHistorial.classList.remove('d-none');
+                        });
+                } else {
+                    visitasHistorial.classList.remove('d-none');
+                }
+            } else {
+                // Ocultar historial
+                visitasHistorial.classList.add('d-none');
+            }
+        });
+        
+        // En caso de implementación real, se usaría este endpoint
+        // Por ahora, si no existe el endpoint, simularemos datos para prueba
+        if (typeof visitasHistoricas === 'undefined' || visitasHistoricas === null) {
+            window.visitasHistoricas = [];
+        }
+    });
+</script>
 {% endblock %}

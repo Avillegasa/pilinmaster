@@ -1,0 +1,811 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ reporte.nombre }} | Vista Previa | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Vista Previa: {{ reporte.nombre }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <!-- Detalles del reporte y acciones -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if reporte.tipo == 'ACCESOS' %}clipboard-list{% elif reporte.tipo == 'RESIDENTES' %}users{% elif reporte.tipo == 'VIVIENDAS' %}home{% elif reporte.tipo == 'PERSONAL' %}id-badge{% else %}chart-bar{% endif %}"></i>
+                    {{ reporte.nombre }}
+                </h5>
+                <div>
+                    <a href="{% url 'reporte-toggle-favorito' reporte.id %}?next={{ request.path|urlencode }}" class="btn btn-light btn-sm {% if reporte.es_favorito %}active{% endif %}">
+                        <i class="fas fa-star {% if reporte.es_favorito %}text-warning{% endif %}"></i>
+                        {% if reporte.es_favorito %}Favorito{% else %}Marcar como favorito{% endif %}
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p><strong>Tipo:</strong> 
+                            {% if reporte.tipo == 'ACCESOS' %}
+                                <span class="badge text-bg-primary">Accesos</span>
+                            {% elif reporte.tipo == 'RESIDENTES' %}
+                                <span class="badge text-bg-success">Residentes</span>
+                            {% elif reporte.tipo == 'VIVIENDAS' %}
+                                <span class="badge text-bg-info">Viviendas</span>
+                            {% elif reporte.tipo == 'PERSONAL' %}
+                                <span class="badge text-bg-secondary">Personal</span>
+                            {% elif reporte.tipo == 'FINANCIERO' %}
+                                <span class="badge text-bg-warning">Financiero</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Período:</strong> {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}</p>
+                        
+                        {% if reporte.filtros %}
+                            <p><strong>Filtros aplicados:</strong></p>
+                            <ul class="list-unstyled">
+                                {% if reporte.filtros.edificio %}
+                                    <li><i class="fas fa-filter text-secondary me-1"></i> Edificio: {{ nombre_edificio }}</li>
+                                {% endif %}
+                                
+                                {% if reporte.tipo == 'ACCESOS' and reporte.filtros.tipo_visita %}
+                                    <li><i class="fas fa-filter text-secondary me-1"></i> Estado: {{ reporte.filtros.tipo_visita }}</li>
+                                {% endif %}
+                                
+                                {% if reporte.tipo == 'RESIDENTES' or reporte.tipo == 'PERSONAL' %}
+                                    {% if reporte.filtros.estado %}
+                                        <li><i class="fas fa-filter text-secondary me-1"></i> Estado: {{ reporte.filtros.estado }}</li>
+                                    {% endif %}
+                                    
+                                    {% if reporte.tipo == 'RESIDENTES' and reporte.filtros.tipo_residente %}
+                                        <li><i class="fas fa-filter text-secondary me-1"></i> Tipos de residente seleccionados</li>
+                                    {% endif %}
+                                    
+                                    {% if reporte.tipo == 'PERSONAL' and reporte.filtros.puesto %}
+                                        <li><i class="fas fa-filter text-secondary me-1"></i> Puestos seleccionados</li>
+                                    {% endif %}
+                                {% endif %}
+                                
+                                {% if reporte.tipo == 'VIVIENDAS' and reporte.filtros.estado %}
+                                    <li><i class="fas fa-filter text-secondary me-1"></i> Estados: 
+                                        {% for estado in reporte.filtros.estado %}
+                                            {% if estado == 'OCUPADO' %}
+                                                <span class="badge text-bg-success">Ocupado</span>
+                                            {% elif estado == 'DESOCUPADO' %}
+                                                <span class="badge text-bg-secondary">Desocupado</span>
+                                            {% elif estado == 'MANTENIMIENTO' %}
+                                                <span class="badge text-bg-warning">Mantenimiento</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p><strong>Creado por:</strong> {{ reporte.creado_por.first_name }} {{ reporte.creado_por.last_name }}</p>
+                        <p><strong>Fecha de creación:</strong> {{ reporte.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                        <p><strong>Última generación:</strong> 
+                            {% if reporte.ultima_generacion %}
+                                {{ reporte.ultima_generacion|date:"d/m/Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">No generado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Acciones -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'reporte-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver a la lista
+                    </a>
+                    <div>
+                        <a href="{% url 'reporte-update' reporte.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar configuración
+                        </a>
+                        <a href="{% url 'reporte-duplicar' reporte.id %}" class="btn btn-info">
+                            <i class="fas fa-copy"></i> Duplicar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Resumen de datos -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Resumen del Reporte</h5>
+            </div>
+            <div class="card-body">
+                {% if reporte.tipo == 'ACCESOS' %}
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-primary">{{ total_visitas }}</h3>
+                                <p class="mb-0">Total de visitas</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-success">{{ visitas_activas }}</h3>
+                                <p class="mb-0">Visitas activas</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-info">{{ visitas_finalizadas }}</h3>
+                                <p class="mb-0">Visitas finalizadas</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if duracion_promedio %}
+                        <div class="alert alert-info mt-3 text-center">
+                            <i class="fas fa-clock"></i> Duración promedio de visitas: <strong>{{ duracion_promedio }} horas</strong>
+                        </div>
+                    {% endif %}
+                
+                {% elif reporte.tipo == 'RESIDENTES' %}
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-primary">{{ total_residentes }}</h3>
+                                <p class="mb-0">Total de residentes</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-success">{{ propietarios }}</h3>
+                                <p class="mb-0">Propietarios</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-info">{{ inquilinos }}</h3>
+                                <p class="mb-0">Inquilinos</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-warning">{{ activos }}</h3>
+                                <p class="mb-0">Residentes activos</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                {% elif reporte.tipo == 'VIVIENDAS' %}
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-primary">{{ total_viviendas }}</h3>
+                                <p class="mb-0">Total de viviendas</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-success">{{ ocupadas }}</h3>
+                                <p class="mb-0">Ocupadas</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-secondary">{{ desocupadas }}</h3>
+                                <p class="mb-0">Desocupadas</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-warning">{{ mantenimiento }}</h3>
+                                <p class="mb-0">En mantenimiento</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3 text-center">
+                        <i class="fas fa-percentage"></i> Porcentaje de ocupación: <strong>{{ porcentaje_ocupacion|floatformat:2 }}%</strong>
+                    </div>
+                    
+                {% elif reporte.tipo == 'PERSONAL' %}
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-primary">{{ total_empleados }}</h3>
+                                <p class="mb-0">Total de empleados</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-success">{{ activos }}</h3>
+                                <p class="mb-0">Empleados activos</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 mb-3">
+                                <h3 class="text-danger">{{ inactivos }}</h3>
+                                <p class="mb-0">Empleados inactivos</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if puestos_stats %}
+                        <h6 class="mb-3 mt-4">Distribución por puesto de trabajo:</h6>
+                        <div class="row">
+                            {% for puesto in puestos_stats %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="bg-light rounded p-2">
+                                        <p class="mb-0">
+                                            <span class="badge text-bg-primary">{{ puesto.cantidad }}</span>
+                                            {{ puesto.nombre }}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Gráficos destacados -->
+        {% if chart_data %}
+            <div class="card shadow mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Gráficos Principales</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if reporte.tipo == 'ACCESOS' %}
+                            {% if chart_data.visitas_por_dia %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Visitas por día</h6>
+                                        <canvas id="visitasPorDiaChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if chart_data.estado_visitas %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Estado de visitas</h6>
+                                        <canvas id="estadoVisitasChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if chart_data.visitas_por_edificio %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Visitas por edificio</h6>
+                                        <canvas id="visitasPorEdificioChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                        {% elif reporte.tipo == 'RESIDENTES' %}
+                            {% if chart_data.tipos_residentes %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Residentes por tipo</h6>
+                                        <canvas id="tiposResidentesChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if chart_data.propietarios_inquilinos %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Propietarios vs Inquilinos</h6>
+                                        <canvas id="propietariosInquilinosChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if chart_data.estado_residentes %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Estado de residentes</h6>
+                                        <canvas id="estadoResidentesChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                        {% elif reporte.tipo == 'VIVIENDAS' %}
+                            {% if chart_data.estado_viviendas %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Estado de viviendas</h6>
+                                        <canvas id="estadoViviendasChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if chart_data.tamanios_viviendas %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Distribución por tamaño</h6>
+                                        <canvas id="tamaniosViviendasChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if chart_data.viviendas_por_edificio %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Viviendas por edificio</h6>
+                                        <canvas id="viviendasPorEdificioChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                        {% elif reporte.tipo == 'PERSONAL' %}
+                            {% if chart_data.empleados_por_puesto %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Empleados por puesto</h6>
+                                        <canvas id="empleadosPorPuestoChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if chart_data.estado_empleados %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Estado de empleados</h6>
+                                        <canvas id="estadoEmpleadosChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if chart_data.tipo_contrato %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="grafico">
+                                        <h6 class="text-center mb-3">Tipo de contrato</h6>
+                                        <canvas id="tipoContratoChart" height="250"></canvas>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Vista previa de datos -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-table"></i> Vista Previa de Datos</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {% if reporte.tipo == 'ACCESOS' %}
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Visitante</th>
+                                    <th>Documento</th>
+                                    <th>Vivienda</th>
+                                    <th>Entrada</th>
+                                    <th>Salida</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for visita in visitas|slice:":10" %}
+                                <tr>
+                                    <td>{{ visita.nombre_visitante }}</td>
+                                    <td>{{ visita.documento_visitante }}</td>
+                                    <td>{{ visita.vivienda_destino }}</td>
+                                    <td>{{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if visita.fecha_hora_salida %}
+                                            {{ visita.fecha_hora_salida|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Sin registrar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if visita.fecha_hora_salida %}
+                                            <span class="badge text-bg-secondary">Finalizada</span>
+                                        {% else %}
+                                            <span class="badge text-bg-success">Activa</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No hay visitas que coincidan con los criterios del reporte</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        
+                    {% elif reporte.tipo == 'RESIDENTES' %}
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Vivienda</th>
+                                    <th>Ingreso</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for residente in residentes|slice:":10" %}
+                                <tr>
+                                    <td>{{ residente.usuario.first_name }} {{ residente.usuario.last_name }}</td>
+                                    <td>
+                                        {{ residente.tipo_residente.nombre }}
+                                        {% if residente.tipo_residente.es_propietario %}
+                                            <span class="badge text-bg-primary">P</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if residente.vivienda %}
+                                            {{ residente.vivienda }}
+                                        {% else %}
+                                            <span class="text-muted">Sin asignar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ residente.fecha_ingreso|date:"d/m/Y" }}</td>
+                                    <td>
+                                        {% if residente.activo %}
+                                            <span class="badge text-bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge text-bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No hay residentes que coincidan con los criterios del reporte</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        
+                    {% elif reporte.tipo == 'VIVIENDAS' %}
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Edificio</th>
+                                    <th>Número</th>
+                                    <th>Piso</th>
+                                    <th>Metros²</th>
+                                    <th>Habitaciones</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vivienda in viviendas|slice:":10" %}
+                                <tr>
+                                    <td>{{ vivienda.edificio.nombre }}</td>
+                                    <td>{{ vivienda.numero }}</td>
+                                    <td>{{ vivienda.piso }}</td>
+                                    <td>{{ vivienda.metros_cuadrados }}</td>
+                                    <td>{{ vivienda.habitaciones }}</td>
+                                    <td>
+                                        {% if vivienda.estado == 'OCUPADO' %}
+                                            <span class="badge text-bg-success">Ocupado</span>
+                                        {% elif vivienda.estado == 'DESOCUPADO' %}
+                                            <span class="badge text-bg-secondary">Desocupado</span>
+                                        {% else %}
+                                            <span class="badge text-bg-warning">Mantenimiento</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No hay viviendas que coincidan con los criterios del reporte</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        
+                    {% elif reporte.tipo == 'PERSONAL' %}
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Puesto</th>
+                                    <th>Contratación</th>
+                                    <th>Contrato</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for empleado in empleados|slice:":10" %}
+                                <tr>
+                                    <td>{{ empleado.usuario.first_name }} {{ empleado.usuario.last_name }}</td>
+                                    <td>{{ empleado.puesto.nombre }}</td>
+                                    <td>{{ empleado.fecha_contratacion|date:"d/m/Y" }}</td>
+                                    <td>{{ empleado.get_tipo_contrato_display }}</td>
+                                    <td>
+                                        {% if empleado.activo %}
+                                            <span class="badge text-bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge text-bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No hay empleados que coincidan con los criterios del reporte</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </div>
+                
+                {% if reporte.tipo == 'ACCESOS' and visitas.count > 10 or reporte.tipo == 'RESIDENTES' and residentes.count > 10 or reporte.tipo == 'VIVIENDAS' and viviendas.count > 10 or reporte.tipo == 'PERSONAL' and empleados.count > 10 %}
+                    <div class="text-center mt-3">
+                        <p class="text-muted">Mostrando 10 de {{ reporte.tipo|lower }} registros. Exporta el reporte completo para ver todos los datos.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Formulario de exportación -->
+        <div class="card shadow sticky-top" style="top: 20px;">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-file-export"></i> Exportar Reporte</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ export_form|crispy }}
+                    
+                    <div class="d-grid mt-3">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-download"></i> Generar y Descargar
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="alert alert-info small">
+                    <p><strong>Consejos de exportación:</strong></p>
+                    <ul class="mb-0">
+                        <li>El formato <strong>PDF</strong> es ideal para presentaciones e impresión.</li>
+                        <li>El formato <strong>Excel</strong> permite analizar y filtrar los datos.</li>
+                        <li>El formato <strong>CSV</strong> es compatible con casi cualquier aplicación.</li>
+                        <li>El formato <strong>HTML</strong> muestra el reporte en el navegador.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if chart_data %}
+            // Configuración común de colores
+            const colorPalette = {
+                blue: 'rgba(54, 162, 235, 0.7)',
+                blueStroke: 'rgba(54, 162, 235, 1)',
+                green: 'rgba(75, 192, 192, 0.7)',
+                greenStroke: 'rgba(75, 192, 192, 1)',
+                red: 'rgba(255, 99, 132, 0.7)',
+                redStroke: 'rgba(255, 99, 132, 1)',
+                orange: 'rgba(255, 159, 64, 0.7)',
+                orangeStroke: 'rgba(255, 159, 64, 1)',
+                purple: 'rgba(153, 102, 255, 0.7)',
+                purpleStroke: 'rgba(153, 102, 255, 1)',
+                yellow: 'rgba(255, 205, 86, 0.7)',
+                yellowStroke: 'rgba(255, 205, 86, 1)',
+                grey: 'rgba(201, 203, 207, 0.7)',
+                greyStroke: 'rgba(201, 203, 207, 1)'
+            };
+            
+            // Funciones para crear gráficos
+            const createBarChart = (canvasId, labels, data, titulo) => {
+                if (!document.getElementById(canvasId)) return;
+                
+                return new Chart(document.getElementById(canvasId).getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: titulo,
+                            data: data,
+                            backgroundColor: colorPalette.blue,
+                            borderColor: colorPalette.blueStroke,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+            
+            const createPieChart = (canvasId, labels, data, titulo) => {
+                if (!document.getElementById(canvasId)) return;
+                
+                const backgroundColors = [
+                    colorPalette.blue,
+                    colorPalette.green,
+                    colorPalette.red,
+                    colorPalette.yellow,
+                    colorPalette.purple,
+                    colorPalette.orange,
+                    colorPalette.grey
+                ];
+                
+                const borderColors = [
+                    colorPalette.blueStroke,
+                    colorPalette.greenStroke,
+                    colorPalette.redStroke,
+                    colorPalette.yellowStroke,
+                    colorPalette.purpleStroke,
+                    colorPalette.orangeStroke,
+                    colorPalette.greyStroke
+                ];
+                
+                return new Chart(document.getElementById(canvasId).getContext('2d'), {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: titulo,
+                            data: data,
+                            backgroundColor: backgroundColors.slice(0, labels.length),
+                            borderColor: borderColors.slice(0, labels.length),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12
+                                }
+                            },
+                            title: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            };
+            
+            // Crear gráficos según el tipo de reporte
+            {% if reporte.tipo == 'ACCESOS' %}
+                {% if chart_data.visitas_por_dia %}
+                    createBarChart(
+                        'visitasPorDiaChart',
+                        {{ chart_data.visitas_por_dia.labels|safe }},
+                        {{ chart_data.visitas_por_dia.data|safe }},
+                        "{{ chart_data.visitas_por_dia.titulo }}"
+                    );
+                {% endif %}
+                
+                {% if chart_data.estado_visitas %}
+                    createPieChart(
+                        'estadoVisitasChart',
+                        {{ chart_data.estado_visitas.labels|safe }},
+                        {{ chart_data.estado_visitas.data|safe }},
+                        "{{ chart_data.estado_visitas.titulo }}"
+                    );
+                {% endif %}
+                
+                {% if chart_data.visitas_por_edificio %}
+                    createPieChart(
+                        'visitasPorEdificioChart',
+                        {{ chart_data.visitas_por_edificio.labels|safe }},
+                        {{ chart_data.visitas_por_edificio.data|safe }},
+                        "{{ chart_data.visitas_por_edificio.titulo }}"
+                    );
+                {% endif %}
+                
+            {% elif reporte.tipo == 'RESIDENTES' %}
+                {% if chart_data.tipos_residentes %}
+                    createBarChart(
+                        'tiposResidentesChart',
+                        {{ chart_data.tipos_residentes.labels|safe }},
+                        {{ chart_data.tipos_residentes.data|safe }},
+                        "{{ chart_data.tipos_residentes.titulo }}"
+                    );
+                {% endif %}
+                
+                {% if chart_data.propietarios_inquilinos %}
+                    createPieChart(
+                        'propietariosInquilinosChart',
+                        {{ chart_data.propietarios_inquilinos.labels|safe }},
+                        {{ chart_data.propietarios_inquilinos.data|safe }},
+                        "{{ chart_data.propietarios_inquilinos.titulo }}"
+                    );
+                {% endif %}
+                
+                {% if chart_data.estado_residentes %}
+                    createPieChart(
+                        'estadoResidentesChart',
+                        {{ chart_data.estado_residentes.labels|safe }},
+                        {{ chart_data.estado_residentes.data|safe }},
+                        "{{ chart_data.estado_residentes.titulo }}"
+                    );
+                {% endif %}
+                
+            {% elif reporte.tipo == 'VIVIENDAS' %}
+                {% if chart_data.estado_viviendas %}
+                    createPieChart(
+                        'estadoViviendasChart',
+                        {{ chart_data.estado_viviendas.labels|safe }},
+                        {{ chart_data.estado_viviendas.data|safe }},
+                        "{{ chart_data.estado_viviendas.titulo }}"
+                    );
+                {% endif %}
+                
+                {% if chart_data.tamanios_viviendas %}
+                    createPieChart(
+                        'tamaniosViviendasChart',
+                        {{ chart_data.tamanios_viviendas.labels|safe }},
+                        {{ chart_data.tamanios_viviendas.data|safe }},
+                        "{{ chart_data.tamanios_viviendas.titulo }}"
+                    );
+                {% endif %}
+                
+                {% if chart_data.viviendas_por_edificio %}
+                    createPieChart(
+                        'viviendasPorEdificioChart',
+                        {{ chart_data.viviendas_por_edificio.labels|safe }},
+                        {{ chart_data.viviendas_por_edificio.data|safe }},
+                        "{{ chart_data.viviendas_por_edificio.titulo }}"
+                    );
+                {% endif %}
+                
+            {% elif reporte.tipo == 'PERSONAL' %}
+                {% if chart_data.empleados_por_puesto %}
+                    createBarChart(
+                        'empleadosPorPuestoChart',
+                        {{ chart_data.empleados_por_puesto.labels|safe }},
+                        {{ chart_data.empleados_por_puesto.data|safe }},
+                        "{{ chart_data.empleados_por_puesto.titulo }}"
+                    );
+                {% endif %}
+                
+                {% if chart_data.estado_empleados %}
+                    createPieChart(
+                        'estadoEmpleadosChart',
+                        {{ chart_data.estado_empleados.labels|safe }},
+                        {{ chart_data.estado_empleados.data|safe }},
+                        "{{ chart_data.estado_empleados.titulo }}"
+                    );
+                {% endif %}
+                
+                {% if chart_data.tipo_contrato %}
+                    createPieChart(
+                        'tipoContratoChart',
+                        {{ chart_data.tipo_contrato.labels|safe }},
+                        {{ chart_data.tipo_contrato.data|safe }},
+                        "{{ chart_data.tipo_contrato.titulo }}"
+                    );
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

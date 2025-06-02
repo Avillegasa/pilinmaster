@@ -1,15 +1,41 @@
-<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="{% url 'dashboard' %}">
-        <i class="fas fa-building"></i> Condominio App
+<header class="navbar navbar-dark sticky-top" style="background-color: #001f3f; flex-md-nowrap; p-0; shadow">
+    <a class="navbar-brand col-md-3 col-lg-2 me-0 px-3 d-flex align-items-center" href="{% url 'dashboard' %}">
+        <i class="fas fa-building d-md-none me-2"></i> 
+        <span class="d-none d-md-inline"><i class="fas fa-building me-2"></i></span>
+        Torre Segura
     </a>
-    <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+    
+    <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" 
+            data-bs-toggle="collapse" data-bs-target="#sidebarMenu" 
+            aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation"
+            style="top: 0.5rem; right: 5rem;">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="w-100"></div>
-    <div class="navbar-nav">
-        <div class="nav-item text-nowrap">
-            <a class="nav-link px-3" href="{% url 'logout' %}">
-                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+    
+    <!-- Menú rápido para móviles -->
+    <div class="dropdown d-md-none">
+        <button class="btn btn-link text-white dropdown-toggle border-0" type="button" id="quickActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-bolt"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="quickActionsDropdown">
+            <li><a class="dropdown-item" href="{% url 'visita-create' %}"><i class="fas fa-user-plus me-2"></i> Nueva Visita</a></li>
+            <li><a class="dropdown-item" href="{% url 'movimiento-entrada' %}"><i class="fas fa-sign-in-alt me-2"></i> Registrar Entrada</a></li>
+            <li><a class="dropdown-item" href="{% url 'movimiento-salida' %}"><i class="fas fa-sign-out-alt me-2"></i> Registrar Salida</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user-circle me-2"></i> Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión</a></li>
+        </ul>
+    </div>
+    
+    <div class="navbar-nav ms-auto">
+        <div class="nav-item text-nowrap d-none d-md-flex">
+            <a class="nav-link p-2 mx-2" href="{% url 'perfil' %}">
+                <i class="fas fa-user-circle"></i>
+                <span class="ms-1 d-none d-lg-inline">{{ user.first_name|default:user.username }}</span>
+            </a>
+            <a class="btn btn-warning text-white px-3 m-1" href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt"></i> 
+                <span class="d-none d-lg-inline">Cerrar sesión</span>
             </a>
         </div>
     </div>

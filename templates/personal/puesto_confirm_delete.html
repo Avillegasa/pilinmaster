@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Puesto | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Eliminar Puesto de Trabajo{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h5><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h5>
+            </div>
+            <div class="card-body text-center">
+                <p class="lead">¿Estás seguro que deseas eliminar este puesto de trabajo?</p>
+                <div class="alert alert-warning">
+                    <strong>{{ puesto.nombre }}</strong>
+                </div>
+                <p>Esta acción no se puede deshacer y puede afectar a los empleados que tienen asignado este puesto.</p>
+                
+                {% if puesto.empleados.count > 0 %}
+                <div class="alert alert-danger">
+                    <strong>¡Advertencia!</strong> Este puesto está asignado a {{ puesto.empleados.count }} 
+                    empleado{% if puesto.empleados.count > 1 %}s{% endif %}. 
+                    Debes reasignarlos a otro puesto antes de poder eliminarlo.
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mt-4 d-flex justify-content-center gap-3">
+                        <a href="{% url 'puesto-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger" {% if puesto.empleados.count > 0 %}disabled{% endif %}>
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

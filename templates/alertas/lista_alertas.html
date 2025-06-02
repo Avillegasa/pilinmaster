@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Listado de Alertas{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">📢 Alertas Recibidas</h2>
+
+    {% if alertas %}
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Tipo</th>
+                    <th>Descripción</th>
+                    <th>Usuario</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alerta in alertas %}
+                <tr>
+                    <td>{{ alerta.tipo }}</td>
+                    <td>{{ alerta.descripcion }}</td>
+                    <td>{{ alerta.usuario }}</td>
+                    <td>{{ alerta.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">No hay alertas registradas.</div>
+    {% endif %}
+</div>
+{% endblock %}

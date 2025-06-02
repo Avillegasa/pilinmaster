@@ -8,6 +8,5 @@ para mantener compatibilidad con el código existente.
 from usuarios.forms import UsuarioCreationForm, UsuarioChangeForm, RolForm
 from viviendas.forms import EdificioForm, ViviendaForm, ResidenteForm
 from accesos.forms import VisitaForm, MovimientoResidenteEntradaForm, MovimientoResidenteSalidaForm
-from reportes.forms import ReporteForm
 
 # No es necesario definir nuevos formularios aquí

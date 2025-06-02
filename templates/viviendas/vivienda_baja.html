@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Dar de Baja Vivienda | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Dar de Baja Vivienda{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-white">
+                <h5><i class="fas fa-exclamation-triangle"></i> Confirmar Baja de Vivienda</h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">¿Estás seguro que deseas dar de baja la vivienda?</p>
+                <div class="alert alert-warning">
+                    <strong>Vivienda {{ vivienda.numero }} - Piso {{ vivienda.piso }}</strong><br>
+                    Edificio: {{ vivienda.edificio.nombre }}
+                </div>
+                
+                {% if residentes_activos > 0 %}
+                <div class="alert alert-danger">
+                    <strong>¡Advertencia!</strong> Esta vivienda tiene {{ residentes_activos }} residente{% if residentes_activos > 1 %}s{% endif %} activo{% if residentes_activos > 1 %}s{% endif %}. 
+                    Antes de dar de baja esta vivienda, se recomienda:
+                    <ul class="mt-2 mb-0">
+                        <li>Reubicar a los residentes a otras viviendas, o</li>
+                        <li>Desactivar los residentes desde la sección de residentes</li>
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <p>Una vivienda dada de baja no será eliminada del sistema, pero ya no estará disponible para nuevas asignaciones. 
+                   Este proceso no se puede deshacer fácilmente.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {{ form.motivo_baja|as_crispy_field }}
+                    {{ form.fecha_baja|as_crispy_field }}
+                    
+                    {% if residentes_activos > 0 %}
+                    {{ form.confirmar_residentes|as_crispy_field }}
+                    {% endif %}
+                    
+                    <div class="mt-4 d-flex justify-content-center gap-3">
+                        <a href="{% url 'vivienda-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-archive"></i> Dar de Baja
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

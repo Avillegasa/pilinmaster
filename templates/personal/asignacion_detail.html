@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ asignacion.titulo }} | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Detalles de la Asignación{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- Detalles principales de la asignación -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-tasks"></i> Información de la Asignación</h5>
+                <div>
+                    <span class="badge {% if asignacion.estado == 'PENDIENTE' %}bg-warning text-dark{% elif asignacion.estado == 'EN_PROGRESO' %}bg-info text-dark{% elif asignacion.estado == 'COMPLETADA' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ asignacion.get_estado_display }}
+                    </span>
+                    
+                    <span class="badge {% if asignacion.prioridad == 1 %}bg-secondary{% elif asignacion.prioridad == 2 %}bg-primary{% elif asignacion.prioridad == 3 %}bg-warning text-dark{% else %}bg-danger{% endif %} ms-1">
+                        {% if asignacion.prioridad == 1 %}Baja
+                        {% elif asignacion.prioridad == 2 %}Normal
+                        {% elif asignacion.prioridad == 3 %}Alta
+                        {% else %}Urgente{% endif %} Prioridad
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <h4 class="border-bottom pb-2">{{ asignacion.titulo }}</h4>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Asignación</label>
+                            <p class="form-control">
+                                {% if asignacion.tipo == 'TAREA' %}
+                                    <span class="badge bg-secondary">Tarea puntual</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Responsabilidad recurrente</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Asignado a</label>
+                            <p class="form-control">
+                                <a href="{% url 'empleado-detail' asignacion.empleado.id %}">
+                                    {{ asignacion.empleado.usuario.first_name }} {{ asignacion.empleado.usuario.last_name }}
+                                </a>
+                                <span class="text-muted">({{ asignacion.empleado.puesto.nombre }})</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Fecha de Inicio</label>
+                            <p class="form-control">{{ asignacion.fecha_inicio|date:"d/m/Y" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Fecha de Fin</label>
+                            <p class="form-control">{{ asignacion.fecha_fin|date:"d/m/Y"|default:"No especificada" }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Edificio</label>
+                            <p class="form-control">
+                                {% if asignacion.edificio %}
+                                    <a href="{% url 'edificio-detail' asignacion.edificio.id %}">
+                                        {{ asignacion.edificio.nombre }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">No aplica</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Vivienda</label>
+                            <p class="form-control">
+                                {% if asignacion.vivienda %}
+                                    <a href="{% url 'vivienda-detail' asignacion.vivienda.id %}">
+                                        {{ asignacion.vivienda.numero }} (Piso {{ asignacion.vivienda.piso }})
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">No aplica</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label class="form-label">Descripción</label>
+                    <div class="form-control" style="min-height: 100px; white-space: pre-wrap;">{{ asignacion.descripcion }}</div>
+                </div>
+                
+                {% if asignacion.notas %}
+                <div class="form-group mb-3">
+                    <label class="form-label">Notas Adicionales</label>
+                    <div class="form-control" style="min-height: 80px; white-space: pre-wrap;">{{ asignacion.notas }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Asignado por</label>
+                            <p class="form-control">
+                                {{ asignacion.asignado_por.first_name }} {{ asignacion.asignado_por.last_name }}
+                                <span class="text-muted">({{ asignacion.asignado_por.rol.nombre }})</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Fecha de Asignación</label>
+                            <p class="form-control">{{ asignacion.fecha_asignacion|date:"d/m/Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'asignacion-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver a la lista
+                    </a>
+                    <div>
+                        <a href="{% url 'asignacion-update' asignacion.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'cambiar-estado-asignacion' asignacion.id %}" class="btn btn-success">
+                            <i class="fas fa-exchange-alt"></i> Cambiar Estado
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Información del estado -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clipboard-check"></i> Estado de la Asignación</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'cambiar-estado-asignacion' asignacion.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Cambiar estado:</label>
+                        <select name="estado" id="estado" class="form-select">
+                            {% for estado_value, estado_name in asignacion.ESTADOS %}
+                                <option value="{{ estado_value }}" {% if asignacion.estado == estado_value %}selected{% endif %}>
+                                    {{ estado_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar Cambio
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="alert {% if asignacion.estado == 'PENDIENTE' %}alert-warning{% elif asignacion.estado == 'EN_PROGRESO' %}alert-info{% elif asignacion.estado == 'COMPLETADA' %}alert-success{% else %}alert-danger{% endif %} mt-3">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <i class="fas {% if asignacion.estado == 'PENDIENTE' %}fa-clock{% elif asignacion.estado == 'EN_PROGRESO' %}fa-spinner fa-spin{% elif asignacion.estado == 'COMPLETADA' %}fa-check-circle{% else %}fa-times-circle{% endif %} fa-2x me-3"></i>
+                        </div>
+                        <div>
+                            <strong>{{ asignacion.get_estado_display }}</strong>
+                            <div class="small">
+                                {% if asignacion.estado == 'PENDIENTE' %}
+                                    Esta tarea aún no se ha comenzado.
+                                {% elif asignacion.estado == 'EN_PROGRESO' %}
+                                    El trabajo está en curso actualmente.
+                                {% elif asignacion.estado == 'COMPLETADA' %}
+                                    Tarea finalizada satisfactoriamente.
+                                {% else %}
+                                    Esta tarea ha sido cancelada.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comentarios -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-comments"></i> Comentarios</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'asignacion-detail' asignacion.id %}">
+                    {% csrf_token %}
+                    {{ comentario_form|crispy }}
+                    <div class="d-grid mt-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Enviar Comentario
+                        </button>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="comentarios-container" style="max-height: 400px; overflow-y: auto;">
+                    {% for comentario in comentarios %}
+                    <div class="comment-card mb-3 p-3 border rounded {% if comentario.usuario == user %}bg-light{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="d-flex align-items-center">
+                                {% if comentario.usuario.foto %}
+                                    <img src="{{ comentario.usuario.foto.url }}" alt="{{ comentario.usuario }}" class="me-2 rounded-circle" style="width: 30px; height: 30px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="fw-bold">{{ comentario.usuario.first_name }} {{ comentario.usuario.last_name }}</span>
+                            </div>
+                            <small class="text-muted">{{ comentario.fecha|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <div class="comment-text mt-2">
+                            {{ comentario.comentario|linebreaks }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-comment-slash fa-2x mb-2"></i>
+                        <p>No hay comentarios aún. Sé el primero en comentar.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

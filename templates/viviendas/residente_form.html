@@ -14,11 +14,20 @@
     <div class="col-md-8 mx-auto">
         <div class="card shadow">
             <div class="card-body">
-                <form method="post">
+                <form method="post" id="residenteForm">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-md-6">
                             {{ form.usuario|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.tipo_residente|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.edificio|as_crispy_field }}
                         </div>
                         <div class="col-md-6">
                             {{ form.vivienda|as_crispy_field }}
@@ -27,10 +36,10 @@
                     
                     <div class="row">
                         <div class="col-md-6">
-                            {{ form.es_propietario|as_crispy_field }}
+                            {{ form.vehiculos|as_crispy_field }}
                         </div>
                         <div class="col-md-6">
-                            {{ form.vehiculos|as_crispy_field }}
+                            {{ form.activo|as_crispy_field }}
                         </div>
                     </div>
                     
@@ -47,4 +56,68 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Referencias a los campos relevantes
+        const edificioSelect = document.getElementById('id_edificio');
+        const viviendaSelect = document.getElementById('id_vivienda');
+        const currentViviendaId = viviendaSelect.value; // Guardar el valor actual
+        
+        // Función para cargar viviendas del edificio seleccionado
+        function cargarViviendasPorEdificio(edificioId, mantenerSeleccionado = null) {
+            if (!edificioId) {
+                // Si no hay edificio seleccionado, cargar todas las viviendas
+                fetch('/viviendas/api/edificio/0/viviendas/')
+                    .then(response => response.json())
+                    .then(data => actualizarViviendas(data, mantenerSeleccionado))
+                    .catch(error => console.error('Error al cargar todas las viviendas:', error));
+                return;
+            }
+            
+            // Cargar viviendas del edificio seleccionado
+            fetch(`/viviendas/api/edificio/${edificioId}/viviendas/`)
+                .then(response => response.json())
+                .then(data => actualizarViviendas(data, mantenerSeleccionado))
+                .catch(error => console.error('Error al cargar viviendas:', error));
+        }
+        
+        // Función para actualizar el select de viviendas
+        function actualizarViviendas(data, seleccionarId = null) {
+            // Guardar el valor actual antes de limpiar
+            const seleccionadoActual = seleccionarId || viviendaSelect.value;
+            
+            // Limpiar el select de viviendas
+            viviendaSelect.innerHTML = '<option value="">---------</option>';
+            
+            // Añadir las nuevas opciones
+            data.forEach(vivienda => {
+                const option = document.createElement('option');
+                option.value = vivienda.id;
+                option.textContent = `${vivienda.numero} (Piso ${vivienda.piso})`;
+                
+                // Si es la vivienda actualmente seleccionada, marcarla
+                if (vivienda.id == seleccionadoActual) {
+                    option.selected = true;
+                }
+                
+                viviendaSelect.appendChild(option);
+            });
+        }
+        
+        // Evento cuando cambia el edificio seleccionado
+        if (edificioSelect) {
+            edificioSelect.addEventListener('change', function() {
+                cargarViviendasPorEdificio(this.value);
+            });
+            
+            // Cargar las viviendas iniciales si hay un edificio preseleccionado
+            if (edificioSelect.value) {
+                cargarViviendasPorEdificio(edificioSelect.value, currentViviendaId);
+            }
+        }
+    });
+</script>
 {% endblock %}

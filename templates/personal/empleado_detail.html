@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ empleado.usuario.first_name }} {{ empleado.usuario.last_name }} | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Detalles del Empleado{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-id-badge"></i> Información Personal</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    {% if empleado.usuario.foto %}
+                        <img src="{{ empleado.usuario.foto.url }}" alt="{{ empleado.usuario }}" class="rounded-circle user-profile-img mb-3">
+                    {% else %}
+                        <div class="bg-light rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 150px; height: 150px;">
+                            <i class="fas fa-user fa-5x text-secondary"></i>
+                        </div>
+                    {% endif %}
+                    <h4>{{ empleado.usuario.first_name }} {{ empleado.usuario.last_name }}</h4>
+                    <p class="text-muted">{{ empleado.puesto.nombre }}</p>
+                    
+                    {% if not empleado.activo %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Este empleado está inactivo
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="list-group mb-3">
+                    <div class="list-group-item">
+                        <div class="fw-bold smaller text-muted">Nombre de Usuario</div>
+                        <div>{{ empleado.usuario.username }}</div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="fw-bold smaller text-muted">Correo Electrónico</div>
+                        <div>{{ empleado.usuario.email }}</div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="fw-bold smaller text-muted">Teléfono</div>
+                        <div>{{ empleado.usuario.telefono|default:"No especificado" }}</div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="fw-bold smaller text-muted">Tipo de Documento</div>
+                        <div>{{ empleado.usuario.tipo_documento }}: {{ empleado.usuario.numero_documento|default:"No especificado" }}</div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'empleado-update' empleado.id %}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> Editar Información
+                    </a>
+                    <a href="{% url 'empleado-change-state' empleado.id %}" class="btn {% if empleado.activo %}btn-danger{% else %}btn-success{% endif %}">
+                        <i class="fas {% if empleado.activo %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                        {% if empleado.activo %}Desactivar{% else %}Activar{% endif %} Empleado
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-briefcase"></i> Información Laboral</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Puesto</label>
+                            <p class="form-control">{{ empleado.puesto.nombre }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Fecha de Contratación</label>
+                            <p class="form-control">{{ empleado.fecha_contratacion|date:"d/m/Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Contrato</label>
+                            <p class="form-control">
+                                {% if empleado.tipo_contrato == 'PERMANENTE' %}
+                                    <span class="badge bg-primary">Permanente</span>
+                                {% elif empleado.tipo_contrato == 'TEMPORAL' %}
+                                    <span class="badge bg-warning text-dark">Temporal</span>
+                                {% else %}
+                                    <span class="badge bg-info text-dark">Proveedor Externo</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Especialidad</label>
+                            <p class="form-control">{{ empleado.especialidad|default:"No especificada" }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Contacto de Emergencia</label>
+                            <p class="form-control">{{ empleado.contacto_emergencia|default:"No especificado" }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Teléfono de Emergencia</label>
+                            <p class="form-control">{{ empleado.telefono_emergencia|default:"No especificado" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Estadísticas de asignaciones -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ total_asignaciones }}</h3>
+                        <div class="small">Total</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ asignaciones_pendientes }}</h3>
+                        <div class="small">Pendientes</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-dark">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ asignaciones_en_progreso }}</h3>
+                        <div class="small">En Progreso</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3 class="mb-0">{{ asignaciones_completadas }}</h3>
+                        <div class="small">Completadas</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Asignaciones recientes -->
+        <div class="card shadow">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-tasks"></i> Asignaciones Recientes</h5>
+                <a href="{% url 'asignacion-create' %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Nueva Asignación
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Tipo</th>
+                                <th>Inicio</th>
+                                <th>Estado</th>
+                                <th>Prioridad</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for asignacion in asignaciones %}
+                            <tr>
+                                <td>{{ asignacion.titulo }}</td>
+                                <td>
+                                    {% if asignacion.tipo == 'TAREA' %}
+                                        <span class="badge bg-secondary">Tarea</span>
+                                    {% else %}
+                                        <span class="badge bg-primary">Responsabilidad</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ asignacion.fecha_inicio|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if asignacion.estado == 'PENDIENTE' %}
+                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                    {% elif asignacion.estado == 'EN_PROGRESO' %}
+                                        <span class="badge bg-info text-dark">En Progreso</span>
+                                    {% elif asignacion.estado == 'COMPLETADA' %}
+                                        <span class="badge bg-success">Completada</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Cancelada</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if asignacion.prioridad == 1 %}
+                                        <span class="badge bg-secondary">Baja</span>
+                                    {% elif asignacion.prioridad == 2 %}
+                                        <span class="badge bg-primary">Normal</span>
+                                    {% elif asignacion.prioridad == 3 %}
+                                        <span class="badge bg-warning text-dark">Alta</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Urgente</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'asignacion-detail' asignacion.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No hay asignaciones para este empleado</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if asignaciones.count > 0 %}
+                <div class="text-center mt-3">
+                    <a href="{% url 'asignacion-list' %}?empleado={{ empleado.id }}" class="btn btn-sm btn-outline-primary">
+                        Ver todas las asignaciones
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

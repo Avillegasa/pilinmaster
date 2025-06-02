@@ -18,23 +18,51 @@
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-md-6">
-                            {{ form.username|as_crispy_field }}
+                            {% if 'username' in form.fields %}
+                                {{ form.username|as_crispy_field }}
+                            {% else %}
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre de usuario</label>
+                                    <input type="text" class="form-control" value="{{ form.instance.username }}" readonly>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="col-md-6">
-                            {{ form.email|as_crispy_field }}
+                            {% if 'email' in form.fields %}
+                                {{ form.email|as_crispy_field }}
+                            {% else %}
+                                <div class="mb-3">
+                                    <label class="form-label">Correo electrónico</label>
+                                    <input type="email" class="form-control" value="{{ form.instance.email }}" readonly>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6">
-                            {{ form.first_name|as_crispy_field }}
+                            {% if 'first_name' in form.fields %}
+                                {{ form.first_name|as_crispy_field }}
+                            {% else %}
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" value="{{ form.instance.first_name }}" readonly>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="col-md-6">
-                            {{ form.last_name|as_crispy_field }}
+                            {% if 'last_name' in form.fields %}
+                                {{ form.last_name|as_crispy_field }}
+                            {% else %}
+                                <div class="mb-3">
+                                    <label class="form-label">Apellido</label>
+                                    <input type="text" class="form-control" value="{{ form.instance.last_name }}" readonly>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     
-                    {% if not form.instance.pk %}
+                    {% if 'password1' in form.fields and 'password2' in form.fields %}
                     <div class="row">
                         <div class="col-md-6">
                             {{ form.password1|as_crispy_field }}
@@ -47,23 +75,62 @@
                     
                     <div class="row">
                         <div class="col-md-6">
-                            {{ form.rol|as_crispy_field }}
+                            {% if 'rol' in form.fields %}
+                                {{ form.rol|as_crispy_field }}
+                            {% else %}
+                                <div class="mb-3">
+                                    <label class="form-label">Rol</label>
+                                    <input type="text" class="form-control" value="{{ form.instance.rol }}" readonly>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="col-md-6">
-                            {{ form.telefono|as_crispy_field }}
+                            {% if 'telefono' in form.fields %}
+                                {{ form.telefono|as_crispy_field }}
+                            {% else %}
+                                <div class="mb-3">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="text" class="form-control" value="{{ form.instance.telefono }}" readonly>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6">
-                            {{ form.tipo_documento|as_crispy_field }}
+                            {% if 'tipo_documento' in form.fields %}
+                                {{ form.tipo_documento|as_crispy_field }}
+                            {% else %}
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo de documento</label>
+                                    <input type="text" class="form-control" value="{{ form.instance.get_tipo_documento_display }}" readonly>
+                                </div>
+                            {% endif %}
                         </div>
                         <div class="col-md-6">
-                            {{ form.numero_documento|as_crispy_field }}
+                            {% if 'numero_documento' in form.fields %}
+                                {{ form.numero_documento|as_crispy_field }}
+                            {% else %}
+                                <div class="mb-3">
+                                    <label class="form-label">Número de documento</label>
+                                    <input type="text" class="form-control" value="{{ form.instance.numero_documento }}" readonly>
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                     
-                    {{ form.foto|as_crispy_field }}
+                    {% if 'foto' in form.fields %}
+                        {{ form.foto|as_crispy_field }}
+                    {% else %}
+                        {% if form.instance.foto %}
+                        <div class="mb-3">
+                            <label class="form-label">Foto actual</label>
+                            <div>
+                                <img src="{{ form.instance.foto.url }}" alt="Foto de perfil" class="img-thumbnail" style="max-width: 150px;">
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endif %}
                     
                     <div class="mt-4 d-flex justify-content-between">
                         <a href="{% url 'usuario-list' %}" class="btn btn-secondary">

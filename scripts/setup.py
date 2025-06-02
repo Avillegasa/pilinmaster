@@ -31,10 +31,10 @@ def setup():
             # Crear roles básicos
             print("Creando roles...")
             roles = {
-                'Administrador': 'Control total del sistema',
-                'Vigilante': 'Gestión de entradas y salidas',
-                'Residente': 'Propietario o inquilino',
-                'Gerente': 'Gestión administrativa'
+                'Administrador': 'Control total del sistema', # Nosotros
+                'Vigilante': 'Gestión de entradas y salidas', #aplicacion movil y no puede usar este sistema 
+                'Residente': 'Propietario o inquilino', #aplicacion movil y no puede usar este sistema
+                'Gerente': 'Gestión administrativa' # El administrador puede ser el gerente del condominio
             }
             
             for nombre, descripcion in roles.items():
@@ -96,9 +96,41 @@ def setup():
             # Crear usuarios residentes y asignarlos a viviendas
             print("Creando residentes de ejemplo...")
             residentes = [
-                {'nombre': 'Carlos', 'apellido': 'González', 'username': 'carlos', 'vivienda': '101', 'propietario': True},
-                {'nombre': 'María', 'apellido': 'Rodríguez', 'username': 'maria', 'vivienda': '102', 'propietario': True},
-                {'nombre': 'Jorge', 'apellido': 'Fernández', 'username': 'jorge', 'vivienda': '201', 'propietario': False},
+                {
+                    'nombre': 'Carlos', 
+                    'apellido': 'González', 
+                    'username': 'carlos', 
+                    'vivienda': '101', 
+                    'es_propietario': True
+                },
+                {
+                    'nombre': 'María', 
+                    'apellido': 'Rodríguez', 
+                    'username': 'maria', 
+                    'vivienda': '102', 
+                    'es_propietario': True
+                },
+                {
+                    'nombre': 'Jorge', 
+                    'apellido': 'Fernández', 
+                    'username': 'jorge', 
+                    'vivienda': '201', 
+                    'es_propietario': True
+                },
+                {
+                    'nombre': 'Ana', 
+                    'apellido': 'López', 
+                    'username': 'ana', 
+                    'vivienda': '301', 
+                    'es_propietario': True
+                },
+                {
+                    'nombre': 'Pedro', 
+                    'apellido': 'Ramírez', 
+                    'username': 'pedro', 
+                    'vivienda': '102', 
+                    'es_propietario': False
+                }
             ]
             
             for r in residentes:
@@ -120,8 +152,9 @@ def setup():
                     Residente.objects.create(
                         usuario=usuario,
                         vivienda=vivienda,
-                        es_propietario=r['propietario'],
-                        vehiculos=1 if r['propietario'] else 0,
+                        es_propietario=r['es_propietario'],
+                        vehiculos=1 if r['es_propietario'] else 0,
+                        activo=True
                     )
             
             print("Configuración inicial completada con éxito.")

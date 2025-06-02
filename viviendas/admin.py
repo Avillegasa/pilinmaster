@@ -29,8 +29,8 @@ class ViviendaAdmin(admin.ModelAdmin):
     total_residentes.short_description = 'Total de residentes'
 
 class ResidenteAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'vivienda', 'es_propietario', 'fecha_ingreso', 'vehiculos')
-    list_filter = ('es_propietario', 'vivienda__edificio')
+    list_display = ('usuario', 'vivienda', 'es_propietario', 'fecha_ingreso', 'vehiculos', 'activo')
+    list_filter = ('es_propietario', 'activo', 'vivienda__edificio')
     search_fields = ('usuario__first_name', 'usuario__last_name', 'vivienda__numero')
     date_hierarchy = 'fecha_ingreso'
 
