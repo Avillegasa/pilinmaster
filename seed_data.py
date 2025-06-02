@@ -81,6 +81,31 @@ def crear_datos_base():
     return admin_rol, admin_user
 
 
+def generar_roles():
+    """Generar roles para el sistema"""
+    print("\nGenerando roles...")
+    
+    # Lista de posibles roles
+    roles_data = [
+        {'nombre': 'Gerente', 'descripcion': 'Acceso a funciones administrativas y financieras'},
+        {'nombre': 'Residente', 'descripcion': 'Acceso a información de su vivienda y áreas comunes'},
+        {'nombre': 'Personal', 'descripcion': 'Acceso al módulo de mantenimiento'},
+        {'nombre': 'Vigilante', 'descripcion': 'Control de accesos y seguridad'},
+        {'nombre': 'Administrador', 'descripcion': 'Control total del sistema'},
+    ]
+    
+    roles_creados = []
+    for data in roles_data[:NUM_ROLES]:
+        rol, created = Rol.objects.get_or_create(
+            nombre=data['nombre'],
+            defaults={'descripcion': data['descripcion']}
+        )
+        roles_creados.append(rol)
+        print(f"Rol {rol.nombre} {'creado' if created else 'ya existe'}")
+    
+    return roles_creados
+
+
 def generar_usuarios(roles, num_usuarios=NUM_USUARIOS):
     """Generar usuarios ficticios para el sistema"""
     print(f"\nGenerando {num_usuarios} usuarios...")
@@ -472,7 +497,6 @@ def generar_asignaciones(empleados, edificios, viviendas, admin_user, num_asigna
         )
         
         asignaciones.append(asignacion)
-        
         # Añadir comentarios a algunas asignaciones
         num_comentarios = random.randint(0, 3)
         for j in range(num_comentarios):
