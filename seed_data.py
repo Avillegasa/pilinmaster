@@ -26,7 +26,7 @@ from financiero.models import (
 )
 
 # Configuración de números de datos a generar
-NUM_ROLES = 5
+NUM_ROLES = 6  # Aumentado para incluir Personal
 NUM_USUARIOS = 50
 NUM_EDIFICIOS = 3
 NUM_VIVIENDAS = 60
@@ -85,17 +85,18 @@ def generar_roles():
     """Generar roles para el sistema"""
     print("\nGenerando roles...")
     
-    # Lista de posibles roles
+    # Lista de posibles roles - ORDEN IMPORTANTE
     roles_data = [
+        {'nombre': 'Administrador', 'descripcion': 'Control total del sistema'},
         {'nombre': 'Gerente', 'descripcion': 'Acceso a funciones administrativas y financieras'},
         {'nombre': 'Residente', 'descripcion': 'Acceso a información de su vivienda y áreas comunes'},
-        {'nombre': 'Personal', 'descripcion': 'Acceso al módulo de mantenimiento'},
+        {'nombre': 'Personal', 'descripcion': 'Acceso al módulo de mantenimiento'},  # CRUCIAL
         {'nombre': 'Vigilante', 'descripcion': 'Control de accesos y seguridad'},
-        {'nombre': 'Administrador', 'descripcion': 'Control total del sistema'},
+        {'nombre': 'Visitante', 'descripcion': 'Acceso limitado temporal'},
     ]
     
     roles_creados = []
-    for data in roles_data[:NUM_ROLES]:
+    for data in roles_data:
         rol, created = Rol.objects.get_or_create(
             nombre=data['nombre'],
             defaults={'descripcion': data['descripcion']}
@@ -115,9 +116,20 @@ def generar_usuarios(roles, num_usuarios=NUM_USUARIOS):
               'Lucía', 'Fernanda', 'Gabriel', 'Jorge', 'Diana', 'Patricia', 'Andrés', 'Eduardo']
     
     apellidos = ['García', 'Pérez', 'Rodríguez', 'López', 'Martínez', 'González', 'Hernández', 'Sánchez', 
-                'Ramírez', 'Torres', 'Flores'   , 'Rivera', 'Cruz', 'Morales', 'Reyes', 'Díaz', 'Mendoza']
+                'Ramírez', 'Torres', 'Flores', 'Rivera', 'Cruz', 'Morales', 'Reyes', 'Díaz', 'Mendoza']
     
     tipo_docs = ['DNI', 'PASAPORTE', 'CEDULA']
+    
+    # Filtrar roles excluyendo Personal (se creará específicamente para empleados)
+    roles_usuarios = [r for r in roles if r.nombre != 'Personal']
+    
+    # CORRECCIÓN: Aumentar probabilidad de rol Residente
+    def seleccionar_rol_ponderado():
+        """Selecciona rol con ponderación: más residentes"""
+        if random.random() < 0.6:  # 60% probabilidad de Residente
+            return next((r for r in roles_usuarios if r.nombre == 'Residente'), random.choice(roles_usuarios))
+        else:
+            return random.choice(roles_usuarios)
     
     usuarios = []
     for i in range(num_usuarios):
@@ -133,7 +145,7 @@ def generar_usuarios(roles, num_usuarios=NUM_USUARIOS):
         while User.objects.filter(email=email).exists():
             email = f"{username}{random.randint(1, 99)}@example.com"
         
-        rol = random.choice(roles)
+        rol = seleccionar_rol_ponderado()  # Usar selección ponderada
         tipo_documento = random.choice(tipo_docs)
         numero_documento = f"{random.randint(10000000, 99999999)}"
         telefono = f"{random.randint(1000000000, 9999999999)}"
@@ -278,28 +290,39 @@ def generar_residentes(usuarios, viviendas, num_residentes=NUM_RESIDENTES):
     """Generar residentes para las viviendas"""
     print(f"\nGenerando {num_residentes} residentes...")
     
-    # Filtrar viviendas activas y usuarios sin residente asignado
-    viviendas_activas = [v for v in viviendas if v.activo]
+    # Filtrar viviendas activas y desocupadas para mejor distribución
+    viviendas_disponibles = [v for v in viviendas if v.activo and v.estado in ['DESOCUPADO', 'OCUPADO']]
     
-    if not viviendas_activas:
-        print("No hay viviendas activas para asignar residentes")
+    if not viviendas_disponibles:
+        print("No hay viviendas disponibles para asignar residentes")
         return []
     
-    # Verificar si ya hay residentes para evitar duplicados
+    # Filtrar usuarios con rol Residente y sin residente asignado
+    usuarios_residentes = [u for u in usuarios if u.rol and u.rol.nombre == 'Residente']
     usuarios_con_residente = set(Residente.objects.values_list('usuario_id', flat=True))
-    usuarios_disponibles = [u for u in usuarios if u.id not in usuarios_con_residente]
+    usuarios_disponibles = [u for u in usuarios_residentes if u.id not in usuarios_con_residente]
     
     if not usuarios_disponibles:
-        print("No hay usuarios disponibles para crear residentes")
+        print("No hay usuarios con rol Residente disponibles para crear residentes")
         return []
     
     # Limitar según lo disponible
     num_residentes = min(num_residentes, len(usuarios_disponibles))
     
     residentes = []
+    viviendas_usadas = set()
+    
     for i in range(num_residentes):
         usuario = usuarios_disponibles[i]
-        vivienda = random.choice(viviendas_activas)
+        
+        # Seleccionar vivienda disponible (evitar duplicados si es posible)
+        viviendas_candidatas = [v for v in viviendas_disponibles if v.id not in viviendas_usadas]
+        if not viviendas_candidatas:
+            # Si todas están usadas, permitir compartir vivienda
+            viviendas_candidatas = viviendas_disponibles
+        
+        vivienda = random.choice(viviendas_candidatas)
+        viviendas_usadas.add(vivienda.id)
         
         # Propietarios vs inquilinos: 40% propietarios
         es_propietario = random.random() < 0.4
@@ -362,28 +385,82 @@ def generar_puestos(num_puestos=NUM_PUESTOS):
     return puestos
 
 
-def generar_empleados(usuarios, puestos, num_empleados=NUM_EMPLEADOS):
-    """Generar empleados para el condominio"""
-    print(f"\nGenerando {num_empleados} empleados...")
+def crear_usuarios_personal(num_empleados=NUM_EMPLEADOS):
+    """Crear usuarios específicamente con rol Personal para empleados"""
+    print(f"\nCreando {num_empleados} usuarios con rol Personal...")
     
-    # Verificar si ya hay empleados para evitar duplicados
-    usuarios_con_empleado = set(Empleado.objects.values_list('usuario_id', flat=True))
-    usuarios_disponibles = [u for u in usuarios if u.id not in usuarios_con_empleado]
+    User = get_user_model()
     
-    if not usuarios_disponibles:
-        print("No hay usuarios disponibles para crear empleados")
+    # Obtener rol Personal
+    try:
+        rol_personal = Rol.objects.get(nombre='Personal')
+    except Rol.DoesNotExist:
+        print("Error: Rol 'Personal' no existe")
         return []
     
-    # Limitar según lo disponible
-    num_empleados = min(num_empleados, len(usuarios_disponibles), len(puestos) * 3)
+    nombres = ['José', 'Manuel', 'Francisco', 'Antonio', 'Rosa', 'Carmen', 'Elena', 'Isabel', 
+               'Ricardo', 'Fernando', 'Guadalupe', 'Alejandro', 'Javier', 'Raúl', 'Teresa']
+    
+    apellidos = ['Moreno', 'Jiménez', 'Ruiz', 'Navarro', 'Romero', 'Gutiérrez', 'Muñoz', 'Álvarez',
+                'Castillo', 'Ortega', 'Delgado', 'Castro', 'Ortiz', 'Rubio', 'Marín']
+    
+    usuarios_personal = []
+    for i in range(num_empleados):
+        nombre = random.choice(nombres)
+        apellido = random.choice(apellidos)
+        username = f"emp.{nombre.lower()}.{apellido.lower()}{random.randint(1, 99)}"
+        email = f"{username}@torresegura.com"
+        
+        # Evitar duplicados
+        while User.objects.filter(username=username).exists():
+            username = f"emp.{nombre.lower()}.{apellido.lower()}{random.randint(1, 999)}"
+        
+        while User.objects.filter(email=email).exists():
+            email = f"{username}{random.randint(1, 99)}@torresegura.com"
+        
+        numero_documento = f"{random.randint(10000000, 99999999)}"
+        telefono = f"{random.randint(1000000000, 9999999999)}"
+        
+        # CRUCIAL: Crear usuario con rol Personal
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password='personal123',
+            first_name=nombre,
+            last_name=apellido,
+            rol=rol_personal,  # ESTO ES CLAVE
+            tipo_documento='DNI',
+            numero_documento=numero_documento,
+            telefono=telefono,
+            is_active=True
+        )
+        
+        usuarios_personal.append(user)
+        print(f"Usuario Personal creado: {username}")
+    
+    print(f"Total: {len(usuarios_personal)} usuarios Personal creados")
+    return usuarios_personal
+
+
+def generar_empleados(usuarios_personal, puestos, edificios, admin_user):
+    """Generar empleados para el condominio usando usuarios con rol Personal"""
+    print(f"\nGenerando empleados...")
+    
+    if not usuarios_personal:
+        print("No hay usuarios Personal para crear empleados")
+        return []
+    
+    if not puestos:
+        print("No hay puestos para asignar empleados")
+        return []
     
     tipos_contrato = ['PERMANENTE', 'TEMPORAL', 'EXTERNO']
     especialidades = ['General', 'Hidráulica', 'Eléctrica', 'Administrativa', 'Jardinería', 'Seguridad']
     
     empleados = []
-    for i in range(num_empleados):
-        usuario = usuarios_disponibles[i]
+    for usuario in usuarios_personal:
         puesto = random.choice(puestos)
+        edificio = random.choice(edificios) if edificios else None
         
         # Fecha de contratación entre 1 y 10 años atrás
         fecha_contratacion = timezone.now().date() - timedelta(days=random.randint(30, 3650))
@@ -398,19 +475,27 @@ def generar_empleados(usuarios, puestos, num_empleados=NUM_EMPLEADOS):
         # Especialidad para puestos especializados
         especialidad = random.choice(especialidades) if puesto.requiere_especializacion else ""
         
-        empleado = Empleado.objects.create(
-            usuario=usuario,
-            puesto=puesto,
-            fecha_contratacion=fecha_contratacion,
-            tipo_contrato=tipo_contrato,
-            salario=salario,
-            contacto_emergencia=contacto_emergencia,
-            telefono_emergencia=telefono_emergencia,
-            especialidad=especialidad,
-            activo=usuario.is_active
-        )
-        
-        empleados.append(empleado)
+        try:
+            empleado = Empleado.objects.create(
+                usuario=usuario,
+                puesto=puesto,
+                edificio=edificio,
+                fecha_contratacion=fecha_contratacion,
+                tipo_contrato=tipo_contrato,
+                salario=salario,
+                contacto_emergencia=contacto_emergencia,
+                telefono_emergencia=telefono_emergencia,
+                especialidad=especialidad,
+                activo=True,
+                creado_por=admin_user
+            )
+            
+            empleados.append(empleado)
+            print(f"Empleado creado: {usuario.get_full_name()} - {puesto.nombre}")
+            
+        except Exception as e:
+            print(f"Error al crear empleado para {usuario.username}: {str(e)}")
+            continue
     
     print(f"Total: {len(empleados)} empleados creados")
     return empleados
@@ -465,15 +550,31 @@ def generar_asignaciones(empleados, edificios, viviendas, admin_user, num_asigna
         
         # Para tareas completadas, añadir fecha fin
         fecha_fin = None
-        if estado in ['COMPLETADA', 'CANCELADA']:
-            fecha_fin = fecha_inicio + timedelta(days=random.randint(1, 10))
+        fecha_completada = None
+        tiempo_estimado_horas = random.randint(2, 24)
+        
+        # CORRECCIÓN: Siempre asignar fecha_fin para TAREAS
+        if tipo == 'TAREA':
+            fecha_fin = fecha_inicio + timedelta(days=random.randint(1, 15))
+            if estado == 'COMPLETADA':
+                fecha_completada = timezone.now() - timedelta(
+                    days=random.randint(0, 10),
+                    hours=random.randint(0, 23)
+                )
         elif tipo == 'RESPONSABILIDAD':
-            fecha_fin = fecha_inicio + timedelta(days=random.randint(30, 180))
+            # Para responsabilidades, fecha_fin es opcional
+            if random.random() < 0.7:  # 70% tienen fecha fin
+                fecha_fin = fecha_inicio + timedelta(days=random.randint(30, 180))
+            if estado == 'COMPLETADA':
+                fecha_completada = timezone.now() - timedelta(
+                    days=random.randint(0, 10),
+                    hours=random.randint(0, 23)
+                )
         
         # Edificio y vivienda (opcional)
-        edificio = random.choice(edificios)
+        edificio = random.choice(edificios) if edificios else None
         vivienda = None
-        if random.random() < 0.5:  # 50% de probabilidad de asignar a una vivienda específica
+        if random.random() < 0.5 and edificio:  # 50% de probabilidad de asignar a una vivienda específica
             viviendas_edificio = [v for v in viviendas if v.edificio == edificio and v.activo]
             if viviendas_edificio:
                 vivienda = random.choice(viviendas_edificio)
@@ -481,43 +582,55 @@ def generar_asignaciones(empleados, edificios, viviendas, admin_user, num_asigna
         prioridad = random.choice(prioridades)
         notas = f"Notas adicionales para la asignación. Prioridad: {prioridad}."
         
-        asignacion = Asignacion.objects.create(
-            empleado=empleado,
-            tipo=tipo,
-            titulo=titulo,
-            descripcion=descripcion,
-            fecha_inicio=fecha_inicio,
-            fecha_fin=fecha_fin,
-            edificio=edificio,
-            vivienda=vivienda,
-            estado=estado,
-            prioridad=prioridad,
-            notas=notas,
-            asignado_por=admin_user
-        )
-        
-        asignaciones.append(asignacion)
-        # Añadir comentarios a algunas asignaciones
-        num_comentarios = random.randint(0, 3)
-        for j in range(num_comentarios):
-            fecha_comentario = fecha_inicio + timedelta(days=random.randint(0, (fecha_fin - fecha_inicio).days if fecha_fin else 7))
-            
-            comentario_texto = random.choice([
-                "Avance de la tarea según lo planeado.",
-                "Se requieren materiales adicionales.",
-                "Trabajo completado satisfactoriamente.",
-                "Tarea retrasada por falta de acceso.",
-                "Se encontraron problemas adicionales.",
-                f"Actualización: {random.randint(10, 90)}% completado."
-            ])
-            
-            ComentarioAsignacion.objects.create(
-                asignacion=asignacion,
-                usuario=random.choice([admin_user, empleado.usuario]),
-                fecha=timezone.now() - timedelta(days=random.randint(0, 30), hours=random.randint(0, 23)),
-                comentario=comentario_texto
+        try:
+            asignacion = Asignacion.objects.create(
+                empleado=empleado,
+                tipo=tipo,
+                titulo=titulo,
+                descripcion=descripcion,
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                edificio=edificio,
+                vivienda=vivienda,
+                estado=estado,
+                prioridad=prioridad,
+                notas=notas,
+                asignado_por=admin_user,
+                fecha_completada=fecha_completada,
+                tiempo_estimado_horas=tiempo_estimado_horas
             )
-            comentarios_creados += 1
+            
+            asignaciones.append(asignacion)
+            
+            # Añadir comentarios a algunas asignaciones
+            num_comentarios = random.randint(0, 3)
+            for j in range(num_comentarios):
+                fecha_comentario_delta = random.randint(0, 30)
+                fecha_comentario = timezone.now() - timedelta(
+                    days=fecha_comentario_delta,
+                    hours=random.randint(0, 23)
+                )
+                
+                comentario_texto = random.choice([
+                    "Avance de la tarea según lo planeado.",
+                    "Se requieren materiales adicionales.",
+                    "Trabajo completado satisfactoriamente.",
+                    "Tarea retrasada por falta de acceso.",
+                    "Se encontraron problemas adicionales.",
+                    f"Actualización: {random.randint(10, 90)}% completado."
+                ])
+                
+                ComentarioAsignacion.objects.create(
+                    asignacion=asignacion,
+                    usuario=random.choice([admin_user, empleado.usuario]),
+                    fecha=fecha_comentario,
+                    comentario=comentario_texto
+                )
+                comentarios_creados += 1
+                
+        except Exception as e:
+            print(f"Error al crear asignación: {str(e)}")
+            continue
     
     print(f"Total: {len(asignaciones)} asignaciones creadas con {comentarios_creados} comentarios")
     return asignaciones
@@ -677,22 +790,6 @@ def generar_conceptos_cuota(num_conceptos=NUM_CONCEPTOS_CUOTA):
             'periodicidad': 'MENSUAL',
             'aplica_recargo': True,
             'porcentaje_recargo': decimal.Decimal('3.00')
-        },
-        {
-            'nombre': 'Cuota de Seguridad', 
-            'descripcion': 'Servicios de vigilancia y seguridad',
-            'monto_base': decimal.Decimal('500.00'),
-            'periodicidad': 'MENSUAL',
-            'aplica_recargo': True,
-            'porcentaje_recargo': decimal.Decimal('5.00')
-        },
-        {
-            'nombre': 'Cuota de Estacionamiento', 
-            'descripcion': 'Derecho a uso de estacionamiento adicional',
-            'monto_base': decimal.Decimal('300.00'),
-            'periodicidad': 'MENSUAL',
-            'aplica_recargo': True,
-            'porcentaje_recargo': decimal.Decimal('5.00')
         }
     ]
     
@@ -734,7 +831,7 @@ def generar_cuotas(conceptos, viviendas, num_cuotas=NUM_CUOTAS):
         return []
     
     cuotas = []
-    cuotas_por_vivienda = num_cuotas // len(viviendas_activas) + 1
+    cuotas_por_vivienda = min(6, num_cuotas // len(viviendas_activas) + 1)
     
     for vivienda in viviendas_activas:
         for i in range(cuotas_por_vivienda):
@@ -843,6 +940,9 @@ def generar_pagos(cuotas, residentes, admin_user, num_pagos=NUM_PAGOS):
         if vivienda_id not in residentes_por_vivienda:
             continue
             
+        if len(pagos) >= num_pagos:
+            break
+            
         residentes_vivienda = residentes_por_vivienda[vivienda_id]
         
         # Agrupar algunas cuotas en un solo pago
@@ -902,7 +1002,7 @@ def generar_pagos(cuotas, residentes, admin_user, num_pagos=NUM_PAGOS):
             # Si está verificado, añadir fecha y usuario
             if estado == 'VERIFICADO':
                 pago.verificado_por = admin_user
-                pago.fecha_verificacion = fecha_pago + timedelta(days=random.randint(1, 3))
+                pago.fecha_verificacion = timezone.now() - timedelta(days=random.randint(0, 5))
                 pago.save()
             
             # Crear relaciones PagoCuota
@@ -930,9 +1030,7 @@ def generar_categorias_gasto(num_categorias=NUM_CATEGORIAS_GASTO):
         {'nombre': 'Seguridad', 'descripcion': 'Gastos relacionados con seguridad', 'presupuesto_mensual': decimal.Decimal('12000.00'), 'color': '#F44336'},
         {'nombre': 'Limpieza', 'descripcion': 'Servicios de limpieza y materiales', 'presupuesto_mensual': decimal.Decimal('5000.00'), 'color': '#9C27B0'},
         {'nombre': 'Administrativos', 'descripcion': 'Gastos administrativos', 'presupuesto_mensual': decimal.Decimal('3500.00'), 'color': '#FF9800'},
-        {'nombre': 'Áreas Comunes', 'descripcion': 'Mantenimiento de áreas recreativas', 'presupuesto_mensual': decimal.Decimal('4500.00'), 'color': '#795548'},
-        {'nombre': 'Extraordinarios', 'descripcion': 'Gastos no previstos', 'presupuesto_mensual': decimal.Decimal('10000.00'), 'color': '#607D8B'},
-        {'nombre': 'Jardinería', 'descripcion': 'Mantenimiento de áreas verdes', 'presupuesto_mensual': decimal.Decimal('3000.00'), 'color': '#8BC34A'}
+        {'nombre': 'Áreas Comunes', 'descripcion': 'Mantenimiento de áreas recreativas', 'presupuesto_mensual': decimal.Decimal('4500.00'), 'color': '#795548'}
     ]
     
     categorias = []
@@ -959,8 +1057,8 @@ def generar_gastos(categorias, edificios, admin_user, num_gastos=NUM_GASTOS):
     """Generar gastos para el condominio"""
     print(f"\nGenerando {num_gastos} gastos...")
     
-    if not categorias or not edificios:
-        print("No hay categorías o edificios para generar gastos")
+    if not categorias:
+        print("No hay categorías para generar gastos")
         return []
     
     conceptos_gasto = [
@@ -1060,11 +1158,11 @@ def generar_estados_cuenta(viviendas, num_estados=NUM_ESTADOS_CUENTA):
         return []
     
     estados = []
-    estados_por_vivienda = num_estados // len(viviendas_activas) + 1
+    estados_por_vivienda = min(3, num_estados // len(viviendas_activas) + 1)
     
     for vivienda in viviendas_activas:
         # Generar estados de cuenta para los últimos meses
-        for i in range(min(estados_por_vivienda, 12)):  # Máximo 12 meses atrás
+        for i in range(min(estados_por_vivienda, 6)):  # Máximo 6 meses atrás
             if len(estados) >= num_estados:
                 break
                 
@@ -1107,33 +1205,31 @@ def generar_estados_cuenta(viviendas, num_estados=NUM_ESTADOS_CUENTA):
                 continue
             
             # Saldo anterior
-            saldo_anterior = 0
-            ultimo_estado = EstadoCuenta.objects.filter(
-                vivienda=vivienda,
-                fecha_fin__lt=fecha_inicio
-            ).order_by('-fecha_fin').first()
-            
-            if ultimo_estado:
-                saldo_anterior = ultimo_estado.saldo_final
+            saldo_anterior = decimal.Decimal(str(random.randint(-5000, 2000)))
             
             # Crear estado de cuenta
-            estado = EstadoCuenta.objects.create(
-                vivienda=vivienda,
-                fecha_inicio=fecha_inicio,
-                fecha_fin=ultimo_dia,
-                saldo_anterior=saldo_anterior
-            )
-            
-            # Calcular totales
-            estado.calcular_totales()
-            
-            # Simular envío en algunos casos
-            if random.random() < 0.6:  # 60% enviados
-                estado.enviado = True
-                estado.fecha_envio = ultimo_dia + timedelta(days=random.randint(1, 5))
-                estado.save()
-            
-            estados.append(estado)
+            try:
+                estado = EstadoCuenta.objects.create(
+                    vivienda=vivienda,
+                    fecha_inicio=fecha_inicio,
+                    fecha_fin=ultimo_dia,
+                    saldo_anterior=saldo_anterior
+                )
+                
+                # Calcular totales
+                estado.calcular_totales()
+                
+                # Simular envío en algunos casos
+                if random.random() < 0.6:  # 60% enviados
+                    estado.enviado = True
+                    estado.fecha_envio = timezone.now() - timedelta(days=random.randint(1, 30))
+                    estado.save()
+                
+                estados.append(estado)
+                
+            except Exception as e:
+                print(f"Error creando estado de cuenta: {str(e)}")
+                continue
     
     print(f"Total: {len(estados)} estados de cuenta creados")
     return estados
@@ -1143,16 +1239,17 @@ def main():
     """Función principal que coordina el llenado de la base de datos"""
     try:
         with transaction.atomic():
+            print("=== INICIANDO PROCESO DE LLENADO DE BASE DE DATOS ===")
+            
             # 1. Crear datos base
             admin_rol, admin_user = crear_datos_base()
             
             # 2. Generar roles
             roles = generar_roles()
-            roles.append(admin_rol)  # Añadir rol de administrador a la lista
             
-            # 3. Generar usuarios
+            # 3. Generar usuarios (excluyendo Personal)
             usuarios = generar_usuarios(roles)
-            usuarios.append(admin_user)  # Añadir usuario administrador a la lista
+            usuarios.append(admin_user)  # Añadir usuario administrador
             
             # 4. Generar edificios
             edificios = generar_edificios()
@@ -1166,62 +1263,103 @@ def main():
             # 7. Generar puestos
             puestos = generar_puestos()
             
-            # 8. Generar empleados
-            empleados = generar_empleados(usuarios, puestos)
+            # 8. Crear usuarios específicos para Personal
+            usuarios_personal = crear_usuarios_personal()
             
-            # 9. Generar asignaciones
+            # 9. Generar empleados usando usuarios Personal
+            empleados = generar_empleados(usuarios_personal, puestos, edificios, admin_user)
+            
+            # 10. Generar asignaciones
             asignaciones = generar_asignaciones(empleados, edificios, viviendas, admin_user)
             
-            # 10. Generar visitas
+            # 11. Generar visitas
             visitas = generar_visitas(residentes, admin_user)
             
-            # 11. Generar movimientos de residentes
+            # 12. Generar movimientos de residentes
             movimientos = generar_movimientos_residentes(residentes)
             
-            # 12. Generar conceptos de cuota
+            # 13. Generar conceptos de cuota
             conceptos = generar_conceptos_cuota()
             
-            # 13. Generar cuotas
+            # 14. Generar cuotas
             cuotas = generar_cuotas(conceptos, viviendas)
             
-            # 14. Generar pagos
+            # 15. Generar pagos
             pagos = generar_pagos(cuotas, residentes, admin_user)
             
-            # 15. Generar categorías de gasto
+            # 16. Generar categorías de gasto
             categorias = generar_categorias_gasto()
             
-            # 16. Generar gastos
+            # 17. Generar gastos
             gastos = generar_gastos(categorias, edificios, admin_user)
             
-            # 17. Generar estados de cuenta
+            # 18. Generar estados de cuenta
             estados = generar_estados_cuenta(viviendas)
             
-            print("\n¡Proceso de llenado de la base de datos completado con éxito!")
+            print("\n" + "="*70)
+            print("¡PROCESO DE LLENADO COMPLETADO CON ÉXITO!")
+            print("="*70)
             print(f"""
-Resumen de datos generados:
-- Roles: {len(roles)}
-- Usuarios: {len(usuarios)}
-- Edificios: {len(edificios)}
-- Viviendas: {len(viviendas)}
-- Residentes: {len(residentes)}
-- Puestos: {len(puestos)}
-- Empleados: {len(empleados)}
-- Asignaciones: {len(asignaciones)}
-- Visitas: {len(visitas)}
-- Movimientos: {len(movimientos)}
-- Conceptos de Cuota: {len(conceptos)}
-- Cuotas: {len(cuotas)}
-- Pagos: {len(pagos)}
-- Categorías de Gasto: {len(categorias)}
-- Gastos: {len(gastos)}
-- Estados de Cuenta: {len(estados)}
+📊 RESUMEN DE DATOS GENERADOS:
+──────────────────────────────
+👥 Usuarios y Roles:
+   • Roles: {len(roles)}
+   • Usuarios regulares: {len(usuarios)}
+   • Usuarios Personal: {len(usuarios_personal)}
+   • Total usuarios: {len(usuarios) + len(usuarios_personal)}
+
+🏢 Infraestructura:
+   • Edificios: {len(edificios)}
+   • Viviendas: {len(viviendas)}
+   • Residentes: {len(residentes)}
+
+👷 Personal:
+   • Puestos: {len(puestos)}
+   • Empleados: {len(empleados)}
+   • Asignaciones: {len(asignaciones)}
+
+🚪 Control de Acceso:
+   • Visitas: {len(visitas)}
+   • Movimientos: {len(movimientos)}
+
+💰 Sistema Financiero:
+   • Conceptos de Cuota: {len(conceptos)}
+   • Cuotas: {len(cuotas)}
+   • Pagos: {len(pagos)}
+   • Categorías de Gasto: {len(categorias)}
+   • Gastos: {len(gastos)}
+   • Estados de Cuenta: {len(estados)}
+
+🔑 CREDENCIALES DE ACCESO:
+──────────────────────────
+👨‍💼 Administrador:
+   • Usuario: admin
+   • Contraseña: admin123
+   • Email: admin@torresegura.com
+
+👷 Personal (ejemplo):
+   • Usuario: {usuarios_personal[0].username if usuarios_personal else 'N/A'}
+   • Contraseña: personal123
+   • Email: {usuarios_personal[0].email if usuarios_personal else 'N/A'}
+
+📝 NOTAS IMPORTANTES:
+──────────────────────
+✅ Todos los empleados tienen rol 'Personal'
+✅ Los residentes tienen rol 'Residente'
+✅ El sistema financiero está poblado con datos realistas
+✅ Las fechas están distribuidas en los últimos 12 meses
+✅ Los estados de cuenta se generan automáticamente
+
+🚀 El sistema está listo para usar!
             """)
+            
+            print("="*70)
     
     except Exception as e:
-        print(f"Error durante el proceso: {str(e)}")
+        print(f"\n❌ ERROR DURANTE EL PROCESO: {str(e)}")
         import traceback
         traceback.print_exc()
-        print("La transacción ha sido cancelada y no se han guardado cambios.")
+        print("\n🔄 La transacción ha sido cancelada y no se han guardado cambios.")
 
 
 if __name__ == "__main__":
