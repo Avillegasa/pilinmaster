@@ -1,0 +1,123 @@
+<!-- templates/financiero/gasto_form.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.id %}Editar{% else %}Nuevo{% endif %} Gasto | Sistema de Administración de Condominios{% endblock %}
+{% block header %}{% if form.instance.id %}Editar{% else %}Registrar{% endif %} Gasto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">{% if form.instance.id %}Editar{% else %}Registrar{% endif %} Gasto</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            {{ form.concepto|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.categoria|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            {{ form.monto|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.fecha|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.tipo_gasto|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.proveedor|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.factura|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            {{ form.estado|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mt-4">
+                                {{ form.presupuestado|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mt-4">
+                                {{ form.recurrente|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.descripcion|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.comprobante|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.notas|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'gasto-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const estadoSelect = document.getElementById('id_estado');
+        const fechaPagoGroup = document.getElementById('div_id_fecha_pago');
+        
+        // Mostrar/ocultar fecha de pago según el estado
+        if (estadoSelect && fechaPagoGroup) {
+            function toggleFechaPago() {
+                if (estadoSelect.value === 'PAGADO') {
+                    fechaPagoGroup.style.display = 'block';
+                } else {
+                    fechaPagoGroup.style.display = 'none';
+                }
+            }
+            
+            // Ejecutar al cargar la página
+            toggleFechaPago();
+            
+            // Ejecutar cuando cambia el estado
+            estadoSelect.addEventListener('change', toggleFechaPago);
+        }
+    });
+</script>
+{% endblock %}

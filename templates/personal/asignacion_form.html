@@ -92,65 +92,266 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Referencias a los campos relevantes
-        const edificioSelect = document.getElementById('id_edificio');
-        const viviendaSelect = document.getElementById('id_vivienda');
-        const currentViviendaId = viviendaSelect.value; // Guardar el valor actual
+document.addEventListener('DOMContentLoaded', function() {
+    // ✅ CORRECCIÓN: JavaScript mejorado y con manejo de errores
+    const edificioSelect = document.getElementById('id_edificio');
+    const viviendaSelect = document.getElementById('id_vivienda');
+    const tipoSelect = document.getElementById('id_tipo');
+    const fechaFinField = document.getElementById('id_fecha_fin');
+    
+    // Guardar el valor inicial de vivienda para edición
+    let currentViviendaId = viviendaSelect ? viviendaSelect.value : null;
+    
+    // ✅ CORRECCIÓN: Función mejorada para cargar viviendas
+    function cargarViviendasPorEdificio(edificioId, mantenerSeleccionado = null) {
+        if (!viviendaSelect) return;
         
-        // Función para cargar viviendas del edificio seleccionado
-        function cargarViviendasPorEdificio(edificioId, mantenerSeleccionado = null) {
-            if (!edificioId) {
-                // Si no hay edificio seleccionado, limpiar el select de viviendas
+        if (!edificioId) {
+            viviendaSelect.innerHTML = '<option value="">---------</option>';
+            viviendaSelect.disabled = true;
+            return;
+        }
+        
+        // Habilitar el select y mostrar loading
+        viviendaSelect.disabled = false;
+        viviendaSelect.innerHTML = '<option value="">Cargando viviendas...</option>';
+        
+        // ✅ CORRECCIÓN: URL corregida para la API
+        const apiUrl = '/personal/api/viviendas-por-edificio/?edificio_id=' + edificioId;
+        
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Limpiar opciones
                 viviendaSelect.innerHTML = '<option value="">---------</option>';
-                viviendaSelect.disabled = true;
-                return;
-            }
-            
-            // Habilitar el select de viviendas
-            viviendaSelect.disabled = false;
-            
-            // Mostrar loading en el select
-            viviendaSelect.innerHTML = '<option value="">Cargando...</option>';
-            
-            // Cargar viviendas del edificio seleccionado mediante AJAX
-            fetch(`/personal/api/viviendas-por-edificio/?edificio_id=${edificioId}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Limpiar el select de viviendas
-                    viviendaSelect.innerHTML = '<option value="">---------</option>';
-                    
-                    // Añadir las nuevas opciones
+                
+                if (Array.isArray(data) && data.length > 0) {
+                    // Agregar viviendas
                     data.forEach(vivienda => {
                         const option = document.createElement('option');
                         option.value = vivienda.id;
                         option.textContent = `${vivienda.numero} (Piso ${vivienda.piso})`;
                         
-                        // Si es la vivienda actualmente seleccionada, marcarla
+                        // Mantener selección si es edición
                         if (mantenerSeleccionado && vivienda.id == mantenerSeleccionado) {
                             option.selected = true;
                         }
                         
                         viviendaSelect.appendChild(option);
                     });
-                })
-                .catch(error => {
-                    console.error('Error al cargar viviendas:', error);
-                    viviendaSelect.innerHTML = '<option value="">Error al cargar viviendas</option>';
-                });
-        }
-        
-        // Evento cuando cambia el edificio seleccionado
-        if (edificioSelect) {
-            edificioSelect.addEventListener('change', function() {
-                cargarViviendasPorEdificio(this.value);
+                } else {
+                    // No hay viviendas disponibles
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No hay viviendas disponibles';
+                    option.disabled = true;
+                    viviendaSelect.appendChild(option);
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar viviendas:', error);
+                viviendaSelect.innerHTML = '<option value="">Error al cargar viviendas</option>';
+                
+                // Mostrar mensaje de error al usuario
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-2';
+                alertDiv.innerHTML = `
+                    <strong>Error:</strong> No se pudieron cargar las viviendas del edificio seleccionado.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                const edificioContainer = edificioSelect.closest('.form-group, .mb-3');
+                if (edificioContainer) {
+                    edificioContainer.appendChild(alertDiv);
+                    
+                    // Auto-remover después de 5 segundos
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.remove();
+                        }
+                    }, 5000);
+                }
             });
+    }
+    
+    // ✅ CORRECCIÓN: Función para manejar campos requeridos según tipo
+    function manejarCamposSegunTipo() {
+        if (!tipoSelect || !fechaFinField) return;
+        
+        const tipo = tipoSelect.value;
+        const fechaFinContainer = fechaFinField.closest('.form-group, .mb-3');
+        const label = fechaFinContainer ? fechaFinContainer.querySelector('label') : null;
+        
+        if (tipo === 'TAREA') {
+            // Para tareas, la fecha fin es requerida
+            fechaFinField.required = true;
+            if (label) {
+                if (!label.innerHTML.includes('*')) {
+                    label.innerHTML += ' <span class="text-danger">*</span>';
+                }
+            }
+            fechaFinField.placeholder = 'Fecha límite de la tarea';
+        } else {
+            // Para responsabilidades, la fecha fin es opcional
+            fechaFinField.required = false;
+            if (label) {
+                label.innerHTML = label.innerHTML.replace(' <span class="text-danger">*</span>', '');
+            }
+            fechaFinField.placeholder = 'Opcional para responsabilidades continuas';
+        }
+    }
+    
+    // ✅ CORRECCIÓN: Event listeners mejorados
+    if (edificioSelect) {
+        edificioSelect.addEventListener('change', function() {
+            const edificioId = this.value;
+            cargarViviendasPorEdificio(edificioId);
+        });
+        
+        // Cargar viviendas iniciales si hay edificio preseleccionado
+        if (edificioSelect.value) {
+            cargarViviendasPorEdificio(edificioSelect.value, currentViviendaId);
+        }
+    }
+    
+    if (tipoSelect) {
+        tipoSelect.addEventListener('change', manejarCamposSegunTipo);
+        // Ejecutar al cargar la página
+        manejarCamposSegunTipo();
+    }
+    
+    // ✅ CORRECCIÓN: Validación del formulario antes de enviar
+    const form = document.getElementById('asignacionForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            const errors = [];
             
-            // Cargar las viviendas iniciales si hay un edificio preseleccionado
-            if (edificioSelect.value) {
-                cargarViviendasPorEdificio(edificioSelect.value, currentViviendaId);
+            // Validar título
+            const titulo = document.getElementById('id_titulo');
+            if (titulo && titulo.value.trim().length < 5) {
+                errors.push('El título debe tener al menos 5 caracteres.');
+                isValid = false;
+            }
+            
+            // Validar fechas
+            const fechaInicio = document.getElementById('id_fecha_inicio');
+            const fechaFin = document.getElementById('id_fecha_fin');
+            
+            if (fechaInicio && fechaFin && fechaInicio.value && fechaFin.value) {
+                const inicio = new Date(fechaInicio.value);
+                const fin = new Date(fechaFin.value);
+                
+                if (inicio > fin) {
+                    errors.push('La fecha de inicio no puede ser posterior a la fecha de fin.');
+                    isValid = false;
+                }
+            }
+            
+            // Validar tipo y fecha fin
+            if (tipoSelect && tipoSelect.value === 'TAREA' && fechaFinField && !fechaFinField.value) {
+                errors.push('Las tareas puntuales deben tener fecha de finalización.');
+                isValid = false;
+            }
+            
+            // Mostrar errores si los hay
+            if (!isValid) {
+                e.preventDefault();
+                
+                // Remover alertas anteriores
+                const existingAlerts = form.querySelectorAll('.alert-danger');
+                existingAlerts.forEach(alert => alert.remove());
+                
+                // Crear nueva alerta
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+                alertDiv.innerHTML = `
+                    <strong>Errores en el formulario:</strong>
+                    <ul class="mb-0 mt-2">
+                        ${errors.map(error => `<li>${error}</li>`).join('')}
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                // Insertar al inicio del formulario
+                form.insertBefore(alertDiv, form.firstChild);
+                
+                // Scroll hacia el error
+                alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+    
+    // ✅ CORRECCIÓN: Indicador visual de carga para el formulario
+    const submitButton = form ? form.querySelector('button[type="submit"]') : null;
+    if (submitButton) {
+        form.addEventListener('submit', function() {
+            if (form.checkValidity()) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                
+                // Re-habilitar después de 10 segundos como fallback
+                setTimeout(() => {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar Asignación';
+                }, 10000);
+            }
+        });
+    }
+    
+    // ✅ CORRECCIÓN: Autocompletar y sugerencias
+    const descripcionField = document.getElementById('id_descripcion');
+    if (descripcionField) {
+        // Contador de caracteres
+        const maxLength = 1000;
+        const counterDiv = document.createElement('div');
+        counterDiv.className = 'text-muted small mt-1';
+        counterDiv.id = 'descripcion-counter';
+        descripcionField.parentNode.appendChild(counterDiv);
+        
+        function updateCounter() {
+            const remaining = maxLength - descripcionField.value.length;
+            counterDiv.textContent = `${descripcionField.value.length}/${maxLength} caracteres`;
+            
+            if (remaining < 100) {
+                counterDiv.className = 'text-warning small mt-1';
+            } else if (remaining < 50) {
+                counterDiv.className = 'text-danger small mt-1';
+            } else {
+                counterDiv.className = 'text-muted small mt-1';
             }
         }
+        
+        descripcionField.addEventListener('input', updateCounter);
+        updateCounter(); // Ejecutar al cargar
+    }
+    
+    // ✅ CORRECCIÓN: Mejoras de accesibilidad
+    const requiredFields = form ? form.querySelectorAll('[required]') : [];
+    requiredFields.forEach(field => {
+        field.addEventListener('blur', function() {
+            if (!this.value.trim()) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+        
+        field.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid') && this.value.trim()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
     });
+    
+    console.log('✅ Formulario de asignación inicializado correctamente');
+});
 </script>
 {% endblock %}

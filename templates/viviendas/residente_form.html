@@ -2,11 +2,11 @@
 {% load crispy_forms_tags %}
 
 {% block title %}
-    {% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Residente | Sistema de Administración de Condominios
+{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Residente | Sistema de Administración de Condominios
 {% endblock %}
 
 {% block header %}
-    {% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Residente
+{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Residente
 {% endblock %}
 
 {% block content %}
@@ -16,39 +16,93 @@
             <div class="card-body">
                 <form method="post" id="residenteForm">
                     {% csrf_token %}
+
+                    <h5 class="mb-3">
+                        <i class="fas fa-user"></i> Información del Usuario
+                    </h5>
                     <div class="row">
                         <div class="col-md-6">
-                            {{ form.usuario|as_crispy_field }}
+                            {{ form.username|as_crispy_field }}
                         </div>
                         <div class="col-md-6">
-                            {{ form.tipo_residente|as_crispy_field }}
+                            {{ form.numero_documento|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.first_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.last_name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.telefono|as_crispy_field }}
                         </div>
                     </div>
-                    
+
+                    <!-- Solo mostrar campos de contraseña en creación -->
+                    {% if not form.instance.pk %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.password1|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.password2|as_crispy_field }}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <hr>
+                    <h5 class="mb-3">
+                        <i class="fas fa-home"></i> Asignación de Vivienda
+                    </h5>
                     <div class="row">
                         <div class="col-md-6">
                             {{ form.edificio|as_crispy_field }}
                         </div>
                         <div class="col-md-6">
+                            <div id="vivienda-loading" style="display: none;" class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="sr-only">Cargando...</span>
+                                </div>
+                                <small class="text-muted ml-2">Cargando viviendas...</small>
+                            </div>
                             {{ form.vivienda|as_crispy_field }}
                         </div>
                     </div>
-                    
+
+                    <!-- Información adicional sobre la vivienda seleccionada -->
+                    <div id="vivienda-info" class="alert alert-info" style="display: none;">
+                        <strong>Información de la vivienda:</strong>
+                        <div id="vivienda-details"></div>
+                    </div>
+
+                    <hr>
+                    <h5 class="mb-3">
+                        <i class="fas fa-info-circle"></i> Información Adicional
+                    </h5>
                     <div class="row">
+                        <div class="col-md-6">
+                            {{ form.es_propietario|as_crispy_field }}
+                        </div>
                         <div class="col-md-6">
                             {{ form.vehiculos|as_crispy_field }}
                         </div>
+                        {% if form.instance.pk %}
                         <div class="col-md-6">
                             {{ form.activo|as_crispy_field }}
                         </div>
+                        {% endif %}
                     </div>
-                    
+
                     <div class="mt-4 d-flex justify-content-between">
                         <a href="{% url 'residente-list' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Cancelar
                         </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Guardar
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="fas fa-save"></i> 
+                            {% if form.instance.pk %}Actualizar{% else %}Crear{% endif %} Residente
                         </button>
                     </div>
                 </form>
@@ -60,64 +114,159 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Referencias a los campos relevantes
-        const edificioSelect = document.getElementById('id_edificio');
-        const viviendaSelect = document.getElementById('id_vivienda');
-        const currentViviendaId = viviendaSelect.value; // Guardar el valor actual
+document.addEventListener('DOMContentLoaded', function() {
+    const edificioSelect = document.getElementById('id_edificio');
+    const viviendaSelect = document.getElementById('id_vivienda');
+    const viviendaInfo = document.getElementById('vivienda-info');
+    const viviendaDetails = document.getElementById('vivienda-details');
+    const viviendaLoading = document.getElementById('vivienda-loading');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Almacenar las viviendas cargadas para mostrar información adicional
+    let viviendasData = {};
+    
+    if (edificioSelect && viviendaSelect) {
         
-        // Función para cargar viviendas del edificio seleccionado
-        function cargarViviendasPorEdificio(edificioId, mantenerSeleccionado = null) {
+        // Función para cargar viviendas
+        function cargarViviendas(edificioId, viviendaSeleccionada = null) {
             if (!edificioId) {
-                // Si no hay edificio seleccionado, cargar todas las viviendas
-                fetch('/viviendas/api/edificio/0/viviendas/')
-                    .then(response => response.json())
-                    .then(data => actualizarViviendas(data, mantenerSeleccionado))
-                    .catch(error => console.error('Error al cargar todas las viviendas:', error));
+                viviendaSelect.innerHTML = '<option value="">---------</option>';
+                viviendaInfo.style.display = 'none';
                 return;
             }
             
-            // Cargar viviendas del edificio seleccionado
+            // Mostrar loading
+            viviendaLoading.style.display = 'block';
+            viviendaSelect.disabled = true;
+            
+            // Limpiar opciones actuales
+            viviendaSelect.innerHTML = '<option value="">Cargando...</option>';
+            
             fetch(`/viviendas/api/edificio/${edificioId}/viviendas/`)
-                .then(response => response.json())
-                .then(data => actualizarViviendas(data, mantenerSeleccionado))
-                .catch(error => console.error('Error al cargar viviendas:', error));
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta del servidor');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Limpiar opciones
+                    viviendaSelect.innerHTML = '<option value="">---------</option>';
+                    viviendasData = {};
+                    
+                    // Agregar opciones
+                    data.forEach(vivienda => {
+                        const option = document.createElement('option');
+                        option.value = vivienda.id;
+                        option.textContent = `Vivienda ${vivienda.numero} - Piso ${vivienda.piso} (${vivienda.estado})`;
+                        
+                        // Marcar como seleccionada si coincide
+                        if (viviendaSeleccionada && vivienda.id == viviendaSeleccionada) {
+                            option.selected = true;
+                        }
+                        
+                        viviendaSelect.appendChild(option);
+                        
+                        // Almacenar datos para mostrar información
+                        viviendasData[vivienda.id] = vivienda;
+                    });
+                    
+                    // Si hay una vivienda seleccionada, mostrar su información
+                    if (viviendaSeleccionada && viviendasData[viviendaSeleccionada]) {
+                        mostrarInfoVivienda(viviendasData[viviendaSeleccionada]);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar viviendas:', error);
+                    viviendaSelect.innerHTML = '<option value="">Error al cargar viviendas</option>';
+                    
+                    // Mostrar mensaje de error
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger mt-2';
+                    alertDiv.textContent = 'Error al cargar las viviendas. Por favor, intente nuevamente.';
+                    viviendaSelect.parentNode.appendChild(alertDiv);
+                    
+                    // Remover el mensaje después de 5 segundos
+                    setTimeout(() => {
+                        if (alertDiv.parentNode) {
+                            alertDiv.parentNode.removeChild(alertDiv);
+                        }
+                    }, 5000);
+                })
+                .finally(() => {
+                    viviendaLoading.style.display = 'none';
+                    viviendaSelect.disabled = false;
+                });
         }
         
-        // Función para actualizar el select de viviendas
-        function actualizarViviendas(data, seleccionarId = null) {
-            // Guardar el valor actual antes de limpiar
-            const seleccionadoActual = seleccionarId || viviendaSelect.value;
-            
-            // Limpiar el select de viviendas
-            viviendaSelect.innerHTML = '<option value="">---------</option>';
-            
-            // Añadir las nuevas opciones
-            data.forEach(vivienda => {
-                const option = document.createElement('option');
-                option.value = vivienda.id;
-                option.textContent = `${vivienda.numero} (Piso ${vivienda.piso})`;
-                
-                // Si es la vivienda actualmente seleccionada, marcarla
-                if (vivienda.id == seleccionadoActual) {
-                    option.selected = true;
-                }
-                
-                viviendaSelect.appendChild(option);
-            });
-        }
-        
-        // Evento cuando cambia el edificio seleccionado
-        if (edificioSelect) {
-            edificioSelect.addEventListener('change', function() {
-                cargarViviendasPorEdificio(this.value);
-            });
-            
-            // Cargar las viviendas iniciales si hay un edificio preseleccionado
-            if (edificioSelect.value) {
-                cargarViviendasPorEdificio(edificioSelect.value, currentViviendaId);
+        // Función para mostrar información de la vivienda
+        function mostrarInfoVivienda(vivienda) {
+            if (vivienda) {
+                viviendaDetails.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Número:</strong> ${vivienda.numero}<br>
+                            <strong>Piso:</strong> ${vivienda.piso}<br>
+                            <strong>Estado:</strong> <span class="badge badge-${getEstadoBadgeClass(vivienda.estado_code)}">${vivienda.estado}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Área:</strong> ${vivienda.metros_cuadrados} m²<br>
+                            <strong>Habitaciones:</strong> ${vivienda.habitaciones}<br>
+                            <strong>Baños:</strong> ${vivienda.baños}
+                        </div>
+                    </div>
+                `;
+                viviendaInfo.style.display = 'block';
+            } else {
+                viviendaInfo.style.display = 'none';
             }
         }
-    });
+        
+        // Función para obtener la clase CSS del badge según el estado
+        function getEstadoBadgeClass(estado) {
+            switch(estado) {
+                case 'OCUPADO': return 'success';
+                case 'DESOCUPADO': return 'warning';
+                case 'MANTENIMIENTO': return 'info';
+                case 'BAJA': return 'danger';
+                default: return 'secondary';
+            }
+        }
+        
+        // Event listener para cambio de edificio
+        edificioSelect.addEventListener('change', function() {
+            const edificioId = this.value;
+            cargarViviendas(edificioId);
+            viviendaInfo.style.display = 'none';
+        });
+        
+        // Event listener para cambio de vivienda
+        viviendaSelect.addEventListener('change', function() {
+            const viviendaId = this.value;
+            if (viviendaId && viviendasData[viviendaId]) {
+                mostrarInfoVivienda(viviendasData[viviendaId]);
+            } else {
+                viviendaInfo.style.display = 'none';
+            }
+        });
+        
+        // Cargar viviendas al inicio si hay un edificio preseleccionado
+        const edificioInicial = edificioSelect.value;
+        const viviendaInicial = viviendaSelect.value;
+        
+        if (edificioInicial) {
+            cargarViviendas(edificioInicial, viviendaInicial);
+        }
+    }
+    
+    // Prevenir envío múltiple del formulario
+    const form = document.getElementById('residenteForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+        });
+    }
+});
 </script>
 {% endblock %}

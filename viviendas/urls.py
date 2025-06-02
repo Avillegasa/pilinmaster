@@ -1,3 +1,5 @@
+# viviendas/urls.py
+
 from django.urls import path
 from . import views
 from . import api
@@ -23,7 +25,7 @@ urlpatterns = [
     path('residentes/crear/', views.ResidenteCreateView.as_view(), name='residente-create'),
     path('residentes/<int:pk>/', views.ResidenteDetailView.as_view(), name='residente-detail'),
     path('residentes/<int:pk>/editar/', views.ResidenteUpdateView.as_view(), name='residente-update'),
-    path('residentes/<int:pk>/eliminar/', views.ResidenteDeleteView.as_view(), name='residente-delete'),
+    # ✅ LÍNEA ELIMINADA - No existe ResidenteDeleteView, se usa cambio de estado en usuarios
     
     # API endpoints
     path('api/edificio/<int:edificio_id>/viviendas/', api.viviendas_por_edificio, name='api-viviendas-por-edificio'),

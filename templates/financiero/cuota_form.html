@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.id %}Editar{% else %}Nueva{% endif %} Cuota | Sistema de Administración de Condominios{% endblock %}
+{% block header %}{% if form.instance.id %}Editar{% else %}Nueva{% endif %} Cuota{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">{% if form.instance.id %}Editar{% else %}Nueva{% endif %} Cuota</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.concepto|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.vivienda|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            {{ form.monto|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.fecha_emision|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.fecha_vencimiento|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.notas|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    {% if form.instance.id %}
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Estado:</strong> 
+                                {% if form.instance.pagada %}
+                                    <span class="badge bg-success">Pagada</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Recargo:</strong> ${{ form.instance.recargo|floatformat:2 }}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Total a Pagar:</strong> ${{ form.instance.total_a_pagar|floatformat:2 }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'cuota-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const conceptoSelect = document.getElementById('id_concepto');
+        const montoInput = document.getElementById('id_monto');
+        
+        // Actualizar monto base cuando cambia el concepto
+        if (conceptoSelect && montoInput) {
+            conceptoSelect.addEventListener('change', function() {
+                const conceptoId = this.value;
+                if (!conceptoId) return;
+                
+                // Obtener el monto base del concepto seleccionado
+                fetch(`/financiero/api/concepto/${conceptoId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.monto_base && !montoInput.value) {
+                            montoInput.value = data.monto_base;
+                        }
+                    })
+                    .catch(error => console.log('Info: No se pudo obtener el monto base automáticamente'));
+            });
+        }
+        
+        // Validación de fechas
+        const fechaEmisionInput = document.getElementById('id_fecha_emision');
+        const fechaVencimientoInput = document.getElementById('id_fecha_vencimiento');
+        
+        if (fechaEmisionInput && fechaVencimientoInput) {
+            function validarFechas() {
+                const fechaEmision = new Date(fechaEmisionInput.value);
+                const fechaVencimiento = new Date(fechaVencimientoInput.value);
+                
+                if (fechaEmision && fechaVencimiento && fechaVencimiento <= fechaEmision) {
+                    fechaVencimientoInput.setCustomValidity('La fecha de vencimiento debe ser posterior a la fecha de emisión');
+                } else {
+                    fechaVencimientoInput.setCustomValidity('');
+                }
+            }
+            
+            fechaEmisionInput.addEventListener('change', validarFechas);
+            fechaVencimientoInput.addEventListener('change', validarFechas);
+        }
+    });
+</script>
+{% endblock %}

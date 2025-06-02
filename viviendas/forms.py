@@ -1,7 +1,10 @@
+# viviendas/forms.py
 from django import forms
 from django.utils import timezone
 from .models import Edificio, Vivienda, Residente
 import re
+from usuarios.models import Usuario, Rol
+from django.core.exceptions import ObjectDoesNotExist
 
 class EdificioForm(forms.ModelForm):
     class Meta:
@@ -14,21 +17,24 @@ class EdificioForm(forms.ModelForm):
 class ViviendaForm(forms.ModelForm):
     class Meta:
         model = Vivienda
-        fields = '__all__'
-        widgets = {
-            'numero': forms.TextInput(attrs={'placeholder': 'Ej: 101-A', 'maxlength': 10}),
-        }
-
-    def clean_numero(self):
-        numero = self.cleaned_data['numero']
-        if not re.match(r'^[\w\s-]+$', numero):
-            raise forms.ValidationError("El número de vivienda solo puede contener letras, números, espacios y guiones.")
-        return numero
+        # Excluir campos de baja para creación/edición normal
+        fields = ['edificio', 'numero', 'piso', 'metros_cuadrados', 
+                 'habitaciones', 'baños', 'estado']
+        # NO incluir: 'activo', 'fecha_baja', 'motivo_baja'
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['edificio'].queryset = Edificio.objects.all().order_by('nombre')
-
+        
+        # Opcional: personalizar el widget del estado para solo mostrar estados válidos
+        # para creación/edición (no BAJA)
+        if not self.instance.pk or self.instance.activo:
+            # Para nuevas viviendas o viviendas activas
+            self.fields['estado'].choices = [
+                ('OCUPADO', 'Ocupado'),
+                ('DESOCUPADO', 'Desocupado'), 
+                ('MANTENIMIENTO', 'En mantenimiento'),
+            ]
 
 class ViviendaBajaForm(forms.ModelForm):
     """
@@ -58,52 +64,160 @@ class ViviendaBajaForm(forms.ModelForm):
         model = Vivienda
         fields = ['fecha_baja', 'motivo_baja']
 
-class ResidenteForm(forms.ModelForm):
-    edificio = forms.ModelChoiceField(
-        queryset=Edificio.objects.all().order_by('nombre'),
-        required=False,
-        label="Edificio",
-        help_text="Seleccione el edificio para filtrar las viviendas disponibles"
-    )
-    
+class ResidenteCreationForm(forms.ModelForm):
+    # Campos de Usuario (heredados)
+    username = forms.CharField(max_length=150, required=True, label="Nombre de usuario")
+    email = forms.EmailField(required=True)
+    first_name = forms.CharField(label="Nombre")
+    last_name = forms.CharField(label="Apellido")
+    telefono = forms.CharField(required=False)
+    numero_documento = forms.CharField(label="CI", required=True)
+    password1 = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
+    password2 = forms.CharField(widget=forms.PasswordInput, label="Confirmar contraseña")
+
+    # Campos auxiliares
+    edificio = forms.ModelChoiceField(queryset=Edificio.objects.all(), required=True)
+    vivienda = forms.ModelChoiceField(queryset=Vivienda.objects.none(), required=True)
+
     class Meta:
         model = Residente
-        fields = ['usuario', 'edificio', 'vivienda', 'es_propietario', 'vehiculos', 'activo']
-        widgets = {
-            'vivienda': forms.Select(attrs={'class': 'form-select'}),
-            'usuario': forms.Select(attrs={'class': 'form-select'}),
-            'vehiculos': forms.NumberInput(attrs={'min': 0, 'max': 10}),
-        }
-        
+        fields = ['es_propietario', 'vehiculos', 'activo']
+
     def __init__(self, *args, **kwargs):
+        self.user_actual = kwargs.pop('user_actual', None)
         super().__init__(*args, **kwargs)
-        
-        # Si es un formulario de edición (instancia existente)
-        if self.instance and self.instance.pk:
-            # Si el residente ya tiene vivienda, preseleccionar el edificio
-            if self.instance.vivienda:
-                self.fields['edificio'].initial = self.instance.vivienda.edificio
-                # Filtrar viviendas solo del edificio seleccionado
-                self.fields['vivienda'].queryset = Vivienda.objects.filter(
-                    edificio=self.instance.vivienda.edificio
-                ).order_by('piso', 'numero')
+
+        # Configurar queryset de edificios según el rol del usuario
+        if self.user_actual and hasattr(self.user_actual, 'rol'):
+            if self.user_actual.rol.nombre == 'Gerente':
+                if hasattr(self.user_actual, 'gerente') and self.user_actual.gerente.edificio:
+                    self.fields['edificio'].queryset = Edificio.objects.filter(pk=self.user_actual.gerente.edificio.pk)
+                    self.fields['edificio'].initial = self.user_actual.gerente.edificio
+                    # No deshabilitar para permitir validación correcta
+                else:
+                    self.fields['edificio'].queryset = Edificio.objects.none()
             else:
-                # Si no tiene vivienda, mostrar todas
-                self.fields['vivienda'].queryset = Vivienda.objects.all().order_by('edificio__nombre', 'piso', 'numero')
+                self.fields['edificio'].queryset = Edificio.objects.all().order_by('nombre')
         else:
-            # En caso de creación, mostrar todas las viviendas inicialmente
-            self.fields['vivienda'].queryset = Vivienda.objects.all().order_by('edificio__nombre', 'piso', 'numero')
+            self.fields['edificio'].queryset = Edificio.objects.all().order_by('nombre')
+
+        # Configurar queryset de viviendas
+        self._setup_vivienda_queryset()
+
+    def _setup_vivienda_queryset(self):
+        """Configura el queryset de viviendas basado en el edificio seleccionado"""
+        # Obtener edificio desde POST data o initial data
+        edificio_id = None
+        
+        if self.data:
+            # Si hay datos POST, usar el edificio seleccionado
+            edificio_id = self.data.get('edificio')
+        elif self.initial.get('edificio'):
+            # Si hay datos iniciales, usar el edificio inicial
+            edificio_id = self.initial.get('edificio')
+        elif hasattr(self, 'instance') and self.instance.pk and self.instance.vivienda:
+            # Si estamos editando, usar el edificio de la vivienda actual
+            edificio_id = self.instance.vivienda.edificio_id
+
+        if edificio_id:
+            try:
+                edificio_id = int(edificio_id)
+                # Obtener todas las viviendas activas del edificio
+                # No filtrar solo por DESOCUPADO para permitir edición
+                queryset = Vivienda.objects.filter(
+                    edificio_id=edificio_id,
+                    activo=True
+                ).order_by('piso', 'numero')
+                
+                # Si estamos editando y la vivienda actual no está en el queryset, agregarla
+                if hasattr(self, 'instance') and self.instance.pk and self.instance.vivienda:
+                    if not queryset.filter(pk=self.instance.vivienda.pk).exists():
+                        current_vivienda = Vivienda.objects.filter(pk=self.instance.vivienda.pk)
+                        queryset = queryset.union(current_vivienda).order_by('piso', 'numero')
+                
+                self.fields['vivienda'].queryset = queryset
+                
+            except (ValueError, TypeError, ObjectDoesNotExist):
+                self.fields['vivienda'].queryset = Vivienda.objects.none()
+        else:
+            self.fields['vivienda'].queryset = Vivienda.objects.none()
+
+    def clean_vivienda(self):
+        """Validación personalizada para el campo vivienda"""
+        vivienda = self.cleaned_data.get('vivienda')
+        edificio = self.cleaned_data.get('edificio')
+        
+        if vivienda and edificio:
+            # Verificar que la vivienda pertenece al edificio seleccionado
+            if vivienda.edificio != edificio:
+                raise forms.ValidationError("La vivienda seleccionada no pertenece al edificio elegido.")
             
-        # Hacer que el campo edificio no sea parte del modelo, es solo para filtrado
-        self.fields['edificio'].required = False
+            # Verificar que la vivienda está activa
+            if not vivienda.activo:
+                raise forms.ValidationError("No se puede asignar una vivienda que está dada de baja.")
+        
+        return vivienda
     
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '').strip().lower()
+        if not username:
+            raise forms.ValidationError("Este campo es obligatorio.")
+        if ' ' in username:
+            raise forms.ValidationError("El nombre de usuario no debe contener espacios.")
+        if len(username) > 150:
+            raise forms.ValidationError("El nombre de usuario no debe tener más de 150 caracteres.")
+        return username
+
+    def clean_telefono(self):
+        telefono = self.cleaned_data.get('telefono', '').strip()
+        if not telefono.isdigit():
+            raise forms.ValidationError("El teléfono solo debe contener números.")
+        return telefono
+
+    def clean_numero_documento(self):
+        ci = self.cleaned_data.get('numero_documento', '').strip()
+        if not ci.isdigit():
+            raise forms.ValidationError("El CI solo debe contener números.")
+        return ci
     def clean(self):
         cleaned_data = super().clean()
-        # Aquí podríamos añadir validaciones adicionales
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
+        if password1 and password2 and password1 != password2:
+            self.add_error('password2', "Las contraseñas no coinciden.")
+
         return cleaned_data
-    
+
     def save(self, commit=True):
-        instance = super().save(commit=False)
+        # Crear el usuario
+        usuario = Usuario.objects.create_user(
+            username=self.cleaned_data['username'],
+            email=self.cleaned_data['email'],
+            password=self.cleaned_data['password1'],
+            first_name=self.cleaned_data['first_name'],
+            last_name=self.cleaned_data['last_name'],
+            telefono=self.cleaned_data['telefono'],
+            numero_documento=self.cleaned_data['numero_documento'],
+        )
+
+        # Asignar el rol automáticamente
+        rol_residente, _ = Rol.objects.get_or_create(nombre='Residente')
+        usuario.rol = rol_residente
+        usuario.save()
+
+        # Crear el residente
+        residente = super().save(commit=False)
+        residente.usuario = usuario
+        residente.vivienda = self.cleaned_data['vivienda']
+
         if commit:
-            instance.save()
-        return instance
+            residente.save()
+            # Actualizar el estado de la vivienda si es necesario
+            vivienda = residente.vivienda
+            if vivienda.estado == 'DESOCUPADO':
+                vivienda.estado = 'OCUPADO'
+                vivienda.save()
+
+        return residente

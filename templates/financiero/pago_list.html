@@ -1,0 +1,268 @@
+<!-- templates/financiero/pago_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pagos | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Pagos{% endblock %}
+
+{% block content %}
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="edificioSelect" class="form-label">Edificio:</label>
+                <select class="form-select" id="edificioSelect" name="edificio">
+                    <option value="">Todos los edificios</option>
+                    {% for edificio in edificios %}
+                        <option value="{{ edificio.id }}" {% if edificio_id == edificio.id|stringformat:"i" %}selected{% endif %}>{{ edificio.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="viviendaSelect" class="form-label">Vivienda:</label>
+                <select class="form-select" id="viviendaSelect" name="vivienda">
+                    <option value="">Todas las viviendas</option>
+                    {% for vivienda in viviendas %}
+                        <option value="{{ vivienda.id }}" {% if vivienda_id == vivienda.id|stringformat:"i" %}selected{% endif %}>{{ vivienda.numero }} - Piso {{ vivienda.piso }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="estadoSelect" class="form-label">Estado:</label>
+                <select class="form-select" id="estadoSelect" name="estado">
+                    <option value="">Todos</option>
+                    {% for estado_key, estado_value in estados_pago %}
+                        <option value="{{ estado_key }}" {% if estado == estado_key %}selected{% endif %}>{{ estado_value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="metodoSelect" class="form-label">Método de pago:</label>
+                <select class="form-select" id="metodoSelect" name="metodo">
+                    <option value="">Todos</option>
+                    {% for metodo_key, metodo_value in metodos_pago %}
+                        <option value="{{ metodo_key }}" {% if metodo == metodo_key %}selected{% endif %}>{{ metodo_value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="fechaDesde" class="form-label">Fecha desde:</label>
+                <input type="date" class="form-control" id="fechaDesde" name="fecha_desde" value="{{ fecha_desde }}">
+            </div>
+            <div class="col-md-3">
+                <label for="fechaHasta" class="form-label">Fecha hasta:</label>
+                <input type="date" class="form-control" id="fechaHasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+            </div>
+            <div class="col-md-3">
+                <label for="ordenSelect" class="form-label">Ordenar por:</label>
+                <select class="form-select" id="ordenSelect" name="orden">
+                    <option value="-fecha_pago" {% if orden == '-fecha_pago' %}selected{% endif %}>Fecha (reciente)</option>
+                    <option value="fecha_pago" {% if orden == 'fecha_pago' %}selected{% endif %}>Fecha (antigua)</option>
+                    <option value="-monto" {% if orden == '-monto' %}selected{% endif %}>Monto (mayor)</option>
+                    <option value="monto" {% if orden == 'monto' %}selected{% endif %}>Monto (menor)</option>
+                    <option value="vivienda__numero" {% if orden == 'vivienda__numero' %}selected{% endif %}>Vivienda</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex justify-content-between">
+                <div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filtrar
+                    </button>
+                    <a href="{% url 'pago-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-broom"></i> Limpiar
+                    </a>
+                </div>
+                <div>
+                    <a href="{% url 'pago-create' %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Registrar Pago
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumen de totales -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body">
+                <h5 class="card-title">Total Pagos</h5>
+                <h2 class="card-text">${{ total_pagos|floatformat:2 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-success h-100">
+            <div class="card-body">
+                <h5 class="card-title">Pagos Verificados</h5>
+                <h2 class="card-text">${{ total_verificados|floatformat:2 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body">
+                <h5 class="card-title">Pagos Pendientes</h5>
+                <h2 class="card-text">${{ total_pendientes|floatformat:2 }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Listado de pagos -->
+<div class="card">
+    <div class="card-body">
+        {% if pagos %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Vivienda</th>
+                        <th>Residente</th>
+                        <th>Fecha</th>
+                        <th>Monto</th>
+                        <th>Método</th>
+                        <th>Referencia</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pago in pagos %}
+                    <tr>
+                        <td>#{{ pago.id }}</td>
+                        <td>{{ pago.vivienda.numero }} - {{ pago.vivienda.edificio.nombre }}</td>
+                        <td>
+                            {% if pago.residente %}
+                            {{ pago.residente.usuario.first_name }} {{ pago.residente.usuario.last_name }}
+                            {% else %}
+                            Sin residente
+                            {% endif %}
+                        </td>
+                        <td>{{ pago.fecha_pago|date:"d/m/Y" }}</td>
+                        <td>${{ pago.monto|floatformat:2 }}</td>
+                        <td>{{ pago.get_metodo_pago_display }}</td>
+                        <td>{{ pago.referencia|default:"-" }}</td>
+                        <td>
+                            {% if pago.estado == 'VERIFICADO' %}
+                            <span class="badge bg-success">Verificado</span>
+                            {% elif pago.estado == 'PENDIENTE' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rechazado</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{% url 'pago-detail' pago.id %}" class="btn btn-sm btn-info" title="Ver detalle">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if pago.estado == 'PENDIENTE' %}
+                                <a href="{% url 'pago-update' pago.id %}" class="btn btn-sm btn-primary" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if user.rol.nombre == 'Administrador' %}
+                                <a href="{% url 'pago-verificar' pago.id %}" class="btn btn-sm btn-success" title="Verificar">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                <a href="{% url 'pago-rechazar' pago.id %}" class="btn btn-sm btn-danger" title="Rechazar">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Primera">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Anterior">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Siguiente">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Última">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-info">
+            <p class="mb-0 text-center">No se encontraron pagos con los filtros aplicados</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Actualizar viviendas cuando cambia el edificio
+        const edificioSelect = document.getElementById('edificioSelect');
+        const viviendaSelect = document.getElementById('viviendaSelect');
+        
+        if (edificioSelect && viviendaSelect) {
+            edificioSelect.addEventListener('change', function() {
+                const edificioId = this.value;
+                if (!edificioId) {
+                    // Limpiar select de viviendas
+                    viviendaSelect.innerHTML = '<option value="">Todas las viviendas</option>';
+                    return;
+                }
+                
+                // Cargar viviendas del edificio seleccionado
+                fetch(`/viviendas/api/edificio/${edificioId}/viviendas/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpiar select de viviendas
+                        viviendaSelect.innerHTML = '<option value="">Todas las viviendas</option>';
+                        
+                        // Agregar nuevas opciones
+                        data.forEach(vivienda => {
+                            const option = document.createElement('option');
+                            option.value = vivienda.id;
+                            option.textContent = `${vivienda.numero} - Piso ${vivienda.piso}`;
+                            viviendaSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error al cargar viviendas:', error));
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -22,8 +22,15 @@
             <li><a class="dropdown-item" href="{% url 'movimiento-entrada' %}"><i class="fas fa-sign-in-alt me-2"></i> Registrar Entrada</a></li>
             <li><a class="dropdown-item" href="{% url 'movimiento-salida' %}"><i class="fas fa-sign-out-alt me-2"></i> Registrar Salida</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="{% url 'perfil' %}"><i class="fas fa-user-circle me-2"></i> Mi Perfil</a></li>
-            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión</a></li>
+            <li><a class="dropdown-item" href="{% url 'password_change' %}">
+                <i class="fas fa-key me-2"></i> Cambiar Contraseña
+            </a></li>
+            <li><a class="dropdown-item" href="{% url 'perfil' %}">
+                <i class="fas fa-user-circle me-2"></i> Mi Perfil
+            </a></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt me-2"></i> Cerrar sesión
+            </a></li>
         </ul>
     </div>
     
@@ -32,6 +39,7 @@
             <a class="nav-link p-2 mx-2" href="{% url 'perfil' %}">
                 <i class="fas fa-user-circle"></i>
                 <span class="ms-1 d-none d-lg-inline">{{ user.first_name|default:user.username }}</span>
+                <span class="ms-1 d-none d-lg-inline">{{ user.rol|default:user.rol }}</span>
             </a>
             <a class="btn btn-warning text-white px-3 m-1" href="{% url 'logout' %}">
                 <i class="fas fa-sign-out-alt"></i> 

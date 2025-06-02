@@ -1,0 +1,10 @@
+Hola {{ user.get_full_name }},
+
+Gracias por registrarte en TorreSegura. Por favor, confirma tu correo electrónico haciendo clic en el siguiente enlace:
+
+{{ activate_url }}
+
+Este enlace expirará en unas horas. Si tú no realizaste esta solicitud, puedes ignorar este correo.
+
+Atentamente,  
+El equipo de TorreSegura.

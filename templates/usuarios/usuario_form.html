@@ -2,11 +2,11 @@
 {% load crispy_forms_tags %}
 
 {% block title %}
-    {% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Usuario | Sistema de Administración de Condominios
+{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Usuario | Sistema de Administración de Condominios
 {% endblock %}
 
 {% block header %}
-    {% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Usuario
+{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Usuario
 {% endblock %}
 
 {% block content %}
@@ -16,122 +16,141 @@
             <div class="card-body">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <div class="row">
+                    <div class="row" id="credenciales-container-two">
                         <div class="col-md-6">
                             {% if 'username' in form.fields %}
-                                {{ form.username|as_crispy_field }}
-                            {% else %}
-                                <div class="mb-3">
-                                    <label class="form-label">Nombre de usuario</label>
-                                    <input type="text" class="form-control" value="{{ form.instance.username }}" readonly>
-                                </div>
+                            {{ form.username|as_crispy_field }}
                             {% endif %}
                         </div>
                         <div class="col-md-6">
-                            {% if 'email' in form.fields %}
-                                {{ form.email|as_crispy_field }}
-                            {% else %}
-                                <div class="mb-3">
-                                    <label class="form-label">Correo electrónico</label>
-                                    <input type="email" class="form-control" value="{{ form.instance.email }}" readonly>
-                                </div>
-                            {% endif %}
+                            {{ form.email|as_crispy_field }}
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
-                            {% if 'first_name' in form.fields %}
-                                {{ form.first_name|as_crispy_field }}
-                            {% else %}
-                                <div class="mb-3">
-                                    <label class="form-label">Nombre</label>
-                                    <input type="text" class="form-control" value="{{ form.instance.first_name }}" readonly>
-                                </div>
-                            {% endif %}
+                            {{ form.first_name|as_crispy_field }}
                         </div>
                         <div class="col-md-6">
-                            {% if 'last_name' in form.fields %}
-                                {{ form.last_name|as_crispy_field }}
-                            {% else %}
-                                <div class="mb-3">
-                                    <label class="form-label">Apellido</label>
-                                    <input type="text" class="form-control" value="{{ form.instance.last_name }}" readonly>
-                                </div>
-                            {% endif %}
+                            {{ form.last_name|as_crispy_field }}
                         </div>
                     </div>
-                    
+
                     {% if 'password1' in form.fields and 'password2' in form.fields %}
-                    <div class="row">
+                    <div class="row" id="credenciales-container">
                         <div class="col-md-6">
-                            {{ form.password1|as_crispy_field }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form.password2|as_crispy_field }}
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% if 'rol' in form.fields %}
-                                {{ form.rol|as_crispy_field }}
-                            {% else %}
-                                <div class="mb-3">
-                                    <label class="form-label">Rol</label>
-                                    <input type="text" class="form-control" value="{{ form.instance.rol }}" readonly>
+                            <div class="mb-3">
+                                <label for="id_password1" class="form-label">{{ form.password1.label }}</label>
+                                <div class="input-group">
+                                    {{ form.password1 }}
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePassword('id_password1', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
                                 </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            {% if 'telefono' in form.fields %}
-                                {{ form.telefono|as_crispy_field }}
-                            {% else %}
-                                <div class="mb-3">
-                                    <label class="form-label">Teléfono</label>
-                                    <input type="text" class="form-control" value="{{ form.instance.telefono }}" readonly>
+                                {% if form.password1.help_text %}
+                                <small class="form-text text-muted">{{ form.password1.help_text }}</small>
+                                {% endif %}
+                                {% if form.password1.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password1.errors %}
+                                    {{ error }}
+                                    {% endfor %}
                                 </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% if 'tipo_documento' in form.fields %}
-                                {{ form.tipo_documento|as_crispy_field }}
-                            {% else %}
-                                <div class="mb-3">
-                                    <label class="form-label">Tipo de documento</label>
-                                    <input type="text" class="form-control" value="{{ form.instance.get_tipo_documento_display }}" readonly>
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            {% if 'numero_documento' in form.fields %}
-                                {{ form.numero_documento|as_crispy_field }}
-                            {% else %}
-                                <div class="mb-3">
-                                    <label class="form-label">Número de documento</label>
-                                    <input type="text" class="form-control" value="{{ form.instance.numero_documento }}" readonly>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    {% if 'foto' in form.fields %}
-                        {{ form.foto|as_crispy_field }}
-                    {% else %}
-                        {% if form.instance.foto %}
-                        <div class="mb-3">
-                            <label class="form-label">Foto actual</label>
-                            <div>
-                                <img src="{{ form.instance.foto.url }}" alt="Foto de perfil" class="img-thumbnail" style="max-width: 150px;">
+                                {% endif %}
                             </div>
                         </div>
-                        {% endif %}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_password2" class="form-label">{{ form.password2.label }}</label>
+                                <div class="input-group">
+                                    {{ form.password2 }}
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePassword('id_password2', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                {% if form.password2.help_text %}
+                                <small class="form-text text-muted">{{ form.password2.help_text }}</small>
+                                {% endif %}
+                                {% if form.password2.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password2.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                     {% endif %}
-                    
+
+                    {% if form.nueva_password %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_nueva_password" class="form-label">{{ form.nueva_password.label
+                                    }}</label>
+                                <div class="input-group">
+                                    {{ form.nueva_password }}
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        onclick="togglePassword('id_nueva_password', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                {% if form.nueva_password.help_text %}
+                                <small class="form-text text-muted">{{ form.nueva_password.help_text }}</small>
+                                {% endif %}
+                                {% if form.nueva_password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.nueva_password.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.rol|as_crispy_field }}
+                        </div>
+
+                        <div class="col-md-6">
+                            {{ form.telefono|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row" id="edificio-container" style="display: none;">
+                        <div class="col-md-12">
+                            {{ form.edificio|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row" id="vivienda-container" style="display: none;">
+                        <div class="col-md-12">
+                            {{ form.vivienda|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.numero_documento|as_crispy_field }}
+                            <small class="form-text text-muted">Por defecto: CÉDULA</small>
+                        </div>
+                    </div>
+
+                    {% if form.foto %}
+                    {{ form.foto|as_crispy_field }}
+                    {% elif form.instance.foto %}
+                    <div class="mb-3">
+                        <label class="form-label">Foto actual</label>
+                        <div>
+                            <img src="{{ form.instance.foto.url }}" alt="Foto de perfil" class="img-thumbnail"
+                                style="max-width: 150px;">
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="mt-4 d-flex justify-content-between">
                         <a href="{% url 'usuario-list' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Cancelar
@@ -145,4 +164,111 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Asegurar que los campos de contraseña tengan el estilo correcto */
+    .input-group .form-control {
+        border-right: 0;
+    }
+
+    .input-group .btn-outline-secondary {
+        border-left: 0;
+        background-color: #fff;
+        border-color: #ced4da;
+    }
+
+    .input-group .btn-outline-secondary:hover {
+        background-color: #f8f9fa;
+        border-color: #ced4da;
+    }
+
+    .input-group .btn-outline-secondary:focus {
+        box-shadow: none;
+        border-color: #80bdff;
+        background-color: #fff;
+    }
+
+    /* Ajustar el focus del input para que se vea bien con el botón */
+    .input-group .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        z-index: 3;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const rolField = document.getElementById("id_rol");
+        const edificioContainer = document.getElementById("edificio-container");
+        const viviendaContainer = document.getElementById("vivienda-container");
+        const edificioField = document.getElementById("id_edificio");
+        const viviendaField = document.getElementById("id_vivienda");
+
+        function toggleCampos() {
+            const selectedRol = rolField.options[rolField.selectedIndex].text;
+
+            edificioContainer.style.display = (selectedRol === "Residente" || selectedRol === "Gerente" || selectedRol === "Vigilante") ? "block" : "none";
+            viviendaContainer.style.display = (selectedRol === "Residente") ? "block" : "none";
+            // Mostrar/ocultar username y email
+            const credencialesContainerTwo = document.getElementById("credenciales-container-two");
+            if (credencialesContainerTwo) {
+                credencialesContainerTwo.style.display = (selectedRol === "Personal") ? "none" : "flex";
+            }
+
+            // Mostrar/ocultar contraseñas
+            const credencialesContainer = document.getElementById("credenciales-container");
+            if (credencialesContainer) {
+                credencialesContainer.style.display = (selectedRol === "Personal") ? "none" : "flex";
+            }
+        }
+
+        // Cargar viviendas según edificio seleccionado
+        function cargarViviendas(edificioId) {
+            fetch(`/usuarios/ajax/cargar-viviendas/?edificio_id=${edificioId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpiar opciones actuales
+                    viviendaField.innerHTML = '';
+
+                    // Agregar opciones nuevas
+                    data.forEach(function (vivienda) {
+                        const option = document.createElement('option');
+                        option.value = vivienda.id;
+                        option.textContent = vivienda.nombre;
+                        viviendaField.appendChild(option);
+                    });
+                });
+        }
+
+        // Asociar eventos
+        rolField.addEventListener("change", toggleCampos);
+        if (edificioField) {
+            edificioField.addEventListener("change", function () {
+                const edificioId = this.value;
+                if (edificioId) {
+                    cargarViviendas(edificioId);
+                } else {
+                    viviendaField.innerHTML = '';
+                }
+            });
+        }
+
+        toggleCampos(); // Ejecutar al cargar por si ya está seleccionado
+    });
+
+    function togglePassword(id, button) {
+        const input = document.getElementById(id);
+        const icon = button.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
 {% endblock %}
