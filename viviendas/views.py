@@ -39,10 +39,6 @@ class EdificioDetailView(LoginRequiredMixin, DetailView):
 
 # Vistas de Viviendas
 
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView
-from .models import Vivienda, Edificio
-
 class ViviendaListView(LoginRequiredMixin, ListView):
     model = Vivienda
     template_name = 'viviendas/vivienda_list.html'
@@ -78,7 +74,6 @@ class ViviendaListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(activo=activo_bool)
         else:
             queryset = queryset.filter(activo=True)
-
         return queryset
 
     def get_context_data(self, **kwargs):

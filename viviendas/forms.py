@@ -2,6 +2,7 @@
 from django import forms
 from django.utils import timezone
 from .models import Edificio, Vivienda, Residente
+import re
 from usuarios.models import Usuario, Rol
 from django.core.exceptions import ObjectDoesNotExist
 
