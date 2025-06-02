@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalle de Concepto | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Concepto: {{ object.nombre }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Información del Concepto</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Nombre:</h6>
+                        <p>{{ object.nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Periodicidad:</h6>
+                        <p>{{ object.get_periodicidad_display }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Monto Base:</h6>
+                        <p class="fs-5 fw-bold text-primary">${{ object.monto_base|floatformat:2 }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Estado:</h6>
+                        <p>
+                            {% if object.activo %}
+                            <span class="badge bg-success">Activo</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if object.descripcion %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Descripción:</h6>
+                        <p>{{ object.descripcion }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Configuración de Recargos:</h6>
+                        {% if object.aplica_recargo %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Aplica recargos por mora:</strong> {{ object.porcentaje_recargo }}% mensual
+                            <div class="small mt-1">
+                                Los pagos realizados después de la fecha de vencimiento tendrán un recargo adicional.
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>No aplica recargos</strong> - Los pagos tardíos no generan cargos adicionales.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'concepto-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                    <div>
+                        <a href="{% url 'concepto-update' object.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'concepto-delete' object.id %}" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Estadísticas</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Cuotas Generadas:</h6>
+                <p class="fs-4 text-primary">{{ total_cuotas }}</p>
+                
+                <h6 class="fw-bold">Cuotas Pendientes:</h6>
+                <p class="fs-5 text-warning">{{ cuotas_pendientes }}</p>
+                
+                <h6 class="fw-bold">Cuotas Pagadas:</h6>
+                <p class="fs-5 text-success">{{ cuotas_pagadas }}</p>
+                
+                {% if total_cuotas > 0 %}
+                <div class="progress mb-3">
+                    {% widthratio cuotas_pagadas total_cuotas 100 as porcentaje %}
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ porcentaje }}%">
+                        {{ porcentaje }}%
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2 mt-4">
+                    <a href="{% url 'cuota-create' %}?concepto={{ object.id }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nueva Cuota
+                    </a>
+                    <a href="{% url 'cuota-generar' %}?concepto={{ object.id }}" class="btn btn-success">
+                        <i class="fas fa-cogs"></i> Generar Cuotas
+                    </a>
+                    <a href="{% url 'cuota-list' %}?concepto={{ object.id }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-search"></i> Ver Cuotas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Últimas cuotas generadas -->
+{% if cuotas %}
+<div class="card">
+    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">Últimas Cuotas Generadas</h5>
+        <a href="{% url 'cuota-list' %}?concepto={{ object.id }}" class="btn btn-sm btn-outline-dark">
+            Ver Todas
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Vivienda</th>
+                        <th>Emisión</th>
+                        <th>Vencimiento</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cuota in cuotas %}
+                    <tr>
+                        <td>{{ cuota.vivienda.numero }} - {{ cuota.vivienda.edificio.nombre }}</td>
+                        <td>{{ cuota.fecha_emision|date:"d/m/Y" }}</td>
+                        <td>{{ cuota.fecha_vencimiento|date:"d/m/Y" }}</td>
+                        <td>${{ cuota.monto|floatformat:2 }}</td>
+                        <td>
+                            {% if cuota.pagada %}
+                            <span class="badge bg-success">Pagada</span>
+                            {% else %}
+                                {% now "Y-m-d" as today %}
+                                {% if cuota.fecha_vencimiento|date:"Y-m-d" < today %}
+                                <span class="badge bg-danger">Vencida</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark">Pendiente</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'cuota-detail' cuota.id %}" class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center">
+        <div class="py-4">
+            <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
+            <h5>No hay cuotas generadas</h5>
+            <p class="text-muted">Aún no se han generado cuotas con este concepto.</p>
+            <a href="{% url 'cuota-generar' %}?concepto={{ object.id }}" class="btn btn-primary">
+                <i class="fas fa-cogs"></i> Generar Primera Cuota
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

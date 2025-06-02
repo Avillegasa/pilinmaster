@@ -1,0 +1,145 @@
+# Details
+
+Date : 2025-05-18 23:52:46
+
+Directory d:\\proyectos\\Proyecto-sistem\\backend
+
+Total : 130 files,  11391 codes, 808 comments, 1540 blanks, all 13739 lines
+
+[Summary](results.md) / Details / [Diff Summary](diff.md) / [Diff Details](diff-details.md)
+
+## Files
+| filename | language | code | comment | blank | total |
+| :--- | :--- | ---: | ---: | ---: | ---: |
+| [README.md](/README.md) | Markdown | 299 | 0 | 114 | 413 |
+| [accesos/\_\_init\_\_.py](/accesos/__init__.py) | Python | 0 | 0 | 1 | 1 |
+| [accesos/admin.py](/accesos/admin.py) | Python | 30 | 0 | 7 | 37 |
+| [accesos/api.py](/accesos/api.py) | Python | 40 | 2 | 6 | 48 |
+| [accesos/apps.py](/accesos/apps.py) | Python | 4 | 0 | 3 | 7 |
+| [accesos/forms.py](/accesos/forms.py) | Python | 42 | 4 | 9 | 55 |
+| [accesos/migrations/0001\_initial.py](/accesos/migrations/0001_initial.py) | Python | 28 | 1 | 7 | 36 |
+| [accesos/migrations/0002\_initial.py](/accesos/migrations/0002_initial.py) | Python | 32 | 1 | 7 | 40 |
+| [accesos/migrations/\_\_init\_\_.py](/accesos/migrations/__init__.py) | Python | 0 | 0 | 1 | 1 |
+| [accesos/models.py](/accesos/models.py) | Python | 24 | 0 | 5 | 29 |
+| [accesos/tests.py](/accesos/tests.py) | Python | 281 | 50 | 60 | 391 |
+| [accesos/urls.py](/accesos/urls.py) | Python | 13 | 3 | 3 | 19 |
+| [accesos/views.py](/accesos/views.py) | Python | 70 | 9 | 16 | 95 |
+| [condominio\_app/\_\_init\_\_.py](/condominio_app/__init__.py) | Python | 0 | 0 | 1 | 1 |
+| [condominio\_app/asgi.py](/condominio_app/asgi.py) | Python | 4 | 8 | 5 | 17 |
+| [condominio\_app/forms.py](/condominio_app/forms.py) | Python | 3 | 7 | 2 | 12 |
+| [condominio\_app/models.py](/condominio_app/models.py) | Python | 0 | 9 | 1 | 10 |
+| [condominio\_app/settings.py](/condominio_app/settings.py) | Python | 146 | 36 | 38 | 220 |
+| [condominio\_app/urls.py](/condominio_app/urls.py) | Python | 42 | 7 | 7 | 56 |
+| [condominio\_app/views.py](/condominio_app/views.py) | Python | 80 | 13 | 19 | 112 |
+| [condominio\_app/wsgi.py](/condominio_app/wsgi.py) | Python | 4 | 8 | 5 | 17 |
+| [manage.py](/manage.py) | Python | 15 | 3 | 5 | 23 |
+| [personal/\_\_init\_\_.py](/personal/__init__.py) | Python | 0 | 0 | 1 | 1 |
+| [personal/admin.py](/personal/admin.py) | Python | 37 | 1 | 8 | 46 |
+| [personal/api.py](/personal/api.py) | Python | 13 | 2 | 2 | 17 |
+| [personal/apps.py](/personal/apps.py) | Python | 4 | 0 | 3 | 7 |
+| [personal/forms.py](/personal/forms.py) | Python | 99 | 6 | 19 | 124 |
+| [personal/migrations/0001\_initial.py](/personal/migrations/0001_initial.py) | Python | 74 | 1 | 7 | 82 |
+| [personal/migrations/0002\_initial.py](/personal/migrations/0002_initial.py) | Python | 47 | 1 | 7 | 55 |
+| [personal/migrations/\_\_init\_\_.py](/personal/migrations/__init__.py) | Python | 0 | 0 | 1 | 1 |
+| [personal/models.py](/personal/models.py) | Python | 92 | 17 | 17 | 126 |
+| [personal/tests.py](/personal/tests.py) | Python | 437 | 93 | 94 | 624 |
+| [personal/urls.py](/personal/urls.py) | Python | 20 | 4 | 4 | 28 |
+| [personal/views.py](/personal/views.py) | Python | 232 | 23 | 63 | 318 |
+| [requirements.txt](/requirements.txt) | pip requirements | 51 | 0 | 0 | 51 |
+| [scripts/setup.py](/scripts/setup.py) | Python | 134 | 16 | 17 | 167 |
+| [static/css/responsive.css](/static/css/responsive.css) | PostCSS | 206 | 24 | 47 | 277 |
+| [static/css/style.css](/static/css/style.css) | PostCSS | 208 | 17 | 43 | 268 |
+| [static/js/asignaciones\_filters.js](/static/js/asignaciones_filters.js) | JavaScript | 99 | 14 | 20 | 133 |
+| [static/js/residentes\_filters.js](/static/js/residentes_filters.js) | JavaScript | 70 | 15 | 16 | 101 |
+| [static/js/scripts.js](/static/js/scripts.js) | JavaScript | 183 | 33 | 32 | 248 |
+| [static/js/viviendas\_filters.js](/static/js/viviendas_filters.js) | JavaScript | 77 | 17 | 17 | 111 |
+| [templates/404.html](/templates/404.html) | HTML | 20 | 0 | 1 | 21 |
+| [templates/500.html](/templates/500.html) | HTML | 14 | 0 | 2 | 16 |
+| [templates/accesos/movimiento\_entrada\_form.html](/templates/accesos/movimiento_entrada_form.html) | HTML | 37 | 0 | 5 | 42 |
+| [templates/accesos/movimiento\_list.html](/templates/accesos/movimiento_list.html) | HTML | 94 | 1 | 4 | 99 |
+| [templates/accesos/movimiento\_salida\_form.html](/templates/accesos/movimiento_salida_form.html) | HTML | 37 | 0 | 5 | 42 |
+| [templates/accesos/visita\_form.html](/templates/accesos/visita_form.html) | HTML | 42 | 0 | 6 | 48 |
+| [templates/accesos/visita\_list.html](/templates/accesos/visita_list.html) | HTML | 139 | 1 | 14 | 154 |
+| [templates/base.html](/templates/base.html) | HTML | 45 | 7 | 10 | 62 |
+| [templates/dashboard.html](/templates/dashboard.html) | HTML | 396 | 8 | 12 | 416 |
+| [templates/home.html](/templates/home.html) | HTML | 15 | 5 | 5 | 25 |
+| [templates/login.html](/templates/login.html) | HTML | 82 | 0 | 10 | 92 |
+| [templates/navbar.html](/templates/navbar.html) | HTML | 38 | 1 | 3 | 42 |
+| [templates/password\_reset.html](/templates/password_reset.html) | HTML | 31 | 0 | 3 | 34 |
+| [templates/password\_reset\_complete.html](/templates/password_reset_complete.html) | HTML | 25 | 0 | 2 | 27 |
+| [templates/password\_reset\_confirm.html](/templates/password_reset_confirm.html) | HTML | 40 | 0 | 2 | 42 |
+| [templates/password\_reset\_done.html](/templates/password_reset_done.html) | HTML | 25 | 0 | 2 | 27 |
+| [templates/perfil.html](/templates/perfil.html) | HTML | 61 | 1 | 6 | 68 |
+| [templates/personal/asignacion\_detail.html](/templates/personal/asignacion_detail.html) | HTML | 230 | 3 | 15 | 248 |
+| [templates/personal/asignacion\_form.html](/templates/personal/asignacion_form.html) | HTML | 137 | 0 | 19 | 156 |
+| [templates/personal/asignacion\_list.html](/templates/personal/asignacion_list.html) | HTML | 227 | 8 | 11 | 246 |
+| [templates/personal/cambiar\_estado\_asignacion.html](/templates/personal/cambiar_estado_asignacion.html) | HTML | 51 | 0 | 4 | 55 |
+| [templates/personal/empleado\_change\_state.html](/templates/personal/empleado_change_state.html) | HTML | 46 | 0 | 3 | 49 |
+| [templates/personal/empleado\_detail.html](/templates/personal/empleado_detail.html) | HTML | 229 | 2 | 8 | 239 |
+| [templates/personal/empleado\_form.html](/templates/personal/empleado_form.html) | HTML | 108 | 0 | 15 | 123 |
+| [templates/personal/empleado\_list.html](/templates/personal/empleado_list.html) | HTML | 142 | 4 | 9 | 155 |
+| [templates/personal/puesto\_confirm\_delete.html](/templates/personal/puesto_confirm_delete.html) | HTML | 39 | 0 | 4 | 43 |
+| [templates/personal/puesto\_form.html](/templates/personal/puesto_form.html) | HTML | 30 | 0 | 3 | 33 |
+| [templates/personal/puesto\_list.html](/templates/personal/puesto_list.html) | HTML | 61 | 0 | 3 | 64 |
+| [templates/reportes/pdf/reporte\_accesos.html](/templates/reportes/pdf/reporte_accesos.html) | HTML | 116 | 9 | 8 | 133 |
+| [templates/reportes/pdf/reporte\_personal.html](/templates/reportes/pdf/reporte_personal.html) | HTML | 161 | 10 | 10 | 181 |
+| [templates/reportes/pdf/reporte\_residentes.html](/templates/reportes/pdf/reporte_residentes.html) | HTML | 127 | 10 | 10 | 147 |
+| [templates/reportes/pdf/reporte\_viviendas.html](/templates/reportes/pdf/reporte_viviendas.html) | HTML | 131 | 10 | 10 | 151 |
+| [templates/reportes/reporte\_confirm\_delete.html](/templates/reportes/reporte_confirm_delete.html) | HTML | 35 | 0 | 3 | 38 |
+| [templates/reportes/reporte\_form.html](/templates/reportes/reporte_form.html) | HTML | 158 | 1 | 10 | 169 |
+| [templates/reportes/reporte\_generado.html](/templates/reportes/reporte_generado.html) | HTML | 745 | 3 | 47 | 795 |
+| [templates/reportes/reporte\_list.html](/templates/reportes/reporte_list.html) | HTML | 193 | 3 | 8 | 204 |
+| [templates/reportes/reporte\_preview.html](/templates/reportes/reporte_preview.html) | HTML | 751 | 6 | 54 | 811 |
+| [templates/sidebar.html](/templates/sidebar.html) | HTML | 127 | 9 | 8 | 144 |
+| [templates/usuarios/rol\_confirm\_delete.html](/templates/usuarios/rol_confirm_delete.html) | HTML | 32 | 0 | 3 | 35 |
+| [templates/usuarios/rol\_form.html](/templates/usuarios/rol_form.html) | HTML | 30 | 0 | 3 | 33 |
+| [templates/usuarios/rol\_list.html](/templates/usuarios/rol_list.html) | HTML | 52 | 0 | 3 | 55 |
+| [templates/usuarios/usuario\_change\_state.html](/templates/usuarios/usuario_change_state.html) | HTML | 46 | 0 | 3 | 49 |
+| [templates/usuarios/usuario\_confirm\_delete.html](/templates/usuarios/usuario_confirm_delete.html) | HTML | 32 | 0 | 3 | 35 |
+| [templates/usuarios/usuario\_detail.html](/templates/usuarios/usuario_detail.html) | HTML | 77 | 0 | 6 | 83 |
+| [templates/usuarios/usuario\_form.html](/templates/usuarios/usuario_form.html) | HTML | 139 | 0 | 9 | 148 |
+| [templates/usuarios/usuario\_list.html](/templates/usuarios/usuario_list.html) | HTML | 98 | 0 | 6 | 104 |
+| [templates/viviendas/edificio\_confirm\_delete.html](/templates/viviendas/edificio_confirm_delete.html) | HTML | 32 | 0 | 3 | 35 |
+| [templates/viviendas/edificio\_detail.html](/templates/viviendas/edificio_detail.html) | HTML | 205 | 1 | 18 | 224 |
+| [templates/viviendas/edificio\_form.html](/templates/viviendas/edificio_form.html) | HTML | 39 | 0 | 5 | 44 |
+| [templates/viviendas/edificio\_list.html](/templates/viviendas/edificio_list.html) | HTML | 57 | 0 | 3 | 60 |
+| [templates/viviendas/residente\_detail.html](/templates/viviendas/residente_detail.html) | HTML | 121 | 5 | 9 | 135 |
+| [templates/viviendas/residente\_form.html](/templates/viviendas/residente_form.html) | HTML | 107 | 0 | 16 | 123 |
+| [templates/viviendas/residente\_list.html](/templates/viviendas/residente_list.html) | HTML | 160 | 12 | 10 | 182 |
+| [templates/viviendas/tipo\_residente\_confirm\_delete.html](/templates/viviendas/tipo_residente_confirm_delete.html) | HTML | 39 | 0 | 4 | 43 |
+| [templates/viviendas/tipo\_residente\_form.html](/templates/viviendas/tipo_residente_form.html) | HTML | 30 | 0 | 3 | 33 |
+| [templates/viviendas/tipo\_residente\_list.html](/templates/viviendas/tipo_residente_list.html) | HTML | 60 | 0 | 3 | 63 |
+| [templates/viviendas/vivienda\_baja.html](/templates/viviendas/vivienda_baja.html) | HTML | 50 | 0 | 8 | 58 |
+| [templates/viviendas/vivienda\_confirm\_delete.html](/templates/viviendas/vivienda_confirm_delete.html) | HTML | 33 | 0 | 3 | 36 |
+| [templates/viviendas/vivienda\_detail.html](/templates/viviendas/vivienda_detail.html) | HTML | 248 | 2 | 14 | 264 |
+| [templates/viviendas/vivienda\_form.html](/templates/viviendas/vivienda_form.html) | HTML | 56 | 0 | 6 | 62 |
+| [templates/viviendas/vivienda\_list.html](/templates/viviendas/vivienda_list.html) | HTML | 174 | 10 | 10 | 194 |
+| [usuarios/\_\_init\_\_.py](/usuarios/__init__.py) | Python | 0 | 0 | 1 | 1 |
+| [usuarios/adapters.py](/usuarios/adapters.py) | Python | 25 | 23 | 11 | 59 |
+| [usuarios/admin.py](/usuarios/admin.py) | Python | 29 | 0 | 3 | 32 |
+| [usuarios/apps.py](/usuarios/apps.py) | Python | 4 | 0 | 3 | 7 |
+| [usuarios/forms.py](/usuarios/forms.py) | Python | 15 | 0 | 3 | 18 |
+| [usuarios/migrations/0001\_initial.py](/usuarios/migrations/0001_initial.py) | Python | 51 | 1 | 7 | 59 |
+| [usuarios/migrations/\_\_init\_\_.py](/usuarios/migrations/__init__.py) | Python | 0 | 0 | 1 | 1 |
+| [usuarios/models.py](/usuarios/models.py) | Python | 20 | 0 | 6 | 26 |
+| [usuarios/serializers.py](/usuarios/serializers.py) | Python | 11 | 1 | 1 | 13 |
+| [usuarios/tests.py](/usuarios/tests.py) | Python | 96 | 24 | 22 | 142 |
+| [usuarios/urls.py](/usuarios/urls.py) | Python | 18 | 3 | 2 | 23 |
+| [usuarios/validaciones\_movil.py](/usuarios/validaciones_movil.py) | Python | 4 | 1 | 2 | 7 |
+| [usuarios/views.py](/usuarios/views.py) | Python | 64 | 6 | 18 | 88 |
+| [usuarios/views\_api.py](/usuarios/views_api.py) | Python | 44 | 1 | 11 | 56 |
+| [viviendas/\_\_init\_\_.py](/viviendas/__init__.py) | Python | 0 | 0 | 1 | 1 |
+| [viviendas/admin.py](/viviendas/admin.py) | Python | 31 | 0 | 8 | 39 |
+| [viviendas/api.py](/viviendas/api.py) | Python | 64 | 14 | 12 | 90 |
+| [viviendas/apps.py](/viviendas/apps.py) | Python | 4 | 0 | 3 | 7 |
+| [viviendas/forms.py](/viviendas/forms.py) | Python | 73 | 11 | 15 | 99 |
+| [viviendas/migrations/0001\_initial.py](/viviendas/migrations/0001_initial.py) | Python | 48 | 1 | 7 | 56 |
+| [viviendas/migrations/\_\_init\_\_.py](/viviendas/migrations/__init__.py) | Python | 0 | 0 | 1 | 1 |
+| [viviendas/models.py](/viviendas/models.py) | Python | 56 | 3 | 10 | 69 |
+| [viviendas/templatetags/\_\_init\_\_.py](/viviendas/templatetags/__init__.py) | Python | 0 | 1 | 0 | 1 |
+| [viviendas/templatetags/vivienda\_filters.py](/viviendas/templatetags/vivienda_filters.py) | Python | 35 | 29 | 12 | 76 |
+| [viviendas/tests.py](/viviendas/tests.py) | Python | 347 | 78 | 75 | 500 |
+| [viviendas/urls.py](/viviendas/urls.py) | Python | 24 | 4 | 4 | 32 |
+| [viviendas/views.py](/viviendas/views.py) | Python | 186 | 30 | 56 | 272 |
+
+[Summary](results.md) / Details / [Diff Summary](diff.md) / [Diff Details](diff-details.md)

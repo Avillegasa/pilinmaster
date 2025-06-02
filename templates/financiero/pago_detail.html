@@ -1,0 +1,190 @@
+<!-- templates/financiero/pago_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalle de Pago | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Detalle de Pago #{{ pago.id }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Información del Pago</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Vivienda:</h6>
+                        <p>{{ pago.vivienda.numero }} - {{ pago.vivienda.edificio.nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Residente:</h6>
+                        <p>
+                            {% if pago.residente %}
+                            {{ pago.residente.usuario.first_name }} {{ pago.residente.usuario.last_name }}
+                            {% if pago.residente.es_propietario %}
+                            <span class="badge bg-primary">Propietario</span>
+                            {% else %}
+                            <span class="badge bg-info">Inquilino</span>
+                            {% endif %}
+                            {% else %}
+                            Sin residente asociado
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Monto:</h6>
+                        <p class="fs-5 fw-bold">${{ pago.monto|floatformat:2 }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Fecha de Pago:</h6>
+                        <p>{{ pago.fecha_pago|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="fw-bold">Estado:</h6>
+                        <p>
+                            {% if pago.estado == 'VERIFICADO' %}
+                            <span class="badge bg-success">Verificado</span>
+                            {% elif pago.estado == 'PENDIENTE' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rechazado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Método de Pago:</h6>
+                        <p>{{ pago.get_metodo_pago_display }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Referencia:</h6>
+                        <p>{{ pago.referencia|default:"---" }}</p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Registrado por:</h6>
+                        <p>{{ pago.registrado_por.first_name }} {{ pago.registrado_por.last_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Verificado por:</h6>
+                        <p>
+                            {% if pago.verificado_por %}
+                            {{ pago.verificado_por.first_name }} {{ pago.verificado_por.last_name }}
+                            <small class="text-muted">({{ pago.fecha_verificacion|date:"d/m/Y H:i" }})</small>
+                            {% else %}
+                            No verificado
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% if pago.notas %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Notas:</h6>
+                        <p>{{ pago.notas }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                {% if pago.comprobante %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Comprobante:</h6>
+                        <p>
+                            <a href="{{ pago.comprobante.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-file"></i> Ver Comprobante
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'pago-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                    <div>
+                        {% if pago.estado == 'PENDIENTE' %}
+                        <a href="{% url 'pago-update' pago.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        {% if user.rol.nombre == 'Administrador' %}
+                        <a href="{% url 'pago-verificar' pago.id %}" class="btn btn-success">
+                            <i class="fas fa-check"></i> Verificar
+                        </a>
+                        <a href="{% url 'pago-rechazar' pago.id %}" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Rechazar
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Estado de cuenta resumido -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Estado de Cuenta</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Vivienda {{ pago.vivienda.numero }}</h6>
+                <p>{{ pago.vivienda.edificio.nombre }}</p>
+                
+                <h6 class="fw-bold mt-3">Cuotas Pendientes:</h6>
+                <p class="fs-5">{{ cuotas_pendientes_count }}</p>
+                
+                <h6 class="fw-bold mt-3">Monto Pendiente Total:</h6>
+                <p class="fs-5">${{ monto_pendiente_total|default:"0.00"|floatformat:2 }}</p>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'pago-create' %}?vivienda={{ pago.vivienda.id }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Nuevo Pago
+                    </a>
+                    <a href="{% url 'estado-cuenta-create' %}?vivienda={{ pago.vivienda.id }}" class="btn btn-outline-info">
+                        <i class="fas fa-file-alt"></i> Generar Estado de Cuenta
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cuotas aplicadas a este pago -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Cuotas Pagadas</h5>
+            </div>
+            <div class="card-body">
+                {% if cuotas_pago %}
+                <div class="list-group">
+                    {% for pago_cuota in cuotas_pago %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ pago_cuota.cuota.concepto.nombre }}</h6>
+                            <small>${{ pago_cuota.monto_aplicado|floatformat:2 }}</small>
+                        </div>
+                        <small class="text-muted">Vence: {{ pago_cuota.cuota.fecha_vencimiento|date:"d/m/Y" }}</small>
+                        <div class="progress mt-1" style="height: 4px;">
+                            {% widthratio pago_cuota.monto_aplicado pago_cuota.cuota.total_a_pagar 100 as porcentaje %}
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ porcentaje }}%" aria-valuenow="{{ porcentaje }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info mb-0">
+                    <p class="mb-0 text-center">No hay cuotas asociadas a este pago</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

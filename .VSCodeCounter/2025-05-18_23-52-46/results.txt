@@ -1,0 +1,187 @@
+Date : 2025-05-18 23:52:46
+Directory : d:\proyectos\Proyecto-sistem\backend
+Total : 130 files,  11391 codes, 808 comments, 1540 blanks, all 13739 lines
+
+Languages
++------------------+------------+------------+------------+------------+------------+
+| language         | files      | code       | comment    | blank      | total      |
++------------------+------------+------------+------------+------------+------------+
+| HTML             |         61 |      6,902 |        132 |        505 |      7,539 |
+| Python           |         61 |      3,296 |        556 |        746 |      4,598 |
+| JavaScript       |          4 |        429 |         79 |         85 |        593 |
+| PostCSS          |          2 |        414 |         41 |         90 |        545 |
+| Markdown         |          1 |        299 |          0 |        114 |        413 |
+| pip requirements |          1 |         51 |          0 |          0 |         51 |
++------------------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                        | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                           |        130 |     11,391 |        808 |      1,540 |     13,739 |
+| . (Files)                                                                                   |          3 |        365 |          3 |        119 |        487 |
+| accesos                                                                                     |         12 |        564 |         70 |        125 |        759 |
+| accesos (Files)                                                                             |          9 |        504 |         68 |        110 |        682 |
+| accesos\migrations                                                                          |          3 |         60 |          2 |         15 |         77 |
+| condominio_app                                                                              |          8 |        279 |         88 |         78 |        445 |
+| personal                                                                                    |         12 |      1,055 |        148 |        226 |      1,429 |
+| personal (Files)                                                                            |          9 |        934 |        146 |        211 |      1,291 |
+| personal\migrations                                                                         |          3 |        121 |          2 |         15 |        138 |
+| scripts                                                                                     |          1 |        134 |         16 |         17 |        167 |
+| static                                                                                      |          6 |        843 |        120 |        175 |      1,138 |
+| static\css                                                                                  |          2 |        414 |         41 |         90 |        545 |
+| static\js                                                                                   |          4 |        429 |         79 |         85 |        593 |
+| templates                                                                                   |         61 |      6,902 |        132 |        505 |      7,539 |
+| templates (Files)                                                                           |         13 |        919 |         31 |         66 |      1,016 |
+| templates\accesos                                                                           |          5 |        349 |          2 |         34 |        385 |
+| templates\personal                                                                          |         11 |      1,300 |         17 |         94 |      1,411 |
+| templates\reportes                                                                          |          9 |      2,417 |         52 |        160 |      2,629 |
+| templates\reportes (Files)                                                                  |          5 |      1,882 |         13 |        122 |      2,017 |
+| templates\reportes\pdf                                                                      |          4 |        535 |         39 |         38 |        612 |
+| templates\usuarios                                                                          |          8 |        506 |          0 |         36 |        542 |
+| templates\viviendas                                                                         |         15 |      1,411 |         30 |        115 |      1,556 |
+| usuarios                                                                                    |         14 |        381 |         60 |         91 |        532 |
+| usuarios (Files)                                                                            |         12 |        330 |         59 |         83 |        472 |
+| usuarios\migrations                                                                         |          2 |         51 |          1 |          8 |         60 |
+| viviendas                                                                                   |         13 |        868 |        171 |        204 |      1,243 |
+| viviendas (Files)                                                                           |          9 |        785 |        140 |        184 |      1,109 |
+| viviendas\migrations                                                                        |          2 |         48 |          1 |          8 |         57 |
+| viviendas\templatetags                                                                      |          2 |         35 |         30 |         12 |         77 |
++---------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| filename                                                                                    | language         | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| d:\proyectos\Proyecto-sistem\backend\README.md                                              | Markdown         |        299 |          0 |        114 |        413 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\__init__.py                                    | Python           |          0 |          0 |          1 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\admin.py                                       | Python           |         30 |          0 |          7 |         37 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\api.py                                         | Python           |         40 |          2 |          6 |         48 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\apps.py                                        | Python           |          4 |          0 |          3 |          7 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\forms.py                                       | Python           |         42 |          4 |          9 |         55 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\migrations\0001_initial.py                     | Python           |         28 |          1 |          7 |         36 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\migrations\0002_initial.py                     | Python           |         32 |          1 |          7 |         40 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\migrations\__init__.py                         | Python           |          0 |          0 |          1 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\models.py                                      | Python           |         24 |          0 |          5 |         29 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\tests.py                                       | Python           |        281 |         50 |         60 |        391 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\urls.py                                        | Python           |         13 |          3 |          3 |         19 |
+| d:\proyectos\Proyecto-sistem\backend\accesos\views.py                                       | Python           |         70 |          9 |         16 |         95 |
+| d:\proyectos\Proyecto-sistem\backend\condominio_app\__init__.py                             | Python           |          0 |          0 |          1 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\condominio_app\asgi.py                                 | Python           |          4 |          8 |          5 |         17 |
+| d:\proyectos\Proyecto-sistem\backend\condominio_app\forms.py                                | Python           |          3 |          7 |          2 |         12 |
+| d:\proyectos\Proyecto-sistem\backend\condominio_app\models.py                               | Python           |          0 |          9 |          1 |         10 |
+| d:\proyectos\Proyecto-sistem\backend\condominio_app\settings.py                             | Python           |        146 |         36 |         38 |        220 |
+| d:\proyectos\Proyecto-sistem\backend\condominio_app\urls.py                                 | Python           |         42 |          7 |          7 |         56 |
+| d:\proyectos\Proyecto-sistem\backend\condominio_app\views.py                                | Python           |         80 |         13 |         19 |        112 |
+| d:\proyectos\Proyecto-sistem\backend\condominio_app\wsgi.py                                 | Python           |          4 |          8 |          5 |         17 |
+| d:\proyectos\Proyecto-sistem\backend\manage.py                                              | Python           |         15 |          3 |          5 |         23 |
+| d:\proyectos\Proyecto-sistem\backend\personal\__init__.py                                   | Python           |          0 |          0 |          1 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\personal\admin.py                                      | Python           |         37 |          1 |          8 |         46 |
+| d:\proyectos\Proyecto-sistem\backend\personal\api.py                                        | Python           |         13 |          2 |          2 |         17 |
+| d:\proyectos\Proyecto-sistem\backend\personal\apps.py                                       | Python           |          4 |          0 |          3 |          7 |
+| d:\proyectos\Proyecto-sistem\backend\personal\forms.py                                      | Python           |         99 |          6 |         19 |        124 |
+| d:\proyectos\Proyecto-sistem\backend\personal\migrations\0001_initial.py                    | Python           |         74 |          1 |          7 |         82 |
+| d:\proyectos\Proyecto-sistem\backend\personal\migrations\0002_initial.py                    | Python           |         47 |          1 |          7 |         55 |
+| d:\proyectos\Proyecto-sistem\backend\personal\migrations\__init__.py                        | Python           |          0 |          0 |          1 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\personal\models.py                                     | Python           |         92 |         17 |         17 |        126 |
+| d:\proyectos\Proyecto-sistem\backend\personal\tests.py                                      | Python           |        437 |         93 |         94 |        624 |
+| d:\proyectos\Proyecto-sistem\backend\personal\urls.py                                       | Python           |         20 |          4 |          4 |         28 |
+| d:\proyectos\Proyecto-sistem\backend\personal\views.py                                      | Python           |        232 |         23 |         63 |        318 |
+| d:\proyectos\Proyecto-sistem\backend\requirements.txt                                       | pip requirements |         51 |          0 |          0 |         51 |
+| d:\proyectos\Proyecto-sistem\backend\scripts\setup.py                                       | Python           |        134 |         16 |         17 |        167 |
+| d:\proyectos\Proyecto-sistem\backend\static\css\responsive.css                              | PostCSS          |        206 |         24 |         47 |        277 |
+| d:\proyectos\Proyecto-sistem\backend\static\css\style.css                                   | PostCSS          |        208 |         17 |         43 |        268 |
+| d:\proyectos\Proyecto-sistem\backend\static\js\asignaciones_filters.js                      | JavaScript       |         99 |         14 |         20 |        133 |
+| d:\proyectos\Proyecto-sistem\backend\static\js\residentes_filters.js                        | JavaScript       |         70 |         15 |         16 |        101 |
+| d:\proyectos\Proyecto-sistem\backend\static\js\scripts.js                                   | JavaScript       |        183 |         33 |         32 |        248 |
+| d:\proyectos\Proyecto-sistem\backend\static\js\viviendas_filters.js                         | JavaScript       |         77 |         17 |         17 |        111 |
+| d:\proyectos\Proyecto-sistem\backend\templates\404.html                                     | HTML             |         20 |          0 |          1 |         21 |
+| d:\proyectos\Proyecto-sistem\backend\templates\500.html                                     | HTML             |         14 |          0 |          2 |         16 |
+| d:\proyectos\Proyecto-sistem\backend\templates\accesos\movimiento_entrada_form.html         | HTML             |         37 |          0 |          5 |         42 |
+| d:\proyectos\Proyecto-sistem\backend\templates\accesos\movimiento_list.html                 | HTML             |         94 |          1 |          4 |         99 |
+| d:\proyectos\Proyecto-sistem\backend\templates\accesos\movimiento_salida_form.html          | HTML             |         37 |          0 |          5 |         42 |
+| d:\proyectos\Proyecto-sistem\backend\templates\accesos\visita_form.html                     | HTML             |         42 |          0 |          6 |         48 |
+| d:\proyectos\Proyecto-sistem\backend\templates\accesos\visita_list.html                     | HTML             |        139 |          1 |         14 |        154 |
+| d:\proyectos\Proyecto-sistem\backend\templates\base.html                                    | HTML             |         45 |          7 |         10 |         62 |
+| d:\proyectos\Proyecto-sistem\backend\templates\dashboard.html                               | HTML             |        396 |          8 |         12 |        416 |
+| d:\proyectos\Proyecto-sistem\backend\templates\home.html                                    | HTML             |         15 |          5 |          5 |         25 |
+| d:\proyectos\Proyecto-sistem\backend\templates\login.html                                   | HTML             |         82 |          0 |         10 |         92 |
+| d:\proyectos\Proyecto-sistem\backend\templates\navbar.html                                  | HTML             |         38 |          1 |          3 |         42 |
+| d:\proyectos\Proyecto-sistem\backend\templates\password_reset.html                          | HTML             |         31 |          0 |          3 |         34 |
+| d:\proyectos\Proyecto-sistem\backend\templates\password_reset_complete.html                 | HTML             |         25 |          0 |          2 |         27 |
+| d:\proyectos\Proyecto-sistem\backend\templates\password_reset_confirm.html                  | HTML             |         40 |          0 |          2 |         42 |
+| d:\proyectos\Proyecto-sistem\backend\templates\password_reset_done.html                     | HTML             |         25 |          0 |          2 |         27 |
+| d:\proyectos\Proyecto-sistem\backend\templates\perfil.html                                  | HTML             |         61 |          1 |          6 |         68 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\asignacion_detail.html              | HTML             |        230 |          3 |         15 |        248 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\asignacion_form.html                | HTML             |        137 |          0 |         19 |        156 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\asignacion_list.html                | HTML             |        227 |          8 |         11 |        246 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\cambiar_estado_asignacion.html      | HTML             |         51 |          0 |          4 |         55 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\empleado_change_state.html          | HTML             |         46 |          0 |          3 |         49 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\empleado_detail.html                | HTML             |        229 |          2 |          8 |        239 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\empleado_form.html                  | HTML             |        108 |          0 |         15 |        123 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\empleado_list.html                  | HTML             |        142 |          4 |          9 |        155 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\puesto_confirm_delete.html          | HTML             |         39 |          0 |          4 |         43 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\puesto_form.html                    | HTML             |         30 |          0 |          3 |         33 |
+| d:\proyectos\Proyecto-sistem\backend\templates\personal\puesto_list.html                    | HTML             |         61 |          0 |          3 |         64 |
+| d:\proyectos\Proyecto-sistem\backend\templates\reportes\pdf\reporte_accesos.html            | HTML             |        116 |          9 |          8 |        133 |
+| d:\proyectos\Proyecto-sistem\backend\templates\reportes\pdf\reporte_personal.html           | HTML             |        161 |         10 |         10 |        181 |
+| d:\proyectos\Proyecto-sistem\backend\templates\reportes\pdf\reporte_residentes.html         | HTML             |        127 |         10 |         10 |        147 |
+| d:\proyectos\Proyecto-sistem\backend\templates\reportes\pdf\reporte_viviendas.html          | HTML             |        131 |         10 |         10 |        151 |
+| d:\proyectos\Proyecto-sistem\backend\templates\reportes\reporte_confirm_delete.html         | HTML             |         35 |          0 |          3 |         38 |
+| d:\proyectos\Proyecto-sistem\backend\templates\reportes\reporte_form.html                   | HTML             |        158 |          1 |         10 |        169 |
+| d:\proyectos\Proyecto-sistem\backend\templates\reportes\reporte_generado.html               | HTML             |        745 |          3 |         47 |        795 |
+| d:\proyectos\Proyecto-sistem\backend\templates\reportes\reporte_list.html                   | HTML             |        193 |          3 |          8 |        204 |
+| d:\proyectos\Proyecto-sistem\backend\templates\reportes\reporte_preview.html                | HTML             |        751 |          6 |         54 |        811 |
+| d:\proyectos\Proyecto-sistem\backend\templates\sidebar.html                                 | HTML             |        127 |          9 |          8 |        144 |
+| d:\proyectos\Proyecto-sistem\backend\templates\usuarios\rol_confirm_delete.html             | HTML             |         32 |          0 |          3 |         35 |
+| d:\proyectos\Proyecto-sistem\backend\templates\usuarios\rol_form.html                       | HTML             |         30 |          0 |          3 |         33 |
+| d:\proyectos\Proyecto-sistem\backend\templates\usuarios\rol_list.html                       | HTML             |         52 |          0 |          3 |         55 |
+| d:\proyectos\Proyecto-sistem\backend\templates\usuarios\usuario_change_state.html           | HTML             |         46 |          0 |          3 |         49 |
+| d:\proyectos\Proyecto-sistem\backend\templates\usuarios\usuario_confirm_delete.html         | HTML             |         32 |          0 |          3 |         35 |
+| d:\proyectos\Proyecto-sistem\backend\templates\usuarios\usuario_detail.html                 | HTML             |         77 |          0 |          6 |         83 |
+| d:\proyectos\Proyecto-sistem\backend\templates\usuarios\usuario_form.html                   | HTML             |        139 |          0 |          9 |        148 |
+| d:\proyectos\Proyecto-sistem\backend\templates\usuarios\usuario_list.html                   | HTML             |         98 |          0 |          6 |        104 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\edificio_confirm_delete.html       | HTML             |         32 |          0 |          3 |         35 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\edificio_detail.html               | HTML             |        205 |          1 |         18 |        224 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\edificio_form.html                 | HTML             |         39 |          0 |          5 |         44 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\edificio_list.html                 | HTML             |         57 |          0 |          3 |         60 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\residente_detail.html              | HTML             |        121 |          5 |          9 |        135 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\residente_form.html                | HTML             |        107 |          0 |         16 |        123 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\residente_list.html                | HTML             |        160 |         12 |         10 |        182 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\tipo_residente_confirm_delete.html | HTML             |         39 |          0 |          4 |         43 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\tipo_residente_form.html           | HTML             |         30 |          0 |          3 |         33 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\tipo_residente_list.html           | HTML             |         60 |          0 |          3 |         63 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\vivienda_baja.html                 | HTML             |         50 |          0 |          8 |         58 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\vivienda_confirm_delete.html       | HTML             |         33 |          0 |          3 |         36 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\vivienda_detail.html               | HTML             |        248 |          2 |         14 |        264 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\vivienda_form.html                 | HTML             |         56 |          0 |          6 |         62 |
+| d:\proyectos\Proyecto-sistem\backend\templates\viviendas\vivienda_list.html                 | HTML             |        174 |         10 |         10 |        194 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\__init__.py                                   | Python           |          0 |          0 |          1 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\adapters.py                                   | Python           |         25 |         23 |         11 |         59 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\admin.py                                      | Python           |         29 |          0 |          3 |         32 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\apps.py                                       | Python           |          4 |          0 |          3 |          7 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\forms.py                                      | Python           |         15 |          0 |          3 |         18 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\migrations\0001_initial.py                    | Python           |         51 |          1 |          7 |         59 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\migrations\__init__.py                        | Python           |          0 |          0 |          1 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\models.py                                     | Python           |         20 |          0 |          6 |         26 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\serializers.py                                | Python           |         11 |          1 |          1 |         13 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\tests.py                                      | Python           |         96 |         24 |         22 |        142 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\urls.py                                       | Python           |         18 |          3 |          2 |         23 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\validaciones_movil.py                         | Python           |          4 |          1 |          2 |          7 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\views.py                                      | Python           |         64 |          6 |         18 |         88 |
+| d:\proyectos\Proyecto-sistem\backend\usuarios\views_api.py                                  | Python           |         44 |          1 |         11 |         56 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\__init__.py                                  | Python           |          0 |          0 |          1 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\admin.py                                     | Python           |         31 |          0 |          8 |         39 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\api.py                                       | Python           |         64 |         14 |         12 |         90 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\apps.py                                      | Python           |          4 |          0 |          3 |          7 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\forms.py                                     | Python           |         73 |         11 |         15 |         99 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\migrations\0001_initial.py                   | Python           |         48 |          1 |          7 |         56 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\migrations\__init__.py                       | Python           |          0 |          0 |          1 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\models.py                                    | Python           |         56 |          3 |         10 |         69 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\templatetags\__init__.py                     | Python           |          0 |          1 |          0 |          1 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\templatetags\vivienda_filters.py             | Python           |         35 |         29 |         12 |         76 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\tests.py                                     | Python           |        347 |         78 |         75 |        500 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\urls.py                                      | Python           |         24 |          4 |          4 |         32 |
+| d:\proyectos\Proyecto-sistem\backend\viviendas\views.py                                     | Python           |        186 |         30 |         56 |        272 |
+| Total                                                                                       |                  |     11,391 |        808 |      1,540 |     13,739 |
++---------------------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+

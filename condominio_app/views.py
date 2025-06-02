@@ -1,87 +1,191 @@
+# views.py en condominio_app que condominio app es el que tiene el archivo settings.py
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
+from django.contrib import messages
 from django.db.models import Count, Q, Sum
+from django.core.cache import cache
+from django.utils import timezone
 from viviendas.models import Edificio, Vivienda, Residente
 from accesos.models import Visita, MovimientoResidente
 from personal.models import Empleado, Asignacion
 
 @login_required
 def dashboard(request):
-    # Obtener el edificio seleccionado (si existe)
-    edificio_id = request.GET.get('edificio')
-    
+    """
+    Vista principal del dashboard con estadísticas del condominio
+    Incluye filtrado por edificio y optimizaciones de consultas
+    """
     # Obtener todos los edificios para el selector
     edificios = Edificio.objects.all()
     
-    # Filtrar viviendas según el edificio seleccionado
+    # Verificar que existan edificios en el sistema
+    if not edificios.exists():
+        messages.warning(request, "No hay edificios registrados en el sistema. Por favor, registre al menos un edificio para ver las estadísticas.")
+        return render(request, 'dashboard_empty.html', {'edificios': edificios})
+    
+    # Obtener el edificio seleccionado (si existe)
+    edificio_id = request.GET.get('edificio')
+    edificio_seleccionado = None
+    edificio_nombre = "Todos los edificios"
+    
+    # Validar y procesar el edificio seleccionado
     if edificio_id:
-        viviendas = Vivienda.objects.filter(edificio_id=edificio_id)
-        edificio_seleccionado = int(edificio_id)
-        # Obtener el nombre del edificio seleccionado
-        edificio_nombre = Edificio.objects.get(id=edificio_id).nombre
+        try:
+            edificio_seleccionado = int(edificio_id)
+            edificio_obj = Edificio.objects.get(id=edificio_id)
+            edificio_nombre = edificio_obj.nombre
+            viviendas = Vivienda.objects.filter(edificio_id=edificio_id, activo=True)
+        except (ValueError, Edificio.DoesNotExist):
+            messages.error(request, "El edificio seleccionado no es válido.")
+            return redirect('dashboard')
     else:
-        viviendas = Vivienda.objects.all()
+        viviendas = Vivienda.objects.filter(activo=True)
         edificio_seleccionado = None
-        edificio_nombre = "Todos los edificios"
     
-    # Estadísticas de viviendas
-    total_viviendas = viviendas.count()
-    viviendas_ocupadas = viviendas.filter(estado='OCUPADO').count()
-    viviendas_desocupadas = viviendas.filter(estado='DESOCUPADO').count()
-    viviendas_mantenimiento = viviendas.filter(estado='MANTENIMIENTO').count()
+    # Verificar si existen viviendas
+    if not viviendas.exists():
+        messages.info(request, f"No hay viviendas registradas en {edificio_nombre}.")
     
-    # Calcular porcentaje de ocupación (evitando división por cero)
-    if total_viviendas > 0:
-        porcentaje_ocupacion = viviendas_ocupadas / total_viviendas * 100
-    else:
-        porcentaje_ocupacion = 0
+    # Usar caché para estadísticas (5 minutos)
+    cache_key = f"dashboard_stats_{edificio_id or 'all'}"
+    cached_stats = cache.get(cache_key)
     
-    # Estadísticas de residentes
+    if cached_stats is None:
+        # Estadísticas de viviendas optimizadas en una sola consulta
+        vivienda_stats = viviendas.aggregate(
+            total=Count('id'),
+            ocupadas=Count('id', filter=Q(estado='OCUPADO')),
+            desocupadas=Count('id', filter=Q(estado='DESOCUPADO')),
+            mantenimiento=Count('id', filter=Q(estado='MANTENIMIENTO'))
+        )
+        
+        total_viviendas = vivienda_stats['total']
+        viviendas_ocupadas = vivienda_stats['ocupadas']
+        viviendas_desocupadas = vivienda_stats['desocupadas']
+        viviendas_mantenimiento = vivienda_stats['mantenimiento']
+        
+        # Calcular porcentaje de ocupación (evitando división por cero)
+        if total_viviendas > 0:
+            porcentaje_ocupacion = round((viviendas_ocupadas / total_viviendas) * 100, 1)
+        else:
+            porcentaje_ocupacion = 0
+        
+        # Estadísticas de residentes
+        if edificio_id:
+            residentes_query = Residente.objects.filter(
+                vivienda__edificio_id=edificio_id, 
+                activo=True,
+                vivienda__activo=True
+            )
+        else:
+            residentes_query = Residente.objects.filter(
+                activo=True,
+                vivienda__activo=True
+            )
+        
+        # Estadísticas de residentes optimizadas
+        residente_stats = residentes_query.aggregate(
+            total=Count('id'),
+            propietarios=Count('id', filter=Q(es_propietario=True)),
+            inquilinos=Count('id', filter=Q(es_propietario=False))
+        )
+        
+        total_residentes = residente_stats['total']
+        propietarios_count = residente_stats['propietarios']
+        inquilinos_count = residente_stats['inquilinos']
+        
+        # Estadísticas de visitas
+        if edificio_id:
+            visitas_activas = Visita.objects.filter(
+                vivienda_destino__edificio_id=edificio_id,
+                vivienda_destino__activo=True,
+                fecha_hora_salida__isnull=True
+            ).count()
+        else:
+            visitas_activas = Visita.objects.filter(
+                vivienda_destino__activo=True,
+                fecha_hora_salida__isnull=True
+            ).count()
+        
+        # Estadísticas de personal
+        total_personal = Empleado.objects.filter(activo=True).count()
+        
+        # Asignaciones pendientes
+        total_asignaciones_pendientes = Asignacion.objects.filter(estado='PENDIENTE').count()
+        
+        # Guardar en caché por 5 minutos
+        cached_stats = {
+            'total_viviendas': total_viviendas,
+            'viviendas_ocupadas': viviendas_ocupadas,
+            'viviendas_desocupadas': viviendas_desocupadas,
+            'viviendas_mantenimiento': viviendas_mantenimiento,
+            'porcentaje_ocupacion': porcentaje_ocupacion,
+            'total_residentes': total_residentes,
+            'propietarios_count': propietarios_count,
+            'inquilinos_count': inquilinos_count,
+            'visitas_activas': visitas_activas,
+            'total_personal': total_personal,
+            'total_asignaciones_pendientes': total_asignaciones_pendientes,
+        }
+        cache.set(cache_key, cached_stats, 300)  # 5 minutos
+    
+    # Extraer estadísticas del caché
+    total_viviendas = cached_stats['total_viviendas']
+    viviendas_ocupadas = cached_stats['viviendas_ocupadas']
+    viviendas_desocupadas = cached_stats['viviendas_desocupadas']
+    viviendas_mantenimiento = cached_stats['viviendas_mantenimiento']
+    porcentaje_ocupacion = cached_stats['porcentaje_ocupacion']
+    total_residentes = cached_stats['total_residentes']
+    propietarios_count = cached_stats['propietarios_count']
+    inquilinos_count = cached_stats['inquilinos_count']
+    visitas_activas = cached_stats['visitas_activas']
+    total_personal = cached_stats['total_personal']
+    total_asignaciones_pendientes = cached_stats['total_asignaciones_pendientes']
+    
+    # Obtener datos recientes (no cacheados para mostrar información actualizada)
+    # Últimas visitas
     if edificio_id:
-        residentes = Residente.objects.filter(vivienda__edificio_id=edificio_id, activo=True)
+        ultimas_visitas = Visita.objects.filter(
+            vivienda_destino__edificio_id=edificio_id,
+            vivienda_destino__activo=True
+        ).select_related('vivienda_destino', 'vivienda_destino__edificio').order_by('-fecha_hora_entrada')[:5]
     else:
-        residentes = Residente.objects.filter(activo=True)
+        ultimas_visitas = Visita.objects.filter(
+            vivienda_destino__activo=True
+        ).select_related('vivienda_destino', 'vivienda_destino__edificio').order_by('-fecha_hora_entrada')[:5]
     
-    total_residentes = residentes.count()
+    # Últimas asignaciones
+    ultimas_asignaciones = Asignacion.objects.select_related(
+        'empleado__usuario', 'edificio', 'vivienda'
+    ).order_by('-fecha_asignacion')[:5]
     
-    # Contar propietarios e inquilinos
-    propietarios_count = residentes.filter(es_propietario=True).count()
-    inquilinos_count = residentes.filter(es_propietario=False).count()
-    
-    # Estadísticas de visitas
-    if edificio_id:
-        visitas_activas = Visita.objects.filter(vivienda_destino__edificio_id=edificio_id, fecha_hora_salida__isnull=True).count()
-        ultimas_visitas = Visita.objects.filter(vivienda_destino__edificio_id=edificio_id).order_by('-fecha_hora_entrada')[:5]
-    else:
-        visitas_activas = Visita.objects.filter(fecha_hora_salida__isnull=True).count()
-        ultimas_visitas = Visita.objects.all().order_by('-fecha_hora_entrada')[:5]
-    
-    # Estadísticas de personal
-    total_personal = Empleado.objects.filter(activo=True).count()
-    
-    # Obtener asignaciones pendientes
-    total_asignaciones_pendientes = Asignacion.objects.filter(estado='PENDIENTE').count()
-    
-    # Obtener las últimas asignaciones
-    ultimas_asignaciones = Asignacion.objects.all().order_by('-fecha_asignacion')[:5]
-    
-    # Obtener los últimos movimientos de residentes
+    # Últimos movimientos de residentes
     if edificio_id:
         ultimos_movimientos = MovimientoResidente.objects.filter(
-            Q(residente__vivienda__edificio_id=edificio_id)
+            residente__vivienda__edificio_id=edificio_id,
+            residente__activo=True,
+            residente__vivienda__activo=True
+        ).select_related(
+            'residente__usuario', 'residente__vivienda'
         ).order_by('-fecha_hora_entrada', '-fecha_hora_salida')[:5]
     else:
-        ultimos_movimientos = MovimientoResidente.objects.all().order_by('-fecha_hora_entrada', '-fecha_hora_salida')[:5]
+        ultimos_movimientos = MovimientoResidente.objects.filter(
+            residente__activo=True,
+            residente__vivienda__activo=True
+        ).select_related(
+            'residente__usuario', 'residente__vivienda'
+        ).order_by('-fecha_hora_entrada', '-fecha_hora_salida')[:5]
     
+    # Preparar contexto para el template
     context = {
+        'viviendas_ocupadas': viviendas_ocupadas or 0,
+        'viviendas_desocupadas': viviendas_desocupadas or 0,
+        'viviendas_mantenimiento': viviendas_mantenimiento or 0,
         'edificios': edificios,
         'edificio_seleccionado': edificio_seleccionado,
         'edificio_nombre': edificio_nombre,
         'total_viviendas': total_viviendas,
-        'viviendas_ocupadas': viviendas_ocupadas,
-        'viviendas_desocupadas': viviendas_desocupadas,
-        'viviendas_mantenimiento': viviendas_mantenimiento,
         'porcentaje_ocupacion': porcentaje_ocupacion,
         'total_residentes': total_residentes,
         'propietarios_count': propietarios_count,
@@ -97,16 +201,29 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 def home(request):
+    """
+    Vista de la página de inicio
+    Redirige al dashboard si el usuario está autenticado
+    """
     if request.user.is_authenticated:
         return redirect('dashboard')
     return render(request, 'home.html')
 
 @login_required
 def perfil(request):
+    """
+    Vista del perfil del usuario
+    """
     return render(request, 'perfil.html', {'usuario': request.user})
 
 def handler404(request, exception):
+    """
+    Manejador personalizado para errores 404
+    """
     return render(request, '404.html', status=404)
 
 def handler500(request):
+    """
+    Manejador personalizado para errores 500
+    """
     return render(request, '500.html', status=500)

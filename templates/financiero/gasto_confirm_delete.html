@@ -1,0 +1,80 @@
+<!-- templates/financiero/gasto_confirm_delete.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Gasto | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Eliminar Gasto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">Confirmar Eliminación de Gasto</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Atención:</strong> Esta acción no puede deshacerse. Al eliminar el gasto se perderá toda la información asociada.
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <h6 class="fw-bold">Concepto:</h6>
+                        <p>{{ object.concepto }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Categoría:</h6>
+                        <p>{{ object.categoria.nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Monto:</h6>
+                        <p class="fs-5 fw-bold">${{ object.monto|floatformat:2 }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Fecha:</h6>
+                        <p>{{ object.fecha|date:"d/m/Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold">Estado:</h6>
+                        <p>
+                            {% if object.estado == 'PAGADO' %}
+                            <span class="badge bg-success">Pagado</span>
+                            {% elif object.estado == 'PENDIENTE' %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                            {% else %}
+                            <span class="badge bg-danger">Cancelado</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if object.estado == 'PAGADO' %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Advertencia:</strong> Este gasto ya ha sido pagado. Al eliminarlo se afectarán los registros contables históricos.
+                </div>
+                {% endif %}
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'gasto-detail' object.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmar Eliminación
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

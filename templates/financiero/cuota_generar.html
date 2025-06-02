@@ -1,0 +1,140 @@
+<!-- templates/financiero/cuota_generar.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Generar Cuotas | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Generar Cuotas Masivamente{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Generación Masiva de Cuotas</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <p class="mb-0">
+                                    <i class="fas fa-info-circle"></i> Esta herramienta permite generar cuotas para múltiples viviendas de manera simultánea. Puede elegir aplicar a todas las viviendas activas, o bien seleccionar un edificio o viviendas específicas.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.concepto|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            {{ form.fecha_emision|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.fecha_vencimiento|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            {{ form.monto_personalizado|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                {{ form.aplicar_a_todas|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3" id="seleccionViviendas">
+                        <div class="col-md-6">
+                            {{ form.edificio|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.viviendas|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'cuota-list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-cogs"></i> Generar Cuotas
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const aplicarTodasCheck = document.getElementById('id_aplicar_a_todas');
+        const seleccionViviendas = document.getElementById('seleccionViviendas');
+        const edificioSelect = document.getElementById('id_edificio');
+        const viviendasSelect = document.getElementById('id_viviendas');
+        
+        // Función para mostrar/ocultar selección de viviendas
+        function toggleSeleccionViviendas() {
+            if (aplicarTodasCheck.checked) {
+                seleccionViviendas.style.display = 'none';
+            } else {
+                seleccionViviendas.style.display = 'flex';
+            }
+        }
+        
+        // Actualizar viviendas cuando cambia el edificio
+        if (edificioSelect && viviendasSelect) {
+            edificioSelect.addEventListener('change', function() {
+                const edificioId = this.value;
+                if (!edificioId) {
+                    // Limpiar select de viviendas
+                    viviendasSelect.innerHTML = '';
+                    return;
+                }
+                
+                // Cargar viviendas del edificio seleccionado
+                fetch(`/viviendas/api/edificio/${edificioId}/viviendas/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpiar select de viviendas
+                        viviendasSelect.innerHTML = '';
+                        
+                        // Agregar nuevas opciones
+                        data.forEach(vivienda => {
+                            if (vivienda.activo) {
+                                const option = document.createElement('option');
+                                option.value = vivienda.id;
+                                option.textContent = `${vivienda.numero} - Piso ${vivienda.piso}`;
+                                viviendasSelect.appendChild(option);
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Error al cargar viviendas:', error));
+            });
+        }
+        
+        // Event listener para aplicar a todas
+        if (aplicarTodasCheck) {
+            aplicarTodasCheck.addEventListener('change', toggleSeleccionViviendas);
+            
+            // Inicializar
+            toggleSeleccionViviendas();
+        }
+    });
+</script>
+{% endblock %}

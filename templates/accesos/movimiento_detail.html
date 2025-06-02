@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Detalle de Movimiento | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Detalle de Movimiento{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header {% if movimiento.fecha_hora_entrada and not movimiento.fecha_hora_salida %}bg-success{% elif movimiento.fecha_hora_salida and not movimiento.fecha_hora_entrada %}bg-danger{% else %}bg-info{% endif %} text-white">
+                <h5 class="mb-0">
+                    {% if movimiento.fecha_hora_entrada and not movimiento.fecha_hora_salida %}
+                        <i class="fas fa-sign-in-alt"></i> Entrada de Residente
+                    {% elif movimiento.fecha_hora_salida and not movimiento.fecha_hora_entrada %}
+                        <i class="fas fa-sign-out-alt"></i> Salida de Residente
+                    {% else %}
+                        <i class="fas fa-exchange-alt"></i> Movimiento de Residente
+                    {% endif %}
+                    #{{ movimiento.id }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Información del Residente -->
+                    <div class="col-md-6">
+                        <h6 class="text-primary"><i class="fas fa-user"></i> Información del Residente</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td><strong>Nombre:</strong></td>
+                                <td>{{ movimiento.residente.usuario.first_name }} {{ movimiento.residente.usuario.last_name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tipo:</strong></td>
+                                <td>
+                                    {% if movimiento.residente.es_propietario %}
+                                        <span class="badge badge-primary">Propietario</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Inquilino</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Estado:</strong></td>
+                                <td>
+                                    {% if movimiento.residente.activo %}
+                                        <span class="badge badge-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Información de la Vivienda -->
+                    <div class="col-md-6">
+                        <h6 class="text-success"><i class="fas fa-building"></i> Información de Vivienda</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td><strong>Edificio:</strong></td>
+                                <td>{{ movimiento.residente.vivienda.edificio.nombre }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vivienda:</strong></td>
+                                <td>{{ movimiento.residente.vivienda.numero }} - Piso {{ movimiento.residente.vivienda.piso }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Metros²:</strong></td>
+                                <td>{{ movimiento.residente.vivienda.metros_cuadrados }} m²</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Información del Movimiento -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="text-warning"><i class="fas fa-clock"></i> Detalles del Movimiento</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td><strong>Tipo de Movimiento:</strong></td>
+                                <td>
+                                    {% if movimiento.fecha_hora_entrada and not movimiento.fecha_hora_salida %}
+                                        <span class="badge badge-success"><i class="fas fa-sign-in-alt"></i> Entrada</span>
+                                    {% elif movimiento.fecha_hora_salida and not movimiento.fecha_hora_entrada %}
+                                        <span class="badge badge-danger"><i class="fas fa-sign-out-alt"></i> Salida</span>
+                                    {% elif movimiento.fecha_hora_entrada and movimiento.fecha_hora_salida %}
+                                        <span class="badge badge-info"><i class="fas fa-exchange-alt"></i> Entrada/Salida</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if movimiento.fecha_hora_entrada %}
+                            <tr>
+                                <td><strong>Fecha/Hora de Entrada:</strong></td>
+                                <td>
+                                    <span class="badge badge-success">
+                                        {{ movimiento.fecha_hora_entrada|date:"d/m/Y H:i:s" }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% if movimiento.fecha_hora_salida %}
+                            <tr>
+                                <td><strong>Fecha/Hora de Salida:</strong></td>
+                                <td>
+                                    <span class="badge badge-danger">
+                                        {{ movimiento.fecha_hora_salida|date:"d/m/Y H:i:s" }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Información del Vehículo -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="text-info"><i class="fas fa-car"></i> Información del Vehículo</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td><strong>Con Vehículo:</strong></td>
+                                <td>
+                                    {% if movimiento.vehiculo %}
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-check"></i> Sí
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">
+                                            <i class="fas fa-times"></i> No
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if movimiento.vehiculo and movimiento.placa_vehiculo %}
+                            <tr>
+                                <td><strong>Placa del Vehículo:</strong></td>
+                                <td>
+                                    <span class="badge badge-primary">
+                                        <i class="fas fa-car"></i> {{ movimiento.placa_vehiculo }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botones de Acción -->
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'movimiento-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver a Lista
+                    </a>
+                    
+                    <div>
+                        <button class="btn btn-info" onclick="window.print()">
+                            <i class="fas fa-print"></i> Imprimir
+                        </button>
+                        
+                        <a href="{% url 'residente-detail' movimiento.residente.id %}" class="btn btn-primary">
+                            <i class="fas fa-user"></i> Ver Residente
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos adicionales para impresión -->
+<style>
+@media print {
+    .btn, .card-footer {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

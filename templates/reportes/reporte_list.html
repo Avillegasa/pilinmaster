@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load dict_extras %}
 
 {% block title %}Reportes | Sistema de Administración de Condominios{% endblock %}
 {% block header %}Gestión de Reportes{% endblock %}
@@ -8,20 +7,54 @@
 <!-- Filtro por tipo de reporte -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Filtrar por Tipo de Reporte</h6>
+        <h6 class="m-0 font-weight-bold text-primary">Filtrar Reportes</h6>
     </div>
     <div class="card-body">
-        <div class="d-flex flex-wrap gap-2">
-            <a href="{% url 'reporte-list' %}" class="btn {% if not tipo_actual %}btn-primary{% else %}btn-outline-primary{% endif %} mb-2">
-                <i class="fas fa-list"></i> Todos <span class="badge bg-light text-dark">{{ reportes.count }}</span>
-            </a>
-            {% for tipo_code, tipo_nombre in tipos %}
-                <a href="{% url 'reporte-list' %}?tipo={{ tipo_code }}" class="btn {% if tipo_actual == tipo_code %}btn-primary{% else %}btn-outline-primary{% endif %} mb-2">
-                    <i class="fas fa-{% if tipo_code == 'ACCESOS' %}clipboard-list{% elif tipo_code == 'RESIDENTES' %}users{% elif tipo_code == 'VIVIENDAS' %}home{% elif tipo_code == 'PERSONAL' %}id-badge{% else %}chart-bar{% endif %}"></i>
-                    {{ tipo_nombre }} <span class="badge bg-light text-dark">{{ contadores|get_item:tipo_code }}</span>
+        <!-- Filtros de estado -->
+        <div class="mb-3">
+            <h6 class="text-muted mb-2">Estado:</h6>
+            <div class="btn-group" role="group">
+                <a href="{% url 'reporte-list' %}{% if tipo_actual %}?tipo={{ tipo_actual }}{% endif %}" 
+                   class="btn {% if not dados_baja and not solo_activos %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="fas fa-list"></i> Todos
                 </a>
-            {% endfor %}
+                <a href="{% url 'reporte-list' %}?solo_activos=1{% if tipo_actual %}&tipo={{ tipo_actual }}{% endif %}" 
+                   class="btn {% if solo_activos == '1' %}btn-success{% else %}btn-outline-success{% endif %}">
+                    <i class="fas fa-check"></i> Activos
+                </a>
+                <a href="{% url 'reporte-list' %}?dados_baja=1{% if tipo_actual %}&tipo={{ tipo_actual }}{% endif %}" 
+                   class="btn {% if dados_baja == '1' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                    <i class="fas fa-user-slash"></i> Dados de baja
+                </a>
+            </div>
         </div>
+        
+        <!-- Filtros por tipo -->
+        <div class="mb-3">
+            <h6 class="text-muted mb-2">Tipo de Reporte:</h6>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'reporte-list' %}{% if dados_baja == '1' %}?dados_baja=1{% elif solo_activos == '1' %}?solo_activos=1{% endif %}" 
+                   class="btn {% if not tipo_actual %}btn-info{% else %}btn-outline-info{% endif %} mb-2">
+                    <i class="fas fa-th-large"></i> Todos los tipos
+                </a>
+                {% for tipo_code, tipo_nombre in tipos %}
+                    <a href="{% url 'reporte-list' %}?tipo={{ tipo_code }}{% if dados_baja == '1' %}&dados_baja=1{% elif solo_activos == '1' %}&solo_activos=1{% endif %}" 
+                       class="btn {% if tipo_actual == tipo_code %}btn-primary{% else %}btn-outline-primary{% endif %} mb-2">
+                        <i class="fas fa-{% if tipo_code == 'ACCESOS' %}clipboard-list{% elif tipo_code == 'RESIDENTES' %}users{% elif tipo_code == 'VIVIENDAS' %}home{% elif tipo_code == 'PERSONAL' %}id-badge{% else %}chart-bar{% endif %}"></i>
+                        {{ tipo_nombre }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Botón para limpiar filtros -->
+        {% if filtros_activos %}
+        <div class="mt-3">
+            <a href="{% url 'reporte-list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-times"></i> Limpiar filtros
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -35,12 +68,22 @@
         <div class="row">
             {% for reporte in favoritos %}
                 <div class="col-md-4 mb-3">
-                    <div class="card h-100">
+                    <div class="card h-100 {% if not reporte.activo %}border-danger{% endif %}">
                         <div class="card-body">
-                            <h5 class="card-title">{{ reporte.nombre }}</h5>
+                            <h5 class="card-title">
+                                {{ reporte.nombre }}
+                                {% if not reporte.activo %}
+                                    <small class="badge bg-danger ms-2">Inactivo</small>
+                                {% endif %}
+                            </h5>
                             <h6 class="card-subtitle mb-2 text-muted">{{ reporte.get_tipo_display }}</h6>
                             <p class="card-text small">
-                                <strong>Período:</strong> {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}
+                                <strong>Período:</strong> 
+                                {% if reporte.fecha_desde and reporte.fecha_hasta %}
+                                    {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}
+                                {% else %}
+                                    Sin período definido
+                                {% endif %}
                             </p>
                         </div>
                         <div class="card-footer bg-transparent">
@@ -57,7 +100,13 @@
 {% endif %}
 
 <div class="mb-4 d-flex justify-content-between align-items-center">
-    <p class="text-muted">Total: {{ reportes.count }} reportes {% if tipo_actual %}({{ tipo_actual }}){% endif %}</p>
+    <div>
+        <p class="text-muted mb-1">
+            Total: {{ reportes.count }} reportes
+            {% if tipo_actual %} - Tipo: {{ tipo_actual }}{% endif %}
+            {% if dados_baja == '1' %} - Solo dados de baja{% elif solo_activos == '1' %} - Solo activos{% endif %}
+        </p>
+    </div>
     <div class="dropdown">
         <button class="btn btn-primary dropdown-toggle" type="button" id="nuevoReporteDropdown" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="fas fa-plus"></i> Nuevo Reporte
@@ -93,6 +142,7 @@
                         <th>Nombre</th>
                         <th>Tipo</th>
                         <th>Período</th>
+                        <th>Estado</th>
                         <th>Creación</th>
                         <th>Última Generación</th>
                         <th>Acciones</th>
@@ -100,7 +150,7 @@
                 </thead>
                 <tbody>
                     {% for reporte in reportes %}
-                    <tr>
+                    <tr {% if not reporte.activo %}class="table-warning"{% endif %}>
                         <td>
                             <div class="d-flex align-items-center">
                                 {% if reporte.es_favorito %}
@@ -111,18 +161,31 @@
                         </td>
                         <td>
                             {% if reporte.tipo == 'ACCESOS' %}
-                                <span class="badge text-bg-primary">Accesos</span>
+                                <span class="badge bg-primary">Accesos</span>
                             {% elif reporte.tipo == 'RESIDENTES' %}
-                                <span class="badge text-bg-success">Residentes</span>
+                                <span class="badge bg-success">Residentes</span>
                             {% elif reporte.tipo == 'VIVIENDAS' %}
-                                <span class="badge text-bg-info">Viviendas</span>
+                                <span class="badge bg-info">Viviendas</span>
                             {% elif reporte.tipo == 'PERSONAL' %}
-                                <span class="badge text-bg-secondary">Personal</span>
+                                <span class="badge bg-secondary">Personal</span>
                             {% elif reporte.tipo == 'FINANCIERO' %}
-                                <span class="badge text-bg-warning">Financiero</span>
+                                <span class="badge bg-warning text-dark">Financiero</span>
                             {% endif %}
                         </td>
-                        <td>{{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}</td>
+                        <td>
+                            {% if reporte.fecha_desde and reporte.fecha_hasta %}
+                                {{ reporte.fecha_desde|date:"d/m/Y" }} - {{ reporte.fecha_hasta|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">Sin período</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if reporte.activo %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
                         <td>{{ reporte.fecha_creacion|date:"d/m/Y H:i" }}</td>
                         <td>
                             {% if reporte.ultima_generacion %}
@@ -142,6 +205,10 @@
                                 <a href="{% url 'reporte-toggle-favorito' reporte.id %}" class="btn btn-sm {% if reporte.es_favorito %}btn-warning{% else %}btn-outline-warning{% endif %}" title="{% if reporte.es_favorito %}Quitar de favoritos{% else %}Marcar como favorito{% endif %}">
                                     <i class="fas fa-star"></i>
                                 </a>
+                                <!-- Botón para generar PDF -->
+                                <a href="{% url 'reporte-pdf' reporte.id %}" class="btn btn-sm btn-success" title="Generar PDF" target="_blank">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
                                 <button type="button" class="btn btn-sm btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
@@ -152,22 +219,38 @@
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
+                                    {% if not reporte.activo %}
                                     <li>
-                                        <a class="dropdown-item text-danger" href="{% url 'reporte-delete' reporte.id %}">
-                                            <i class="fas fa-trash"></i> Eliminar
+                                        <a class="dropdown-item text-success" href="{% url 'reporte-reactivar' reporte.id %}">
+                                            <i class="fas fa-undo"></i> Reactivar
                                         </a>
                                     </li>
+                                    {% else %}
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="{% url 'reporte-delete' reporte.id %}">
+                                            <i class="fas fa-user-slash"></i> Dar de baja
+                                        </a>
+                                    </li>
+                                    {% endif %}
                                 </ul>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center">
-                            No hay reportes configurados{% if tipo_actual %} para el tipo seleccionado{% endif %}.
-                            <a href="{% url 'reporte-create' %}{% if tipo_actual %}?tipo={{ tipo_actual }}{% endif %}" class="btn btn-sm btn-primary ms-2">
-                                <i class="fas fa-plus"></i> Crear uno ahora
-                            </a>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-file-alt fa-3x mb-3"></i>
+                                <p class="mb-2">No hay reportes configurados{% if filtros_activos %} con los filtros seleccionados{% endif %}.</p>
+                                <a href="{% url 'reporte-create' %}{% if tipo_actual %}?tipo={{ tipo_actual }}{% endif %}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Crear nuevo reporte
+                                </a>
+                                {% if filtros_activos %}
+                                <a href="{% url 'reporte-list' %}" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-times"></i> Limpiar filtros
+                                </a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -189,6 +272,7 @@
             <li><strong>Guardar configuraciones:</strong> Las configuraciones se guardan para que puedas generar reportes con los mismos parámetros en el futuro.</li>
             <li><strong>Diferentes formatos:</strong> Exporta tus reportes en PDF, Excel y CSV según tus necesidades.</li>
             <li><strong>Marcar favoritos:</strong> Para acceder rápidamente a los reportes que uses con mayor frecuencia.</li>
+            <li><strong>Filtrar reportes:</strong> Filtra por tipo de reporte y estado (activos/inactivos) para encontrar rápidamente lo que necesitas.</li>
         </ul>
     </div>
 </div>
@@ -196,9 +280,25 @@
 
 {% block extra_js %}
 <script>
-    // Agregar filtro personalizado para acceder a elementos de un diccionario
-    Handlebars.registerHelper('get_item', function(object, key) {
-        return object[key];
+    // Agregar funcionalidad adicional si es necesaria
+    document.addEventListener('DOMContentLoaded', function() {
+        // Confirmar antes de dar de baja un reporte
+        document.querySelectorAll('a[href*="reporte-delete"]').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                if (!confirm('¿Estás seguro de que deseas dar de baja este reporte?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Mostrar mensaje de confirmación al duplicar
+        document.querySelectorAll('a[href*="reporte-duplicar"]').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                if (!confirm('¿Deseas crear una copia de este reporte?')) {
+                    e.preventDefault();
+                }
+            });
+        });
     });
 </script>
 {% endblock %}

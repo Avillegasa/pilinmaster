@@ -1,17 +1,26 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+import environ
+import socket
+
+hostname = socket.gethostname()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+env = environ.Env()
+environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env')) # Lee automáticamente el archivo .env
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-a5r*0(20$e-o86dlzn-z(42l6xirk!xe4h$*72x)rm*gd)58l^'
+SECRET_KEY = env('SECRET_KEY')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = ["*"]
 # Application definition
@@ -24,7 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',  # Necesario para django-allauth
-    
+    'django_extensions',
     # Apps de terceros
     'crispy_forms',
     'crispy_bootstrap4',
@@ -42,6 +51,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'personal',  # Nueva aplicación de gestión de personal
     'alertas',# hola muchachos aqui alertas
+    'financiero',  # Nueva aplicación de gestión financiera
+    'reportes',
 ]
 
 MIDDLEWARE = [
@@ -162,7 +173,10 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-SITE_ID = 1
+if "torresegura" in hostname:
+    SITE_ID = 1  # Sitio móvil
+else:
+    SITE_ID = 2  # Sitio escritorio
 
 # Configuración de AllAuth
 ACCOUNT_EMAIL_REQUIRED = True
@@ -209,12 +223,13 @@ GOOGLE_SECRET = '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'
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 # Configuración de correo para desarrollo
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desarrollo, los correos se mostrarán en la consola
-
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para desarrollo, los correos se mostrarán en la consola
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 # Para producción, usa esto:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'  # O tu servidor de correo
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'tu@email.com'
-# EMAIL_HOST_PASSWORD = 'tu_contraseña'
+EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Sistema <no-reply@dominio.com>')

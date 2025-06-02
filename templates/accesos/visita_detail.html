@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Detalle de Visita | Sistema de Administración de Condominios{% endblock %}
+{% block header %}Detalle de Visita{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-friends"></i> 
+                    Visita #{{ visita.id }} - {{ visita.nombre_visitante }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Información del Visitante -->
+                    <div class="col-md-6">
+                        <h6 class="text-primary"><i class="fas fa-user"></i> Información del Visitante</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td><strong>Nombre:</strong></td>
+                                <td>{{ visita.nombre_visitante }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Documento:</strong></td>
+                                <td>{{ visita.documento_visitante }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Motivo:</strong></td>
+                                <td>{{ visita.motivo|default:"No especificado" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <!-- Información del Destino -->
+                    <div class="col-md-6">
+                        <h6 class="text-success"><i class="fas fa-building"></i> Destino de la Visita</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td><strong>Edificio:</strong></td>
+                                <td>{{ visita.vivienda_destino.edificio.nombre }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Vivienda:</strong></td>
+                                <td>{{ visita.vivienda_destino.numero }} - Piso {{ visita.vivienda_destino.piso }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Autoriza:</strong></td>
+                                <td>{{ visita.residente_autoriza.usuario.first_name }} {{ visita.residente_autoriza.usuario.last_name }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Información de Tiempos -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="text-warning"><i class="fas fa-clock"></i> Control de Tiempos</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td><strong>Fecha/Hora de Entrada:</strong></td>
+                                <td>
+                                    <span class="badge badge-success">
+                                        {{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Fecha/Hora de Salida:</strong></td>
+                                <td>
+                                    {% if visita.fecha_hora_salida %}
+                                        <span class="badge badge-danger">
+                                            {{ visita.fecha_hora_salida|date:"d/m/Y H:i" }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Visita Activa</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if visita.fecha_hora_salida %}
+                            <tr>
+                                <td><strong>Duración:</strong></td>
+                                <td>
+                                    {% with entrada=visita.fecha_hora_entrada salida=visita.fecha_hora_salida %}
+                                        {% with duracion_minutos=salida|timeuntil:entrada %}
+                                        <span class="badge badge-info">
+                                            {{ duracion_minutos }}
+                                        </span>
+                                        {% endwith %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <!-- Información de Registro -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6 class="text-secondary"><i class="fas fa-user-shield"></i> Información de Registro</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr>
+                                <td><strong>Registrado por:</strong></td>
+                                <td>
+                                    {% if visita.registrado_por %}
+                                        {{ visita.registrado_por.first_name }} {{ visita.registrado_por.last_name }}
+                                        ({{ visita.registrado_por.username }})
+                                    {% else %}
+                                        No especificado
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Estado:</strong></td>
+                                <td>
+                                    {% if visita.fecha_hora_salida %}
+                                        <span class="badge badge-success">Finalizada</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Activa</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botones de Acción -->
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'visita-list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver a Lista
+                    </a>
+                    
+                    <div>
+                        {% if not visita.fecha_hora_salida %}
+                            <a href="{% url 'visita-salida' visita.id %}" class="btn btn-success" 
+                               onclick="return confirm('¿Está seguro de registrar la salida de esta visita?')">
+                                <i class="fas fa-sign-out-alt"></i> Registrar Salida
+                            </a>
+                        {% endif %}
+                        
+                        <button class="btn btn-info" onclick="window.print()">
+                            <i class="fas fa-print"></i> Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos adicionales para impresión -->
+<style>
+@media print {
+    .btn, .card-footer {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .badge {
+        color: #000 !important;
+        background-color: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+    }
+}
+</style>
+{% endblock %}

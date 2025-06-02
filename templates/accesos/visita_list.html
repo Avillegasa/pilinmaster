@@ -44,9 +44,16 @@
                         <td>{{ visita.fecha_hora_entrada|date:"d/m/Y H:i" }}</td>
                         <td>-</td>
                         <td>
-                            <a href="{% url 'visita-salida' visita.id %}" class="btn btn-sm btn-success">
-                                <i class="fas fa-sign-out-alt"></i> Registrar Salida
-                            </a>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'visita-detail' visita.id %}" class="btn btn-sm btn-info" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'visita-salida' visita.id %}" class="btn btn-sm btn-success" 
+                                   onclick="return confirm('¿Confirma el registro de salida de {{ visita.nombre_visitante }}?')"
+                                   title="Registrar salida">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
@@ -60,6 +67,37 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Paginación -->
+        {% if is_paginated %}
+        <nav aria-label="Paginación de visitas">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -77,9 +115,18 @@
             if (checkboxHistorial.checked) {
                 // Mostrar historial
                 if (!historialCargado) {
-                    // Cargar historial mediante AJAX si no está cargado
-                    fetch('/api/visitas/historial/')
-                        .then(response => response.json())
+                    // Mostrar indicador de carga
+                    visitasHistorial.innerHTML = '<tr><td colspan="8" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando historial...</td></tr>';
+                    visitasHistorial.classList.remove('d-none');
+                    
+                    // Cargar historial mediante AJAX
+                    fetch('{% url "api-visitas-historial" %}')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error en la respuesta del servidor');
+                            }
+                            return response.json();
+                        })
                         .then(data => {
                             // Limpiar contenido actual
                             visitasHistorial.innerHTML = '';
@@ -119,7 +166,7 @@
                                         <td>${visita.residente_autoriza}</td>
                                         <td>${entradaStr}</td>
                                         <td>${salidaStr}</td>
-                                        <td><span class="badge text-bg-secondary">${duracion} min.</span></td>
+                                        <td><span class="badge badge-secondary">${duracion} min.</span></td>
                                     `;
                                     
                                     visitasHistorial.appendChild(row);
@@ -127,28 +174,24 @@
                             }
                             
                             historialCargado = true;
-                            visitasHistorial.classList.remove('d-none');
                         })
                         .catch(error => {
                             console.error('Error al cargar historial de visitas:', error);
                             // Mostrar mensaje de error
-                            visitasHistorial.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error al cargar historial</td></tr>';
-                            visitasHistorial.classList.remove('d-none');
+                            visitasHistorial.innerHTML = '<tr><td colspan="8" class="text-center text-danger"><i class="fas fa-exclamation-triangle"></i> Error al cargar historial</td></tr>';
                         });
                 } else {
                     visitasHistorial.classList.remove('d-none');
                 }
+                
+                // Ocultar visitas activas
+                visitasActivas.classList.add('d-none');
             } else {
-                // Ocultar historial
+                // Ocultar historial y mostrar activas
                 visitasHistorial.classList.add('d-none');
+                visitasActivas.classList.remove('d-none');
             }
         });
-        
-        // En caso de implementación real, se usaría este endpoint
-        // Por ahora, si no existe el endpoint, simularemos datos para prueba
-        if (typeof visitasHistoricas === 'undefined' || visitasHistoricas === null) {
-            window.visitasHistoricas = [];
-        }
     });
 </script>
 {% endblock %}
