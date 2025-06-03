@@ -38,7 +38,6 @@ class EdificioDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'edificio'
 
 # Vistas de Viviendas
-
 class ViviendaListView(LoginRequiredMixin, ListView):
     model = Vivienda
     template_name = 'viviendas/vivienda_list.html'

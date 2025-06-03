@@ -21,6 +21,182 @@ from django.contrib.auth import get_user_model
 from viviendas.models import Edificio, Residente,Vivienda
 from usuarios.models import Gerente, Vigilante
 from uuid import uuid4
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions, AllowAny
+from rest_framework.response import Response
+from .serializers import ClientePotencialSerializer
+from django.contrib.auth.decorators import login_required, permission_required
+from django.utils.decorators import method_decorator
+from django.views.generic import ListView
+from .models import ClientePotencial
+from django.db.models import Q
+# Agregar estas importaciones al inicio de tu views.py
+from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+import json
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, DjangoModelPermissions])
+def api_clientes_potenciales(request):
+    clientes = ClientePotencial.objects.all().order_by('-fecha_contacto')
+    serializer = ClientePotencialSerializer(clientes, many=True)
+    return Response(serializer.data)
+# ====== OPCIÓN 1: Usando Django REST Framework (Recomendado) ======
+@api_view(['POST'])
+@permission_classes([AllowAny])  # Permite acceso sin autenticación
+def crear_cliente_potencial(request):
+    """
+    API endpoint para crear un cliente potencial desde NextJS
+    """
+    try:
+        # Obtener datos del request
+        data = request.data
+        
+        # Validar campos requeridos
+        campos_requeridos = ['nombre_completo', 'email']
+        for campo in campos_requeridos:
+            if not data.get(campo):
+                return Response({
+                    'error': f'El campo {campo} es requerido'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validar formato de email básico
+        email = data.get('email')
+        if not '@' in email or not '.' in email:
+            return Response({
+                'error': 'El formato del email no es válido'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Crear el cliente potencial
+        cliente = ClientePotencial.objects.create(
+            nombre_completo=data.get('nombre_completo', '').strip(),
+            telefono=data.get('telefono', '').strip(),
+            email=email.strip().lower(),
+            ubicacion=data.get('ubicacion', '').strip(),
+            mensaje=data.get('mensaje', '').strip()
+        )
+        
+        return Response({
+            'success': True,
+            'message': f"Gracias {cliente.nombre_completo}, hemos recibido tu mensaje correctamente. ¡Pronto nos pondremos en contacto!",
+            'cliente_id': cliente.id,
+            'fecha': cliente.fecha_contacto.strftime('%Y-%m-%d %H:%M:%S')
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        return Response({
+            'success': False,
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ====== OPCIÓN 2: Usando Django Views tradicionales ======
+@csrf_exempt  # Desactiva CSRF para esta vista (necesario para requests externos)
+@require_http_methods(["POST"])
+def crear_cliente_potencial_simple(request):
+    """
+    Vista simple para crear cliente potencial sin DRF
+    """
+    try:
+        # Parsear JSON del request
+        data = json.loads(request.body)
+        
+        # Validar campos requeridos
+        if not data.get('nombre_completo') or not data.get('email'):
+            return JsonResponse({
+                'success': False,
+                'error': 'Los campos nombre_completo y email son requeridos'
+            }, status=400)
+        
+        # Crear cliente potencial
+        cliente = ClientePotencial.objects.create(
+            nombre_completo=data.get('nombre_completo', '').strip(),
+            telefono=data.get('telefono', '').strip(),
+            email=data.get('email', '').strip().lower(),
+            ubicacion=data.get('ubicacion', '').strip(),
+            mensaje=data.get('mensaje', '').strip()
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Cliente potencial creado exitosamente',
+            'id': cliente.id
+        }, status=201)
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Formato JSON inválido'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': 'Error interno del servidor',
+            'details': str(e)
+        }, status=500)
+
+# ====== Vista para listar clientes potenciales (ya existente, mejorada) ======
+@method_decorator([login_required, permission_required('usuarios.ver_cliente_potencial', raise_exception=True)], name='dispatch')
+class ClientePotencialListView(ListView):
+    model = ClientePotencial
+    template_name = 'usuarios/clientes_potenciales.html'
+    context_object_name = 'clientes'
+    ordering = ['-fecha_contacto']
+    paginate_by = 20  # Paginación para mejor rendimiento
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filtro por búsqueda
+        search = self.request.GET.get('search', '')
+        if search:
+            queryset = queryset.filter(
+                Q(nombre_completo__icontains=search) |
+                Q(email__icontains=search) |
+                Q(telefono__icontains=search)
+            )
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search'] = self.request.GET.get('search', '')
+        context['total_clientes'] = self.get_queryset().count()
+        return context
+
+# ====== API para obtener estadísticas (opcional) ======
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, DjangoModelPermissions])
+def estadisticas_clientes_potenciales(request):
+    """
+    Obtener estadísticas de clientes potenciales
+    """
+    from django.db.models import Count
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # Estadísticas básicas
+    total_clientes = ClientePotencial.objects.count()
+    
+    # Clientes de los últimos 30 días
+    hace_30_dias = timezone.now() - timedelta(days=30)
+    clientes_mes = ClientePotencial.objects.filter(
+        fecha_contacto__gte=hace_30_dias
+    ).count()
+    
+    # Clientes de la última semana
+    hace_7_dias = timezone.now() - timedelta(days=7)
+    clientes_semana = ClientePotencial.objects.filter(
+        fecha_contacto__gte=hace_7_dias
+    ).count()
+    
+    return Response({
+        'total_clientes': total_clientes,
+        'clientes_ultimo_mes': clientes_mes,
+        'clientes_ultima_semana': clientes_semana,
+        'crecimiento_semanal': clientes_semana,
+        'crecimiento_mensual': clientes_mes
+    })
 # Función auxiliar para comprobar si es administrador
 def tiene_acceso_web(user):
     return (
