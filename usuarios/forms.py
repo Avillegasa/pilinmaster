@@ -259,3 +259,7 @@ class RolForm(forms.ModelForm):
     class Meta:
         model = Rol
         fields = '__all__'
+    def __init__(self, *args, **kwargs):
+        super(RolForm, self).__init__(*args, **kwargs)
+        if self.instance.pk:
+            self.fields['nombre'].disabled = True  # Esto evita que se pueda editar el nombre
