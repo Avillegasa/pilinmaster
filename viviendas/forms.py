@@ -157,12 +157,17 @@ class ResidenteCreationForm(forms.ModelForm):
         # Configurar queryset de viviendas
         self._setup_vivienda_queryset()
 
+    
     def _setup_vivienda_queryset(self):
-        """Configura el queryset de viviendas basado en el edificio seleccionado"""
+        """
+        Configura el queryset de viviendas basado en el edificio seleccionado
+        Versión corregida que evita problemas con SQLite y UNION
+        """
         edificio_id = None
         
+        # Determinar el edificio a usar
         if self.data:
-            # Si hay datos POST, usar el edificio seleccionado
+            # Si hay datos POST, usar el edificio seleccionado en el formulario
             edificio_id = self.data.get('edificio')
         elif self.initial.get('edificio'):
             # Si hay datos iniciales, usar el edificio inicial
@@ -174,17 +179,29 @@ class ResidenteCreationForm(forms.ModelForm):
         if edificio_id:
             try:
                 edificio_id = int(edificio_id)
-                # Obtener todas las viviendas activas del edificio
-                queryset = Vivienda.objects.filter(
-                    edificio_id=edificio_id,
-                    activo=True
-                ).order_by('piso', 'numero')
                 
-                # Si estamos editando y la vivienda actual no está en el queryset, agregarla
+                # ✅ SOLUCIÓN: Usar pk__in en lugar de UNION para evitar problemas con SQLite
+                # Obtener IDs de viviendas activas del edificio
+                vivienda_ids = list(
+                    Vivienda.objects.filter(
+                        edificio_id=edificio_id,
+                        activo=True
+                    ).values_list('id', flat=True)
+                )
+                
+                # Si estamos editando, incluir la vivienda actual aunque esté inactiva
                 if self.is_editing and self.instance.vivienda:
-                    if not queryset.filter(pk=self.instance.vivienda.pk).exists():
-                        current_vivienda = Vivienda.objects.filter(pk=self.instance.vivienda.pk)
-                        queryset = queryset.union(current_vivienda).order_by('piso', 'numero')
+                    current_vivienda_id = self.instance.vivienda.id
+                    if current_vivienda_id not in vivienda_ids:
+                        vivienda_ids.append(current_vivienda_id)
+                
+                # Crear queryset final usando pk__in (compatible con SQLite)
+                if vivienda_ids:
+                    queryset = Vivienda.objects.filter(
+                        pk__in=vivienda_ids
+                    ).order_by('piso', 'numero')
+                else:
+                    queryset = Vivienda.objects.none()
                 
                 self.fields['vivienda'].queryset = queryset
                 
