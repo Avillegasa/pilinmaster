@@ -1,7 +1,8 @@
 from django.db import models
+from django.conf import settings
 
 class Alerta(models.Model):
-    TIPO_CHOICES = [
+    TIPOS_ALERTA = [
         ('Incendio', 'Incendio'),
         ('Sismo', 'Sismo'),
         ('Seguridad', 'Seguridad'),
@@ -9,11 +10,23 @@ class Alerta(models.Model):
         ('Aviso importante', 'Aviso importante'),
         ('Reunión', 'Reunión'),
     ]
-
-    tipo = models.CharField(max_length=50, choices=TIPO_CHOICES)
+    
+    ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('en_proceso', 'En Proceso'),
+        ('resuelto', 'Resuelto'),
+    ]
+    
+    tipo = models.CharField(max_length=50, choices=TIPOS_ALERTA)
     descripcion = models.TextField()
-    usuario = models.CharField(max_length=100)
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-
+    enviado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='alertas_enviadas')
+    fecha = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
+    atendido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='alertas_atendidas')
+    fecha_atencion = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-fecha']
+    
     def __str__(self):
-        return f"{self.tipo} - {self.usuario}"
+        return f"{self.tipo} - {self.enviado_por.username} - {self.fecha.strftime('%d/%m/%Y %H:%M')}"

@@ -262,7 +262,7 @@ class RolDeleteView(LoginRequiredMixin, AccesoWebPermitidoMixin, DeleteView):
 
 #aqui estoy poniendo las alertas 
 
-class AlertaListView(LoginRequiredMixin, AdminRequiredMixin, ListView):
+class AlertaListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = Alerta
     template_name = 'alertas/lista_alertas.html'
     context_object_name = 'alertas'

@@ -1,35 +1,651 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Listado de Alertas{% endblock %}
+{% block title %}Alertas - Torre Segura{% endblock %}
+
+{% block header %}Sistema de Alertas{% endblock %}
+
+{% block extra_css %}
+<style>
+    .alert-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+        overflow: visible;
+        position: relative;
+    }
+    
+    .alert-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+    
+    .alert-incendio { border-left-color: #e74c3c; }
+    .alert-sismo { border-left-color: #95a5a6; }
+    .alert-seguridad { border-left-color: #e74c3c; }
+    .alert-salud { border-left-color: #3498db; }
+    .alert-aviso { border-left-color: #9b59b6; }
+    .alert-reunion { border-left-color: #27ae60; }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--accent-color);
+    }
+    
+    .stat-card.pendientes { --accent-color: #f39c12; }
+    .stat-card.proceso { --accent-color: #3498db; }
+    .stat-card.resueltas { --accent-color: #27ae60; }
+    .stat-card.total { --accent-color: #2c3e50; }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--accent-color);
+        margin-bottom: 8px;
+    }
+    
+    .stat-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .filters-section {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+        padding: 10px 20px;
+        border: 2px solid #ecf0f1;
+        background: white;
+        color: #7f8c8d;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        text-decoration: none;
+    }
+    
+    .filter-btn:hover, .filter-btn.active {
+        color: white;
+        border-color: #2c3e50;
+        background: #2c3e50;
+        text-decoration: none;
+    }
+    
+    .filter-btn.pendientes:hover, .filter-btn.pendientes.active {
+        background: #f39c12;
+        border-color: #f39c12;
+    }
+    
+    .filter-btn.proceso:hover, .filter-btn.proceso.active {
+        background: #3498db;
+        border-color: #3498db;
+    }
+    
+    .filter-btn.resueltas:hover, .filter-btn.resueltas.active {
+        background: #27ae60;
+        border-color: #27ae60;
+    }
+    
+    .alert-header {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #ecf0f1;
+    }
+    
+    .alert-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: white;
+        margin-right: 16px;
+        flex-shrink: 0;
+    }
+    
+    .alert-info {
+        flex: 1;
+    }
+    
+    .alert-type {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 4px;
+    }
+    
+    .alert-meta {
+        color: #7f8c8d;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .alert-body {
+        padding: 20px;
+    }
+    
+    .alert-description {
+        color: #2c3e50;
+        margin-bottom: 16px;
+        line-height: 1.5;
+    }
+    
+    .alert-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .status-pendiente {
+        background: #fef9e7;
+        color: #f39c12;
+        border: 1px solid #f7dc6f;
+    }
+    
+    .status-en_proceso {
+        background: #ebf3fd;
+        color: #3498db;
+        border: 1px solid #aed6f1;
+    }
+    
+    .status-resuelto {
+        background: #eafaf1;
+        color: #27ae60;
+        border: 1px solid #a9dfbf;
+    }
+    
+    .action-dropdown {
+        position: relative;
+        z-index: 100;
+    }
+    
+    .action-btn {
+        background: #2c3e50;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: background 0.3s ease;
+    }
+    
+    .action-btn:hover {
+        background: #34495e;
+    }
+    
+    .action-btn:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+    }
+    
+    .dropdown-menu {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        min-width: 180px;
+        z-index: 9999;
+        border: 1px solid #ecf0f1;
+        margin-top: 5px;
+    }
+    
+    .dropdown-item {
+        display: block;
+        padding: 12px 16px;
+        color: #2c3e50;
+        text-decoration: none;
+        transition: background 0.3s ease;
+        border-bottom: 1px solid #f8f9fa;
+        font-weight: 500;
+    }
+    
+    .dropdown-item:last-child {
+        border-bottom: none;
+    }
+    
+    .dropdown-item:hover {
+        background: #f8f9fa;
+        color: #2c3e50;
+        text-decoration: none;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: #bdc3c7;
+        margin-bottom: 20px;
+    }
+    
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    
+    .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 12px;
+        border-radius: 6px;
+        margin: 10px 0;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 12px;
+        border-radius: 6px;
+        margin: 10px 0;
+        border: 1px solid #f5c6cb;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4">📢 Alertas Recibidas</h2>
+{% csrf_token %}
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
-    {% if alertas %}
-        <table class="table table-bordered table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>Tipo</th>
-                    <th>Descripción</th>
-                    <th>Usuario</th>
-                    <th>Fecha</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for alerta in alertas %}
-                <tr>
-                    <td>{{ alerta.tipo }}</td>
-                    <td>{{ alerta.descripcion }}</td>
-                    <td>{{ alerta.usuario }}</td>
-                    <td>{{ alerta.fecha_creacion|date:"d/m/Y H:i" }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <div class="alert alert-info">No hay alertas registradas.</div>
-    {% endif %}
+<!-- Mensajes -->
+<div id="messages-container"></div>
+
+<!-- Estadísticas -->
+<div class="stats-grid">
+    <div class="stat-card total">
+        <div class="stat-number">{{ alertas|length }}</div>
+        <div class="stat-label">Total de Alertas</div>
+    </div>
+    <div class="stat-card pendientes">
+        <div class="stat-number" id="count-pendientes">{{ alertas_pendientes }}</div>
+        <div class="stat-label">Pendientes</div>
+    </div>
+    <div class="stat-card proceso">
+        <div class="stat-number" id="count-proceso">{{ alertas_proceso }}</div>
+        <div class="stat-label">En Proceso</div>
+    </div>
+    <div class="stat-card resueltas">
+        <div class="stat-number" id="count-resueltas">{{ alertas_resueltas }}</div>
+        <div class="stat-label">Resueltas</div>
+    </div>
 </div>
+
+<!-- Filtros -->
+<div class="filters-section">
+    <h5 style="margin: 0 0 16px 0; color: #2c3e50; font-weight: 600;">
+        <i class="fas fa-filter me-2"></i>Filtrar por estado
+    </h5>
+    <div class="filter-buttons">
+        <a href="#" class="filter-btn active" data-filter="todos">
+            <i class="fas fa-list-ul"></i> Todas las Alertas
+        </a>
+        <a href="#" class="filter-btn pendientes" data-filter="pendiente">
+            <i class="fas fa-clock"></i> Pendientes (<span id="filter-count-pendientes">{{ alertas_pendientes }}</span>)
+        </a>
+        <a href="#" class="filter-btn proceso" data-filter="en_proceso">
+            <i class="fas fa-cog"></i> En Proceso (<span id="filter-count-proceso">{{ alertas_proceso }}</span>)
+        </a>
+        <a href="#" class="filter-btn resueltas" data-filter="resuelto">
+            <i class="fas fa-check"></i> Resueltas (<span id="filter-count-resueltas">{{ alertas_resueltas }}</span>)
+        </a>
+    </div>
+</div>
+
+<!-- Lista de Alertas -->
+<div id="alertas-container">
+    {% for alerta in alertas %}
+    <div class="alert-card alert-{{ alerta.tipo|lower|cut:' ' }} alerta-item" data-estado="{{ alerta.estado }}" id="alerta-{{ alerta.id }}">
+        <div class="alert-header">
+            <div class="alert-icon" style="background-color: 
+                {% if alerta.tipo == 'Incendio' %}#e74c3c
+                {% elif alerta.tipo == 'Sismo' %}#95a5a6
+                {% elif alerta.tipo == 'Seguridad' %}#e74c3c
+                {% elif alerta.tipo == 'Salud' %}#3498db
+                {% elif alerta.tipo == 'Aviso importante' %}#9b59b6
+                {% elif alerta.tipo == 'Reunión' %}#27ae60
+                {% else %}#95a5a6{% endif %};">
+                <i class="fas 
+                    {% if alerta.tipo == 'Incendio' %}fa-fire
+                    {% elif alerta.tipo == 'Sismo' %}fa-globe
+                    {% elif alerta.tipo == 'Seguridad' %}fa-shield-alt
+                    {% elif alerta.tipo == 'Salud' %}fa-heartbeat
+                    {% elif alerta.tipo == 'Aviso importante' %}fa-bullhorn
+                    {% elif alerta.tipo == 'Reunión' %}fa-users
+                    {% else %}fa-exclamation-triangle{% endif %}"></i>
+            </div>
+            <div class="alert-info">
+                <div class="alert-type">{{ alerta.tipo }}</div>
+                <div class="alert-meta">
+                    <span>
+                        <i class="fas fa-user"></i>
+                        {{ alerta.enviado_por.get_full_name|default:alerta.enviado_por.username }}
+                    </span>
+                    <span>
+                        <i class="fas fa-calendar"></i>
+                        {{ alerta.fecha|date:"d/m/Y H:i" }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert-body">
+            <div class="alert-description">{{ alerta.descripcion }}</div>
+            <div class="alert-footer">
+                <div>
+                    <span class="status-badge status-{{ alerta.estado }}" id="status-{{ alerta.id }}">
+                        {% if alerta.estado == 'pendiente' %}
+                            <i class="fas fa-clock"></i> Pendiente
+                        {% elif alerta.estado == 'en_proceso' %}
+                            <i class="fas fa-cog fa-spin"></i> En Proceso
+                        {% elif alerta.estado == 'resuelto' %}
+                            <i class="fas fa-check"></i> Resuelto
+                        {% endif %}
+                    </span>
+                    {% if alerta.atendido_por %}
+                        <br><small style="color: #7f8c8d; margin-top: 8px; display: block;" id="atendido-{{ alerta.id }}">
+                            Atendido por: {{ alerta.atendido_por.get_full_name|default:alerta.atendido_por.username }}
+                        </small>
+                    {% else %}
+                        <br><small style="color: #7f8c8d; margin-top: 8px; display: block;" id="atendido-{{ alerta.id }}"></small>
+                    {% endif %}
+                </div>
+                
+                {% if user.is_staff and alerta.estado != 'resuelto' %}
+                <div class="action-dropdown">
+                    <button class="action-btn" onclick="toggleActions(this)" id="btn-{{ alerta.id }}">
+                        <i class="fas fa-ellipsis-v"></i> Acciones
+                    </button>
+                    <div class="dropdown-menu" style="display: none;">
+                        {% if alerta.estado == 'pendiente' %}
+                            <a href="#" class="dropdown-item" onclick="cambiarEstado({{ alerta.id }}, 'en_proceso', this)">
+                                <i class="fas fa-play" style="color: #3498db; margin-right: 8px;"></i> Marcar En Proceso
+                            </a>
+                        {% endif %}
+                        {% if alerta.estado == 'en_proceso' %}
+                            <a href="#" class="dropdown-item" onclick="cambiarEstado({{ alerta.id }}, 'resuelto', this)">
+                                <i class="fas fa-check" style="color: #27ae60; margin-right: 8px;"></i> Marcar Resuelto
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-inbox"></i>
+        </div>
+        <h4 style="color: #7f8c8d; margin-bottom: 12px;">No hay alertas registradas</h4>
+        <p style="color: #95a5a6;">Las alertas aparecerán aquí cuando se reporten desde la aplicación móvil.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Obtener token CSRF
+function getCSRFToken() {
+    let token = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!token) {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            if (cookie.trim().startsWith('csrftoken=')) {
+                return cookie.trim().substring('csrftoken='.length);
+            }
+        }
+    }
+    return token ? token.value : '';
+}
+
+// Mostrar mensaje
+function showMessage(message, type = 'success') {
+    const container = document.getElementById('messages-container');
+    if (!container) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `${type}-message`;
+    messageDiv.innerHTML = `
+        <strong>${type === 'success' ? '✅' : '❌'}</strong> ${message}
+        <button onclick="this.parentElement.remove()" style="float: right; background: none; border: none; font-size: 16px; cursor: pointer;">&times;</button>
+    `;
+    container.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        if (messageDiv.parentElement) {
+            messageDiv.remove();
+        }
+    }, 5000);
+}
+
+// Filtrar alertas
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const filtro = this.dataset.filter;
+        const alertas = document.querySelectorAll('.alerta-item');
+        
+        alertas.forEach(alerta => {
+            if (filtro === 'todos') {
+                alerta.style.display = 'block';
+            } else if (alerta.dataset.estado === filtro) {
+                alerta.style.display = 'block';
+            } else {
+                alerta.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Toggle acciones dropdown
+function toggleActions(button) {
+    console.log('🔘 Toggle actions clicked');
+    
+    const dropdown = button.nextElementSibling;
+    const isVisible = dropdown.style.display === 'block';
+    
+    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+        menu.style.display = 'none';
+    });
+    
+    dropdown.style.display = isVisible ? 'none' : 'block';
+    console.log(`📋 Dropdown ${isVisible ? 'cerrado' : 'abierto'}`);
+}
+
+// Cerrar dropdowns al hacer clic fuera
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.action-dropdown')) {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+    }
+});
+
+// Actualizar contadores
+function updateCounters() {
+    const alertas = document.querySelectorAll('.alerta-item');
+    let pendientes = 0, proceso = 0, resueltas = 0;
+    
+    alertas.forEach(alerta => {
+        const estado = alerta.dataset.estado;
+        if (estado === 'pendiente') pendientes++;
+        else if (estado === 'en_proceso') proceso++;
+        else if (estado === 'resuelto') resueltas++;
+    });
+    
+    document.getElementById('count-pendientes').textContent = pendientes;
+    document.getElementById('count-proceso').textContent = proceso;
+    document.getElementById('count-resueltas').textContent = resueltas;
+    
+    document.getElementById('filter-count-pendientes').textContent = pendientes;
+    document.getElementById('filter-count-proceso').textContent = proceso;
+    document.getElementById('filter-count-resueltas').textContent = resueltas;
+}
+
+// Cambiar estado de alerta
+function cambiarEstado(alertaId, nuevoEstado, element) {
+    console.log(`🚀 Iniciando cambio de estado para alerta ${alertaId} a ${nuevoEstado}`);
+    
+    if (!confirm('¿Estás seguro de cambiar el estado de esta alerta?')) {
+        return;
+    }
+    
+    const button = document.getElementById(`btn-${alertaId}`);
+    const alertaCard = document.getElementById(`alerta-${alertaId}`);
+    const csrfToken = getCSRFToken();
+    
+    console.log('Token CSRF:', csrfToken ? 'Encontrado' : 'NO encontrado');
+    
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+    alertaCard.classList.add('loading');
+    
+    fetch(`/alertas/web/alertas/${alertaId}/estado/`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ estado: nuevoEstado })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('✅ Datos recibidos:', data);
+        
+        const statusBadge = document.getElementById(`status-${alertaId}`);
+        const atendidoInfo = document.getElementById(`atendido-${alertaId}`);
+        
+        statusBadge.className = `status-badge status-${nuevoEstado}`;
+        if (nuevoEstado === 'en_proceso') {
+            statusBadge.innerHTML = '<i class="fas fa-cog fa-spin"></i> En Proceso';
+        } else if (nuevoEstado === 'resuelto') {
+            statusBadge.innerHTML = '<i class="fas fa-check"></i> Resuelto';
+        }
+        
+        if (atendidoInfo && data.atendido_por_info) {
+            const nombre = data.atendido_por_info.first_name && data.atendido_por_info.last_name 
+                ? `${data.atendido_por_info.first_name} ${data.atendido_por_info.last_name}`.trim()
+                : data.atendido_por_info.username;
+            atendidoInfo.textContent = `Atendido por: ${nombre}`;
+        }
+        
+        alertaCard.dataset.estado = nuevoEstado;
+        
+        if (nuevoEstado === 'resuelto') {
+            const actionDropdown = document.querySelector(`#alerta-${alertaId} .action-dropdown`);
+            if (actionDropdown) {
+                actionDropdown.style.display = 'none';
+            }
+        } else {
+            const dropdown = document.querySelector(`#alerta-${alertaId} .dropdown-menu`);
+            if (dropdown && nuevoEstado === 'en_proceso') {
+                dropdown.innerHTML = `
+                    <a href="#" class="dropdown-item" onclick="cambiarEstado(${alertaId}, 'resuelto', this)">
+                        <i class="fas fa-check" style="color: #27ae60; margin-right: 8px;"></i> Marcar Resuelto
+                    </a>
+                `;
+            }
+        }
+        
+        updateCounters();
+        showMessage(`Alerta marcada como ${nuevoEstado === 'en_proceso' ? 'En Proceso' : 'Resuelta'} exitosamente.`, 'success');
+        
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.style.display = 'none';
+        });
+        
+        console.log('🎉 Proceso completado exitosamente');
+    })
+    .catch(error => {
+        console.error('💥 Error:', error);
+        showMessage(`Error al cambiar el estado: ${error.message}`, 'error');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-ellipsis-v"></i> Acciones';
+        alertaCard.classList.remove('loading');
+    });
+}
+
+// Debug inicial
+console.log('🔍 Debug inicial:');
+console.log('- CSRF Token:', getCSRFToken() ? 'Encontrado' : 'NO encontrado');
+console.log('- Alertas en página:', document.querySelectorAll('.alerta-item').length);
+console.log('- Botones de acción:', document.querySelectorAll('.action-btn').length);
+</script>
 {% endblock %}

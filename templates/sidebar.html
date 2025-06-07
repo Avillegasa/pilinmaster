@@ -159,6 +159,35 @@
             </div>
             
         </ul>
+
+
+
+
+
+    <!-- Sección de alertas -->
+     {% if user.rol.nombre in 'Administrador Gerente' %}
+        <div class="sidebar-section">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-3 mb-2 text-white-50">
+                <span><i class="fas fa-bell me-2"></i>Alertas</span>
+                <span class="d-md-none sidebar-toggle" data-bs-toggle="collapse" data-bs-target="#alertasNav" style="cursor: pointer;">
+                    <i class="fas fa-chevron-down transition-icon"></i>
+                </span>
+            </h6>
+            <ul class="nav flex-column collapse show" id="alertasNav">
+                <li class="nav-item">
+                    <a class="nav-link text-white sidebar-link {% if '/alertas/lista/' in request.path %}active{% endif %}" href="{% url 'lista_alertas' %}">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span>Listado de Alertas</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+ 
+    {% endif %}
+
+
+
+
             
             <!-- Sección de utilidades -->
             <div class="sidebar-section">
@@ -423,10 +452,12 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link text-white {% if '/alertas/' in request.path %}active bg-primary{% endif %}" href="{% url 'lista_alertas' %}">
-            <i class="fas fa-exclamation-triangle me-2"></i> Alertas
-        </a>
-    </li>
+    <a class="nav-link" href="{% url 'lista_alertas' %}">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>Alertas</span>
+    </a>
+</li>
+
 </ul>
 {% endif %}
 

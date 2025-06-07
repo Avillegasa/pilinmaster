@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import Alerta
 
-# Register your models here.
+@admin.register(Alerta)
+class AlertaAdmin(admin.ModelAdmin):
+    list_display = ('id', 'tipo', 'descripcion', 'enviado_por', 'fecha')
+    list_filter = ('tipo', 'fecha')
