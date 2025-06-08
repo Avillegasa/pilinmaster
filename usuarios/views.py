@@ -35,8 +35,8 @@ from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
-
-
+from personal.models import Empleado
+import logging
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, DjangoModelPermissions])
 def api_clientes_potenciales(request):
@@ -217,11 +217,10 @@ class AccesoWebPermitidoMixin(UserPassesTestMixin):
         return tiene_acceso_web(self.request.user)
 
     def handle_no_permission(self):
-        messages.error(self.request, "Debe ingresar desde la aplicación móvil.")
+        messages.error(self.request, "Debe ingresar desde la aplicación móvil.",extra_tags='danger')
         return redirect('login')  # Puedes redirigir a otra vista si lo deseas
 
 
-# Vistas de Usuarios
 class UsuarioListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = Usuario
     template_name = 'usuarios/usuario_list.html'
@@ -229,17 +228,50 @@ class UsuarioListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(rol__isnull=False)
-        query = self.request.GET.get("q")
+        query = self.request.GET.get("q", "").strip()
+        rol_id = self.request.GET.get("rol", "").strip()
+        edificio_id = self.request.GET.get("edificio", "").strip()
+        
+        if edificio_id and edificio_id.isdigit():
+            queryset = queryset.filter(
+                Q(gerente__edificio_id=edificio_id) |
+                Q(vigilante__edificio_id=edificio_id) |
+                Q(residente__vivienda__edificio_id=edificio_id) |
+                Q(empleado__edificio_id=edificio_id)
+            )
+        # Filtro de búsqueda por texto
         if query:
-            queryset = queryset.filter(username__icontains=query)
+            queryset = queryset.filter(
+                Q(username__icontains=query) |
+                Q(first_name__icontains=query) |
+                Q(last_name__icontains=query) |
+                Q(email__icontains=query)
+            )
+
+        # Filtro por rol
+        if rol_id and rol_id.isdigit():
+            queryset = queryset.filter(rol_id=int(rol_id))
+
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Parámetros de búsqueda
         context["q"] = self.request.GET.get("q", "")
+        
+        # Parámetros de rol - necesitamos tanto el string como el entero
+        rol_str = self.request.GET.get("rol", "").strip()
+        context["rol"] = rol_str  # Para el template
+        context["rol_id"] = int(rol_str) if rol_str.isdigit() else None
+        
+        # Todos los roles disponibles
+        context["roles"] = Rol.objects.all()
+        edificio_str = self.request.GET.get("edificio", "").strip()
+        context["edificio"] = edificio_str
+        context["edificio_id"] = int(edificio_str) if edificio_str.isdigit() else None
+        context["edificios"] = Edificio.objects.all()
         return context
-
-
 
 
 class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView):
@@ -252,20 +284,35 @@ class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView)
         rol = form.cleaned_data.get("rol")
 
         if rol and rol.nombre == "Personal":
-            # Crear usuario fantasma sin acceso
-            usuario = Usuario.objects.create(
-                username=f"personal_{uuid4().hex[:6]}",  # nombre aleatorio
-                first_name=form.cleaned_data.get("first_name") or "Empleado",
-                last_name=form.cleaned_data.get("last_name") or "Condominio",
-                is_active=False,
-                rol=rol
-            )
+            usuario = form.save(commit=False)
+            usuario.is_active = True
+            
+            # Asignar username si esta vacío
+            if not usuario.username:
+                usuario.username = f"personal_{uuid4().hex[:6]}"
+
+            if not usuario.email:
+                usuario.email = f"{uuid4().hex[:8]}@noemail.com"
             usuario.set_unusable_password()
             usuario.save()
+            
+            Empleado.objects.create(
+                usuario=usuario,
+                puesto=form.cleaned_data.get("puesto"),
+                edificio=form.cleaned_data.get("edificio"),
+                fecha_contratacion=form.cleaned_data.get("fecha_contratacion"),
+                tipo_contrato=form.cleaned_data.get("tipo_contrato"),
+                salario=form.cleaned_data.get("salario"),
+                contacto_emergencia=form.cleaned_data.get("contacto_emergencia"),
+                telefono_emergencia=form.cleaned_data.get("telefono_emergencia"),
+                especialidad=form.cleaned_data.get("especialidad"),
+                creado_por=self.request.user
+            )
+
             self.object = usuario
-            messages.success(self.request, "Empleado registrado sin acceso al sistema.")
+            messages.success(self.request, "Empleado registrado correctamente.")
             return redirect(self.success_url)
-        
+
         
         
         
@@ -309,7 +356,20 @@ class UsuarioCreateView(LoginRequiredMixin, AccesoWebPermitidoMixin, CreateView)
 
             Vigilante.objects.create(usuario=usuario, edificio=edificio)
         messages.success(self.request, "Usuario creado correctamente.")
+        logger = logging.getLogger(__name__)
+        logger.warning(f"POST para crear {rol.nombre} recibido correctamente.")
+        logger.warning(f"Datos: {form.cleaned_data}")
         return super().form_valid(form)
+    
+    def form_invalid(self, form):
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning("⚠️ FORMULARIO INVÁLIDO")
+        logger.warning(form.errors.as_json())  # Esto te mostrará qué campos fallaron
+        logger.warning(form.cleaned_data)
+        messages.error(self.request, "Ocurrió un error al registrar el usuario. Revisa los datos.",extra_tags='danger')
+        return super().form_invalid(form)
+  
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['user_actual'] = self.request.user  # <- Esto es esencial
@@ -323,7 +383,7 @@ class CustomLoginView(LoginView):
         user = form.get_user()
 
         if user.rol is None or user.rol.nombre not in ['Administrador', 'Gerente']:
-            messages.warning(self.request, "Debe ingresar desde la aplicación móvil")
+            messages.error(self.request, "Debe ingresar desde la aplicación móvil.",extra_tags='danger')
             return redirect('login')
 
         # Solo para Gerente: bloquear si no verificó su correo

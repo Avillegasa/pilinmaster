@@ -6,7 +6,9 @@ import re
 from viviendas.models import Edificio, Vivienda
 from usuarios.models import Gerente, Vigilante
 from viviendas.models import Vivienda, Residente
-
+from personal.models import Puesto
+from datetime import date
+# clase dentro de forsms.py de usuarios
 class UsuarioCreationForm(UserCreationForm):
     email = forms.EmailField(required=True, max_length=254)
     edificio = forms.ModelChoiceField(
@@ -19,14 +21,23 @@ class UsuarioCreationForm(UserCreationForm):
         required=False,
         label="Vivienda (solo para Residente)"
     )
-
+    puesto = forms.ModelChoiceField(queryset=Puesto.objects.all(), required=False)
+    fecha_contratacion = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
+    tipo_contrato = forms.ChoiceField(choices=[('PERMANENTE', 'Permanente'), ('TEMPORAL', 'Temporal'), ('EXTERNO', 'Proveedor Externo')], required=False)
+    salario = forms.DecimalField(required=False)
+    contacto_emergencia = forms.CharField(required=False)
+    telefono_emergencia = forms.CharField(required=False)
+    especialidad = forms.CharField(required=False)
     class Meta:
         model = Usuario
         fields = [
             'username',
             'email', 'first_name', 'last_name', 'telefono',
             'numero_documento', 'rol', 'foto',
-            'password1', 'password2', 'edificio', 'vivienda'
+            'password1', 'password2', 'edificio', 'vivienda',
+            'puesto', 'fecha_contratacion', 'tipo_contrato', 
+            'salario', 'contacto_emergencia', 'telefono_emergencia', 
+            'especialidad'
         ]
 
     def __init__(self, *args, **kwargs):
@@ -66,17 +77,55 @@ class UsuarioCreationForm(UserCreationForm):
         if self.user_actual and hasattr(self.user_actual, 'rol'):
             if self.user_actual.rol.nombre == 'Gerente':
                 self.fields['rol'].queryset = Rol.objects.exclude(nombre='Administrador')
+        # Dentro de __init__, después de obtener rol_obj:
+        if rol_obj.nombre in ["Personal", "Vigilante", "Gerente"]:
+            campos_opcionales = [
+                'contacto_emergencia', 'telefono_emergencia', 'especialidad',
+                'puesto', 'fecha_contratacion', 'tipo_contrato', 'salario'
+            ]
+            for campo in campos_opcionales:
+                self.fields[campo].required = False
+    def clean_fecha_contratacion(self):
+        fecha = self.cleaned_data.get('fecha_contratacion')
+        rol = self.cleaned_data.get('rol')
+        if rol and rol.nombre == 'Personal' and fecha:
+            if fecha > date.today():
+                raise forms.ValidationError("La fecha de contratación no puede estar en el futuro.")
+        return fecha
+    def clean_telefono_emergencia(self):
+        tel = self.cleaned_data.get('telefono_emergencia', '').strip()
+        rol = self.cleaned_data.get('rol')
+        if rol and rol.nombre != 'Personal':
+            return tel
+        if tel and not tel.isdigit():
+            raise forms.ValidationError("El teléfono de emergencia solo debe contener números.")
+        return tel
+
+
+
+    def clean_contacto_emergencia(self):
+        nombre = self.cleaned_data.get('contacto_emergencia', '').strip()
+        rol = self.cleaned_data.get('rol')
+        if rol and rol.nombre != 'Personal':
+            return nombre  # No validar si no es Personal
+        if nombre and not re.match(r'^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$', nombre):
+            raise forms.ValidationError("El nombre de contacto solo debe contener letras y espacios.")
+        return nombre.title()
 
     def clean(self):
         cleaned_data = super().clean()
         rol = cleaned_data.get('rol')
         edificio = cleaned_data.get('edificio')
         vivienda = cleaned_data.get('vivienda')
-        if rol and rol.nombre == 'Personal':
-            # No validar campos que serán ignorados
-            return cleaned_data
+        # if rol and rol.nombre == 'Personal':
+        #     # No validar campos que serán ignorados
+        #     return cleaned_data
+        if rol and rol.nombre in ['Personal', 'Gerente', 'Vigilante']:
+            cleaned_data['vivienda'] = None  # ← Evita validación innecesaria
+        if rol and rol.nombre == 'Personal' and not edificio:
+            self.add_error('edificio', 'Debes seleccionar un edificio para el personal.')
 
-        if rol and rol.nombre == 'Residente':
+        if rol.nombre == 'Residente':
             if not edificio:
                 self.add_error('edificio', 'Debes seleccionar un edificio para asignar al Residente.')
             if not vivienda:
@@ -84,18 +133,34 @@ class UsuarioCreationForm(UserCreationForm):
             elif vivienda.edificio != edificio:
                 self.add_error('vivienda', 'La vivienda no pertenece al edificio seleccionado.')
 
+        # Validaciones para Personal, Gerente y Vigilante (no deben tener vivienda)
+        elif rol.nombre in ['Personal', 'Gerente', 'Vigilante']:
+            if cleaned_data.get('vivienda') is not None:
+                self.add_error('vivienda', f'El rol {rol.nombre} no debe estar asociado a una vivienda.')
+
+            if not edificio:
+                self.add_error('edificio', f'Debes seleccionar un edificio para asignar al rol {rol.nombre}.')
+        
+        if rol and rol.nombre != 'Residente':
+            cleaned_data['vivienda'] = None
+
+
         if rol and rol.nombre in ['Gerente', 'Vigilante'] and not edificio:
             self.add_error('edificio', f'Debes seleccionar un edificio para asignar al rol {rol.nombre}.')
 
     def clean_email(self):
         email = self.cleaned_data.get('email', '').strip()
-        rol = self.cleaned_data.get('rol')
-        if rol and rol.nombre == 'Personal':
-            return email  # Saltar validación
+    
+        # Omitir validación si es un usuario sin email explícito (por ejemplo: Personal)
+        if not email or email.endswith('@noemail.com'):
+            return email
+
         if not email.endswith('@gmail.com'):
             raise forms.ValidationError("Solo se permiten correos de Gmail (@gmail.com).")
+    
         if Usuario.objects.filter(email=email).exists():
             raise forms.ValidationError("Este correo ya está en uso.")
+    
         return email
 
     def clean_username(self):
@@ -129,12 +194,17 @@ class UsuarioCreationForm(UserCreationForm):
         if not telefono.isdigit():
             raise forms.ValidationError("El teléfono solo debe contener números.")
         return telefono
-
     def clean_numero_documento(self):
         numero_documento = self.cleaned_data.get('numero_documento', '').strip()
+    
         if not numero_documento.isdigit():
             raise forms.ValidationError("La Cédula solo debe contener números.")
+
+        if len(numero_documento) < 7:
+            raise forms.ValidationError("La Cédula debe tener al menos 7 dígitos.")
+    
         return numero_documento
+
 
 class UsuarioChangeForm(UserChangeForm):
     class Meta:

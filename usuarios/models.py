@@ -1,4 +1,3 @@
-# Consolidación y mejoras para el modelo de Usuario con Roles, y su integración con Residente y Empleado
 # usuarios/models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
@@ -10,7 +9,7 @@ class Rol(models.Model):
     descripcion = models.TextField(blank=True)
 
     def __str__(self):
-        return self.nombre
+        return self.nombre 
 
 class UsuarioManager(BaseUserManager):
     def create_user(self, username, email=None, password=None, **extra_fields):
