@@ -411,13 +411,6 @@ def reporte_pdf(request, pk):
     }
     template = template_map.get(reporte.tipo, 'reportes/pdf/reporte_generico.html')
 
-<<<<<<< HEAD
-    html = render_to_string(template, context)
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="reporte_{reporte.nombre}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
-    weasyprint.HTML(string=html).write_pdf(target=response)
-    return response
-=======
     try:
         html = render_to_string(template, context)
         response = HttpResponse(content_type='application/pdf')
@@ -427,7 +420,6 @@ def reporte_pdf(request, pk):
     except Exception as e:
         messages.error(request, f"Error generando PDF: {str(e)}")
         return redirect('reporte-list')
->>>>>>> 6abe673bcd61b61075e1ff2922931799b25aaba2
 
 def reporte_reactivar(request, pk):
     reporte = get_object_or_404(Reporte, pk=pk)
@@ -436,7 +428,6 @@ def reporte_reactivar(request, pk):
     return redirect('reporte-list')
 
 def generar_grafico_barras(labels, values, titulo):
-<<<<<<< HEAD
     fig, ax = plt.subplots(figsize=(5, 2.5))
     ax.bar(labels, values, color='#007bff')
     ax.set_title(titulo)
@@ -816,8 +807,7 @@ def reporte_pdf(request, pk):
     response['Content-Disposition'] = f'attachment; filename="reporte_{reporte.nombre}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
     weasyprint.HTML(string=html).write_pdf(target=response)
     return response
-=======
-    try:
+    """ try:
         fig, ax = plt.subplots(figsize=(5, 2.5))
         ax.bar(labels, values, color='#007bff')
         ax.set_title(titulo)
@@ -830,5 +820,4 @@ def reporte_pdf(request, pk):
         return f'data:image/png;base64,{image_base64}'
     except Exception as e:
         print(f"Error generando gráfico: {e}")
-        return None
->>>>>>> 6abe673bcd61b61075e1ff2922931799b25aaba2
+        return None """
