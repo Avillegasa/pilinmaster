@@ -6,9 +6,11 @@ from django.contrib import messages
 from django.db.models import Count, Q, Sum
 from django.core.cache import cache
 from django.utils import timezone
+from datetime import datetime, timedelta
 from viviendas.models import Edificio, Vivienda, Residente
 from accesos.models import Visita, MovimientoResidente
 from personal.models import Empleado, Asignacion
+from usuarios.views import tiene_acceso_web
 
 @login_required
 def dashboard(request):

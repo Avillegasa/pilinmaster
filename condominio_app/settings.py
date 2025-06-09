@@ -8,8 +8,7 @@ hostname = socket.gethostname()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
-environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env')) # Lee automáticamente el archivo .env
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env')) 
 
 
 # Quick-start development settings - unsuitable for production
@@ -22,7 +21,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=["*"])
 # Application definition
 
 INSTALLED_APPS = [
@@ -34,38 +33,73 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',  # Necesario para django-allauth
     'django_extensions',
-    # Apps de terceros
+    
+
     'crispy_forms',
     'crispy_bootstrap4',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',  # Proveedor de Google
+    'corsheaders',
+    'rest_framework',
+    # 'rest_framework_simplejwt',  # Para JWT
+    'rest_framework.authtoken',  # Para autenticación con token
     
     # Apps propias
     'usuarios',
     'viviendas',
     'accesos',
-    # 'reportes',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'personal',  # Nueva aplicación de gestión de personal
-    'financiero',  # Nueva aplicación de gestión financiera
+    'personal',  
+    'financiero',
     'reportes',
+    'alertas',  # Aplicación de alertas
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Debe ser el primero
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',  # Middleware de AllAuth
+    'allauth.account.middleware.AccountMiddleware',  # Middleware de AllAuth 
+]
+# Para desarrollo (permite todo desde localhost)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # NextJS por defecto
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",  # Por si usas otro puerto
 ]
 
+# Permite credenciales (cookies, headers de auth)
+CORS_ALLOW_CREDENTIALS = True
 ROOT_URLCONF = 'condominio_app.urls'
+
+
+# Headers permitidos
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+# Métodos HTTP permitidos
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 TEMPLATES = [
     {
@@ -78,6 +112,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'usuarios.context_processors.clientes_potenciales_count',
             ],
         },
     },
@@ -151,12 +186,47 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
+    'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    )
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+    ],
+}
+
+
+
+# ====== CONFIGURACIÓN DE CSRF (para vistas sin autenticación) ======
+# Estas URLs estarán exentas de verificación CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    # Agrega tu dominio de producción aquí
+    # "https://tudominio.com",
+]
+# ====== CONFIGURACIÓN DE LOGGING PARA DEBUG ======
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'corsheaders': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
 }
 
 SIMPLE_JWT = {
