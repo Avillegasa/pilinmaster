@@ -445,12 +445,12 @@ class UsuarioChangeStateView(LoginRequiredMixin, AccesoWebPermitidoMixin, View):
         usuario = get_object_or_404(Usuario, pk=pk)
 
         if usuario == request.user:
-            messages.add_message(request, messages.ERROR, "No puedes cambiar tu propio estado...", extra_tags='danger')
+            messages.error(request, "No puedes cambiar tu propio estado...")
             return HttpResponseRedirect(reverse_lazy('usuario-list'))
 
         # Bloquear si el usuario tiene rol de alta seguridad
         if usuario.rol and usuario.rol.nombre in ['Administrador', 'Gerente']:
-            messages.add_message(request, messages.ERROR, f"No puedes desactivar a un usuario con rol '{usuario.rol.nombre}'.", extra_tags='danger')
+            messages.error(request, f"No puedes desactivar a un usuario con rol '{usuario.rol.nombre}'.")
             return HttpResponseRedirect(reverse_lazy('usuario-list'))
 
         # ✅ Si es residente y se va a desactivar, liberar la vivienda

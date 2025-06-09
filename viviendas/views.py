@@ -50,6 +50,11 @@ class EdificioDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'edificio'
 
 # Vistas de Viviendas
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+from .models import Vivienda, Edificio
+
 class ViviendaListView(LoginRequiredMixin, ListView):
     model = Vivienda
     template_name = 'viviendas/vivienda_list.html'
