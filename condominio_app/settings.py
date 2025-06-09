@@ -41,13 +41,11 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',  # Proveedor de Google
-<<<<<<< HEAD
-    'rest_framework',
-    'rest_framework.authtoken',
-    
-=======
     'corsheaders',
->>>>>>> c0f5f89470fa9475e30bc58746be1d51c604835a
+    'rest_framework',
+    # 'rest_framework_simplejwt',  # Para JWT
+    'rest_framework.authtoken',  # Para autenticación con token
+    
     # Apps propias
     'usuarios',
     'viviendas',
@@ -55,6 +53,7 @@ INSTALLED_APPS = [
     'personal',  
     'financiero',
     'reportes',
+    'alertas',  # Aplicación de alertas
 ]
 
 MIDDLEWARE = [
