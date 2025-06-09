@@ -5,12 +5,13 @@ import environ
 import socket
 import dj_database_url
 
+
 hostname = socket.gethostname()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env')) 
-
+ENVIRONMENT = env('ENVIRONMENT', default='production')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -19,7 +20,12 @@ environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env('SECRET_KEY')
 
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# SECURITY WARNING: don't run with debug turned on in production
+if ENVIRONMENT == 'production':
+    DEBUG = True
+else:
+    DEBUG = False
+
 DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = ["*"]
@@ -123,7 +129,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'condominio_app.wsgi.application'
 
 
-# Database
+# e
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 
@@ -133,9 +139,10 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-if 'DATABASE_URL' in os.environ:
-    DATABASES['default'] = dj_database_url.parse(os.environ['DATABASE_URL'])
 
+POSTGRES_LOCALLY = False
+if ENVIRONMENT ==  'production' or POSTGRES_LOCALLY == True:
+    DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
