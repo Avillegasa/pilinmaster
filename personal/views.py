@@ -11,12 +11,10 @@ from uuid import uuid4
 from usuarios.models import Usuario
 
 from usuarios.views import AccesoWebPermitidoMixin
-from .models import Puesto, Empleado, Asignacion, ComentarioAsignacion, Vivienda
+from .models import Puesto, Empleado, Asignacion, ComentarioAsignacion
 from .forms import PuestoForm, EmpleadoForm, AsignacionForm, ComentarioAsignacionForm, AsignacionFiltroForm
-# CORRECCIÓN: Import agregado para el modelo Vivienda
 from viviendas.models import Vivienda
 
-# Vistas para Puestos
 class PuestoListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
     model = Puesto
     template_name = 'personal/puesto_list.html'

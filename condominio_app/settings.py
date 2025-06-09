@@ -8,8 +8,7 @@ hostname = socket.gethostname()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
-environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env')) # Lee automáticamente el archivo .env
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env')) 
 
 
 # Quick-start development settings - unsuitable for production
@@ -22,7 +21,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=["*"])
 # Application definition
 
 INSTALLED_APPS = [
@@ -34,23 +33,23 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',  # Necesario para django-allauth
     'django_extensions',
-    # Apps de terceros
+    
+
     'crispy_forms',
     'crispy_bootstrap4',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',  # Proveedor de Google
+    'rest_framework',
+    'rest_framework.authtoken',
     
     # Apps propias
     'usuarios',
     'viviendas',
     'accesos',
-    # 'reportes',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'personal',  # Nueva aplicación de gestión de personal
-    'financiero',  # Nueva aplicación de gestión financiera
+    'personal',  
+    'financiero',
     'reportes',
 ]
 

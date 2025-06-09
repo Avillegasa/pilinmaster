@@ -11,6 +11,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('perfil/', views.perfil, name='perfil'),
+
     # URLs de autenticación
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
@@ -37,9 +38,9 @@ urlpatterns = [
     path('usuarios/', include('usuarios.urls')),
     path('viviendas/', include('viviendas.urls')),
     path('accesos/', include('accesos.urls')),
-    path('personal/', include('personal.urls')),  # Nueva aplicación de personal
-    path('financiero/', include('financiero.urls')),  # Nueva aplicación de gestión financiera
-    path('reportes/', include('reportes.urls')),  # <--- AGREGA ESTA LÍNEA
+    path('personal/', include('personal.urls')),  
+    path('financiero/', include('financiero.urls')),  
+    path('reportes/', include('reportes.urls')),  
     
     # OAuth URLs para autenticación con Gmail (implementación futura)
     path('accounts/', include('allauth.urls')),
