@@ -2,6 +2,7 @@
 from django import forms
 from django.utils import timezone
 from .models import Edificio, Vivienda, Residente
+import re
 from usuarios.models import Usuario, Rol
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -39,6 +40,7 @@ class ViviendaForm(forms.ModelForm):
         else:
             self.fields['edificio'].queryset = Edificio.objects.all().order_by('nombre')
         
+        self.fields['edificio'].queryset = Edificio.objects.all().order_by('nombre')
         # Opcional: personalizar el widget del estado para solo mostrar estados válidos
         if not self.instance.pk or self.instance.activo:
             # Para nuevas viviendas o viviendas activas
@@ -47,7 +49,17 @@ class ViviendaForm(forms.ModelForm):
                 ('DESOCUPADO', 'Desocupado'), 
                 ('MANTENIMIENTO', 'En mantenimiento'),
             ]
-    
+         # Mostrar solo el edificio asignado si es gerente
+        if self.user_actual and hasattr(self.user_actual, 'rol'):
+            if self.user_actual.rol.nombre == "Gerente":
+                if hasattr(self.user_actual, 'gerente') and self.user_actual.gerente.edificio:
+                    self.fields['edificio'].queryset = Edificio.objects.filter(pk=self.user_actual.gerente.edificio.pk)
+                    self.fields['edificio'].initial = self.user_actual.gerente.edificio
+                    self.fields['edificio'].disabled = True  # Opcional: impedir que lo cambie
+                else:
+                    self.fields['edificio'].queryset = Edificio.objects.none()
+            else:
+                self.fields['edificio'].queryset = Edificio.objects.all().order_by('nombre')
     def clean_piso(self):
         piso = self.cleaned_data.get('piso')
         edificio = self.cleaned_data.get('edificio')

@@ -9,7 +9,6 @@ from django.utils import timezone
 from usuarios.views import AccesoWebPermitidoMixin
 from .models import Edificio, Vivienda, Residente
 from .forms import EdificioForm, ViviendaForm, ViviendaBajaForm, ResidenteCreationForm
-
 # Vistas de Edificios
 class EdificioListView(LoginRequiredMixin, ListView):
     model = Edificio
@@ -86,7 +85,6 @@ class ViviendaListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(activo=activo_bool)
         else:
             queryset = queryset.filter(activo=True)
-
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -184,7 +182,7 @@ class ViviendaDetailView(LoginRequiredMixin, DetailView):
         
         return context
 
-# Vistas de Residentes
+# Vistas de Residentes - VERSIÓN CORREGIDA
 class ResidenteListView(LoginRequiredMixin, ListView):
     model = Residente
     template_name = 'viviendas/residente_list.html'
