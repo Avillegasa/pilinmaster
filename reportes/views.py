@@ -420,7 +420,200 @@ def reporte_pdf(request, pk):
     except Exception as e:
         messages.error(request, f"Error generando PDF: {str(e)}")
         return redirect('reporte-list')
+def reporte_descargar(request, pk):
+    from viviendas.models import Residente, Vivienda
+    from personal.models import Empleado
+    from accesos.models import Visita
 
+    reporte = get_object_or_404(Reporte, pk=pk)
+    formato = request.GET.get('formato', reporte.formato_preferido or 'PDF').upper()
+
+    context = {
+        'reporte': reporte,
+        'fecha_generacion': timezone.now(),
+        'logo_path': os.path.join(settings.STATIC_ROOT, 'img/logo_ofi.png'),
+    }
+
+    # --- Genera el contexto igual que en reporte_pdf/reporte_preview ---
+    if reporte.tipo == 'FINANCIERO':
+        fecha_desde = reporte.fecha_desde or timezone.now().date().replace(day=1)
+        fecha_hasta = reporte.fecha_hasta or timezone.now().date()
+
+        ingresos = Pago.objects.filter(
+            estado='VERIFICADO',
+            fecha_pago__gte=fecha_desde,
+            fecha_pago__lte=fecha_hasta
+        )
+        total_ingresos = ingresos.aggregate(total=Sum('monto'))['total'] or 0
+
+        egresos = Gasto.objects.filter(
+            estado='PAGADO',
+            fecha__gte=fecha_desde,
+            fecha__lte=fecha_hasta
+        )
+        total_egresos = egresos.aggregate(total=Sum('monto'))['total'] or 0
+
+        movimientos = []
+        for pago in ingresos:
+            movimientos.append({
+                'fecha': pago.fecha_pago,
+                'concepto': 'Ingreso',
+                'tipo': 'Ingreso',
+                'monto': pago.monto,
+            })
+        for gasto in egresos:
+            movimientos.append({
+                'fecha': gasto.fecha,
+                'concepto': gasto.concepto,
+                'tipo': 'Egreso',
+                'monto': gasto.monto,
+            })
+        movimientos = sorted(movimientos, key=lambda x: x['fecha'], reverse=True)
+
+        balance = total_ingresos - total_egresos
+
+        context['movimientos'] = movimientos
+        context['total_ingresos'] = total_ingresos
+        context['total_egresos'] = total_egresos
+        context['balance'] = balance
+
+    elif reporte.tipo == 'RESIDENTES':
+        residentes = Residente.objects.all()
+        context['residentes'] = residentes
+        context['total_residentes'] = residentes.count()
+        context['activos'] = residentes.filter(activo=True).count()
+        context['inactivos'] = residentes.filter(activo=False).count()
+        context['propietarios'] = residentes.filter(es_propietario=True).count()
+        context['inquilinos'] = residentes.filter(es_propietario=False).count()
+        grafico1 = generar_grafico_barras(
+            ['Propietarios', 'Inquilinos'],
+            [context['propietarios'], context['inquilinos']],
+            'Propietarios vs Inquilinos'
+        )
+        grafico2 = generar_grafico_barras(
+            ['Activos', 'Inactivos'],
+            [context['activos'], context['inactivos']],
+            'Estado de Residentes'
+        )
+        context['grafico1'] = grafico1
+        context['grafico2'] = grafico2
+
+    elif reporte.tipo == 'VIVIENDAS':
+        viviendas = Vivienda.objects.all()
+        context['viviendas'] = viviendas
+        context['total_viviendas'] = viviendas.count()
+        context['ocupadas'] = viviendas.filter(estado='OCUPADO').count()
+        context['desocupadas'] = viviendas.filter(estado='DESOCUPADO').count()
+        grafico1 = generar_grafico_barras(
+            ['Ocupadas', 'Desocupadas'],
+            [context['ocupadas'], context['desocupadas']],
+            'Ocupadas vs Desocupadas'
+        )
+        grafico2 = generar_grafico_barras(
+            ['Total'],
+            [context['total_viviendas']],
+            'Total de Viviendas'
+        )
+        context['grafico1'] = grafico1
+        context['grafico2'] = grafico2
+
+    elif reporte.tipo == 'PERSONAL':
+        empleados = Empleado.objects.all()
+        context['empleados'] = empleados
+        context['total_empleados'] = empleados.count()
+        context['activos'] = empleados.filter(activo=True).count()
+        context['inactivos'] = empleados.filter(activo=False).count()
+        grafico1 = generar_grafico_barras(
+            ['Activos', 'Inactivos'],
+            [context['activos'], context['inactivos']],
+            'Estado de Empleados'
+        )
+        grafico2 = generar_grafico_barras(
+            ['Total'],
+            [context['total_empleados']],
+            'Total de Empleados'
+        )
+        context['grafico1'] = grafico1
+        context['grafico2'] = grafico2
+
+    elif reporte.tipo == 'ACCESOS':
+        visitas = Visita.objects.all()
+        context['visitas'] = visitas
+        context['total_visitas'] = visitas.count()
+        context['visitas_activas'] = visitas.filter(fecha_hora_salida__isnull=True).count()
+        context['visitas_finalizadas'] = visitas.filter(fecha_hora_salida__isnull=False).count()
+        grafico1 = generar_grafico_barras(
+            ['Activas', 'Finalizadas'],
+            [context['visitas_activas'], context['visitas_finalizadas']],
+            'Visitas Activas vs Finalizadas'
+        )
+        grafico2 = generar_grafico_barras(
+            ['Total'],
+            [context['total_visitas']],
+            'Total de Visitas'
+        )
+        context['grafico1'] = grafico1
+        context['grafico2'] = grafico2
+
+    # --- Generación según formato ---
+    if formato == 'PDF':
+        template = 'reportes/pdf/reporte_%s.html' % reporte.tipo.lower()
+        html = render_to_string(template, context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="reporte_{reporte.nombre}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
+        weasyprint.HTML(string=html).write_pdf(target=response)
+        return response
+
+    elif formato == 'CSV':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="reporte_{reporte.nombre}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        writer = csv.writer(response)
+        # Ejemplo para tipo FINANCIERO
+        if reporte.tipo == 'FINANCIERO':
+            writer.writerow(['Fecha', 'Concepto', 'Tipo', 'Monto'])
+            for mov in context['movimientos']:
+                writer.writerow([mov['fecha'], mov['concepto'], mov['tipo'], mov['monto']])
+        # Agrega lógica para otros tipos
+        return response
+
+    elif formato == 'EXCEL':
+        import io
+        output = io.BytesIO()
+        if reporte.tipo == 'FINANCIERO':
+            df = pd.DataFrame(context['movimientos'])
+            if df.empty:
+                df = pd.DataFrame(columns=['fecha', 'concepto', 'tipo', 'monto'])
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False)
+        output.seek(0)
+        response = HttpResponse(
+            output.read(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="reporte_{reporte.nombre}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+        return response
+
+    elif formato == 'HTML':
+        template = 'reportes/pdf/reporte_%s.html' % reporte.tipo.lower()
+        html = render_to_string(template, context)
+        response = HttpResponse(html, content_type='text/html')
+        response['Content-Disposition'] = f'attachment; filename="reporte_{reporte.nombre}_{timezone.now().strftime("%Y%m%d_%H%M%S")}.html"'
+        return response
+
+    else:
+        return HttpResponse("Formato no soportado", status=400)
+
+def get_logo_base64():
+    # Busca primero en static/, luego en staticfiles/
+    static_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'logo_ofi.png')
+    staticfiles_path = os.path.join(settings.STATIC_ROOT, 'img', 'logo_ofi.png')
+    logo_path = static_path if os.path.exists(static_path) else staticfiles_path
+    if not os.path.exists(logo_path):
+        # Opcional: puedes devolver un logo por defecto o lanzar un error más claro
+        raise FileNotFoundError(f'Logo no encontrado en {static_path} ni en {staticfiles_path}')
+    with open(logo_path, 'rb') as image_file:
+        encoded = base64.b64encode(image_file.read()).decode('utf-8')
+    return f'data:image/png;base64,{encoded}'
 def reporte_reactivar(request, pk):
     reporte = get_object_or_404(Reporte, pk=pk)
     reporte.activo = True
