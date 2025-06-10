@@ -7,6 +7,7 @@ nixPkgs = [
     "python312Packages.pip",
     "python312Packages.setuptools",
     "python312Packages.wheel",
+    # WeasyPrint system dependencies
     "cairo",
     "pango",
     "gdk-pixbuf",
@@ -16,14 +17,24 @@ nixPkgs = [
     "gtk3",
     "gobject-introspection",
     "fontconfig",
-    "freetype"
+    "freetype",
+    "harfbuzz",
+    "fribidi",
+    # Additional libraries for better compatibility
+    "pkg-config",
+    "gettext"
 ]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = [
+    "pip install --upgrade pip",
+    "pip install -r requirements.txt"
+]
 
 [phases.build]
-cmds = ["python manage.py collectstatic --noinput"]
+cmds = [
+    "python manage.py collectstatic --noinput"
+]
 
 [start]
-cmd = "gunicorn condominio_app.wsgi"
+cmd = "gunicorn condominio_app.wsgi --bind 0.0.0.0:$PORT"
