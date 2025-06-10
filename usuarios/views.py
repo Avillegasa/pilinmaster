@@ -7,6 +7,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
 from .models import Usuario, Rol
+from alertas.models import Alerta 
+
+
+
 from .forms import UsuarioCreationForm, UsuarioEditForm, RolForm
 from django.contrib.auth.views import LoginView
 from django.core.mail import send_mail
@@ -499,3 +503,10 @@ class RolDeleteView(LoginRequiredMixin, AccesoWebPermitidoMixin, DeleteView):
     success_url = reverse_lazy('rol-list')
 
 
+#aqui estoy poniendo las alertas 
+
+class AlertaListView(LoginRequiredMixin, AccesoWebPermitidoMixin, ListView):
+    model = Alerta
+    template_name = 'alertas/lista_alertas.html'
+    context_object_name = 'alertas'
+    ordering = ['-fecha_creacion']

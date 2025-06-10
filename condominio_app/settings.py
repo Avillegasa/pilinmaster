@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'personal',  # Nueva aplicación de gestión de personal
+    'alertas',# hola muchachos aqui alertas
     'financiero',  # Nueva aplicación de gestión financiera
     'reportes',
 ]
