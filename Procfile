@@ -1,1 +1,1 @@
-web: gunicorn condominio_app.wsgi
+web: gunicorn condominio_app:app --log-file -
