@@ -1,13 +1,9 @@
 # Railway configuration for WeasyPrint dependencies
-[providers.python]
+[providers]
+python = "3.12"
 
 [phases.setup]
 nixPkgs = [
-    "python312",
-    "python312Packages.pip",
-    "python312Packages.setuptools",
-    "python312Packages.wheel",
-    # WeasyPrint system dependencies
     "cairo",
     "pango",
     "gdk-pixbuf",
@@ -20,7 +16,6 @@ nixPkgs = [
     "freetype",
     "harfbuzz",
     "fribidi",
-    # Additional libraries for better compatibility
     "pkg-config",
     "gettext"
 ]
