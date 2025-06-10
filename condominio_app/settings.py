@@ -3,15 +3,12 @@ from pathlib import Path
 from datetime import timedelta
 import environ
 import socket
-import dj_database_url
-
 
 hostname = socket.gethostname()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env')) 
-ENVIRONMENT = env('ENVIRONMENT', default='development')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -19,14 +16,8 @@ ENVIRONMENT = env('ENVIRONMENT', default='development')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
-
-# SECURITY WARNING: don't run with debug turned on in production
-if ENVIRONMENT == 'production':
-    DEBUG = True
-else:
-    DEBUG = False
-
-DEBUG = env.bool('DEBUG', default=False)
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 # Application definition
@@ -79,7 +70,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # NextJS por defecto
     "http://127.0.0.1:3000",
-    "http://localhost:3001",  # Por si usas otro puerto
+    "http://localhost:8080",  # Por si usas otro puerto
 ]
 
 # Permite credenciales (cookies, headers de auth)
