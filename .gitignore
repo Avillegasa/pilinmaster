@@ -1,6 +1,5 @@
 # Entorno virtual
 venv/
-env/
 
 # Archivos de Python
 __pycache__/
@@ -9,7 +8,6 @@ __pycache__/
 *.sqlite3
 
 # Archivos de configuración personales
-*.env
 *.sqlite3
 *.log
 *.pot
