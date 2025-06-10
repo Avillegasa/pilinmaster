@@ -1,0 +1,29 @@
+# Railway configuration for WeasyPrint dependencies
+[providers.python]
+
+[phases.setup]
+nixPkgs = [
+    "python312",
+    "python312Packages.pip",
+    "python312Packages.setuptools",
+    "python312Packages.wheel",
+    "cairo",
+    "pango",
+    "gdk-pixbuf",
+    "libffi",
+    "shared-mime-info",
+    "glib",
+    "gtk3",
+    "gobject-introspection",
+    "fontconfig",
+    "freetype"
+]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
+
+[phases.build]
+cmds = ["python manage.py collectstatic --noinput"]
+
+[start]
+cmd = "gunicorn condominio_app.wsgi"
