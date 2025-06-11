@@ -69,12 +69,13 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',  # Middleware de AllAuth 
 ]
 # Para desarrollo (permite todo desde localhost)
-CORS_ALLOWED_ORIGINS = [
+""" CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # NextJS por defecto
     "http://127.0.0.1:3000",
     "http://localhost:8080",  # Por si usas otro puerto
     "https://*",    
-]
+] """
+CORS_ALLOWED_ORIGINS = ["*"]
 
 # Permite credenciales (cookies, headers de auth)
 CORS_ALLOW_CREDENTIALS = True
