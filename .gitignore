@@ -1,6 +1,6 @@
 # Entorno virtual
 venv/
-
+.env
 # Archivos de Python
 __pycache__/
 *.py[cod]
@@ -32,3 +32,4 @@ db.sqlite3
 *.coverage
 *.egg-info/
 .cache/
+
