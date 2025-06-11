@@ -1,1 +1,1 @@
-web: gunicorn condominio_app.wsgi
+web: python manage.py collectstatic && gunicorn condominio_app.wsgi
