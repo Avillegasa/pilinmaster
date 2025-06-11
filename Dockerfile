@@ -8,16 +8,16 @@ RUN apt-get update && apt-get install -y \
     python3-brotli \
     libpango1.0-0 \
     libpangoft2-1.0-0 \
-    libharfbuzz-subset0 \
     libffi-dev \
     libcairo2 \
     libcairo2-dev \
     libjpeg62-turbo-dev \
     libgdk-pixbuf2.0-0 \
     libgdk-pixbuf2.0-dev \
-    libgobject-2.0-0 \
-    libgobject2.0-dev \
+    libglib2.0-0 \
+    libglib2.0-dev \
     build-essential \
+    fontconfig \
     && apt-get clean
 
 # Set environment variables
