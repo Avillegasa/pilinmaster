@@ -3,6 +3,7 @@ from pathlib import Path
 from datetime import timedelta
 import environ
 import socket
+import dj_database_url
 
 hostname = socket.gethostname()
 
@@ -72,6 +73,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # NextJS por defecto
     "http://127.0.0.1:3000",
     "http://localhost:8080",  # Por si usas otro puerto
+    "https://*",    
 ]
 
 # Permite credenciales (cookies, headers de auth)
@@ -120,7 +122,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'condominio_app.wsgi.application'
 
-DB_LIVE=env('DB_LIVE')
+""" DB_LIVE=env('DB_LIVE')
 
 
 if DB_LIVE in ["False", False]:
@@ -142,7 +144,12 @@ else:
         'HOST': env('DB_HOST'),
         'PORT': env('DB_PORT'),
     }
+} """
+
+DATABASES = {
+    "default": dj_database_url.config(default=env('DATABASE_URL'))
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
