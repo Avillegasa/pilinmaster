@@ -1,0 +1,1 @@
+web: gunicorn condominio_app.wsgi
