@@ -55,13 +55,13 @@ INSTALLED_APPS = [
 
     'crispy_forms',
     'crispy_bootstrap4',
-#    'allauth',
-#    'allauth.account',
-#    'allauth.socialaccount',
-#    'allauth.socialaccount.providers.google', 
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google', 
     'corsheaders',
     'rest_framework',
-    # 'rest_framework_simplejwt',  # Para JWT
+    'rest_framework_simplejwt',  # Para JWT
     'rest_framework.authtoken',  # Para autenticación con token
     
     # Apps propias
@@ -213,7 +213,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # User model personalizado
-# AUTH_USER_MODEL = 'usuarios.Usuario'
+AUTH_USER_MODEL = 'usuarios.Usuario'
 
 # Configuración de login
 LOGIN_REDIRECT_URL = 'dashboard'
