@@ -65,13 +65,13 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',  # Para autenticación con token
     
     # Apps propias
-#    'usuarios',
-#    'viviendas',
-#    'accesos',
-#    'personal',  
-#    'financiero',
-#    'reportes',
-#    'alertas',  # Aplicación de alertas
+    'usuarios',
+    'viviendas',
+    'accesos',
+    'personal',  
+    'financiero',
+    'reportes',
+    'alertas',  # Aplicación de alertas
 ]
 
 MIDDLEWARE = [
