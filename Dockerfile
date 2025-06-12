@@ -32,5 +32,9 @@ COPY . /condominio_app/
 # Install Python dependencies
 RUN pip install -r requirements.txt
 
-# Simple command with maximum logging to debug the issue
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--log-level", "debug", "--access-logfile", "-", "--error-logfile", "-", "--capture-output", "--enable-stdio-inheritance", "condominio_app.wsgi:application"]
+# Test Django configuration before starting Gunicorn
+RUN echo '#!/bin/bash\nset -e\necho "=== Testing Django configuration ==="\npython manage.py check --deploy || echo "Django check failed"\necho "=== Testing Django import ==="\npython -c "import django; print(f'\''Django version: {django.get_version()}'\''); from condominio_app.wsgi import application; print('\''WSGI application loaded successfully'\'')" || echo "WSGI import failed"\necho "=== Starting Gunicorn ==="\nexec gunicorn --bind 0.0.0.0:8000 --workers 1 --log-level debug --access-logfile - --error-logfile - --preload --capture-output condominio_app.wsgi:application' > /condominio_app/start.sh
+RUN chmod +x /condominio_app/start.sh
+
+# Command to run the application
+CMD ["/bin/bash", "/condominio_app/start.sh"]
