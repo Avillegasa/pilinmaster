@@ -23,7 +23,7 @@ def home_view(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health_check'),
-    path('', home_view, name='home_view'),  # Vista de inicio básica
+    path('', views.home, name='home'),
     
     path('dashboard/', views.dashboard, name='dashboard'),
     path('perfil/', views.perfil, name='perfil'),
