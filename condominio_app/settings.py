@@ -18,9 +18,19 @@ env = environ.Env()
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+    '.railway.app',
+]
+if os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
+    ALLOWED_HOSTS.append(os.environ.get('RAILWAY_PUBLIC_DOMAIN'))
+
+ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -148,7 +158,8 @@ else:
 } """
 
 DATABASES = {
-    "default": dj_database_url.config(default=env('DATABASE_URL'))
+    "default": dj_database_url.config(default=env('DATABASE_URL'), conn_max_age=600,
+            conn_health_checks=True,)
 }
 
 
@@ -173,8 +184,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-LANGUAGE_CODE = 'es-mx'
-TIME_ZONE = 'America/Mexico_City'
+LANGUAGE_CODE = 'es-es'
+TIME_ZONE = 'America/La_Paz'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
@@ -224,17 +235,36 @@ REST_FRAMEWORK = {
 }
 
 
+if DEBUG:
+    # Para desarrollo - permitir cualquier origen
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+    ]
+else:
+    # Para producción - orígenes específicos
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [
+        "https://pilinmaster-production.up.railway.app",
+        # Agrega aquí los dominios de tu frontend cuando los tengas
+    ]
 
-# ====== CONFIGURACIÓN DE CSRF (para vistas sin autenticación) ======
-# Estas URLs estarán exentas de verificación CSRF
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:8080",  # Por si usas otro puerto
-    
-    # Agrega tu dominio de producción aquí
-    # "https://tudominio.com",
-]
+
+# Security settings for production
+if not DEBUG:
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+        
 # ====== CONFIGURACIÓN DE LOGGING PARA DEBUG ======
 LOGGING = {
     'version': 1,
