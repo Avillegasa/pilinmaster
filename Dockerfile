@@ -32,5 +32,5 @@ COPY . /condominio_app/
 # Install Python dependencies
 RUN pip install -r requirements.txt
 
-# Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "condominio_app.wsgi"]
+# Simple command with maximum logging to debug the issue
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "1", "--log-level", "debug", "--access-logfile", "-", "--error-logfile", "-", "--capture-output", "--enable-stdio-inheritance", "condominio_app.wsgi:application"]
