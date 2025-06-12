@@ -1,3 +1,4 @@
+
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -8,8 +9,15 @@ import dj_database_url
 hostname = socket.gethostname()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Configuración de environ con valores por defecto
+env = environ.Env(
+    DEBUG=(bool, False),
+    SECRET_KEY=(str, '&ix4!j6wldiurc6q^-c0y^pv91^3v-plu=x!mv3@x9-tv5gy3_'),
+)
+
+# Leer archivo .env si existe
 environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env')) 
-env = environ.Env()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -18,7 +26,7 @@ env = environ.Env()
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -85,7 +93,7 @@ MIDDLEWARE = [
     "http://localhost:8080",  # Por si usas otro puerto
     "https://*",    
 ] """
-CORS_ALLOWED_ORIGINS = ["*"]
+# CORS_ALLOWED_ORIGINS = ["*"]
 
 # Permite credenciales (cookies, headers de auth)
 CORS_ALLOW_CREDENTIALS = True
@@ -264,7 +272,7 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-        
+
 # ====== CONFIGURACIÓN DE LOGGING PARA DEBUG ======
 LOGGING = {
     'version': 1,
