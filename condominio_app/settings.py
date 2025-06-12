@@ -93,10 +93,18 @@ MIDDLEWARE = [
     "http://localhost:8080",  # Por si usas otro puerto
     "https://*",    
 ] """
-# CORS_ALLOWED_ORIGINS = ["*"]
+# CORS settings más específicas
+CORS_ALLOWED_ORIGINS = [
+    "https://pilinmaster-production.up.railway.app",
+]
 
-# Permite credenciales (cookies, headers de auth)
 CORS_ALLOW_CREDENTIALS = True
+
+# CSRF settings - IMPORTANTE
+CSRF_TRUSTED_ORIGINS = [
+    'https://pilinmaster-production.up.railway.app',
+    'https://*.railway.app',
+]
 ROOT_URLCONF = 'condominio_app.urls'
 
 
