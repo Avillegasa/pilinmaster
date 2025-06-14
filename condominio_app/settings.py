@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 from datetime import timedelta
@@ -14,6 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, '&ix4!j6wldiurc6q^-c0y^pv91^3v-plu=x!mv3@x9-tv5gy3_'),
+    USE_LOCAL_DB=(bool, False),  # Nueva variable para controlar la DB
 )
 
 # Leer archivo .env si existe
@@ -32,7 +32,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '0.0.0.0',
-    '.railway.app',
+    '.railway.app', 
 ]
 if os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
     ALLOWED_HOSTS.append(os.environ.get('RAILWAY_PUBLIC_DOMAIN'))
@@ -86,27 +86,42 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',  # Middleware de AllAuth 
 ]
-# Para desarrollo (permite todo desde localhost)
-""" CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # NextJS por defecto
-    "http://127.0.0.1:3000",
-    "http://localhost:8080",  # Por si usas otro puerto
-    "https://*",    
-] """
-# CORS settings más específicas
-CORS_ALLOWED_ORIGINS = [
-    "https://pilinmaster-production.up.railway.app",
-]
 
-CORS_ALLOW_CREDENTIALS = True
-
-# CSRF settings - IMPORTANTE
-CSRF_TRUSTED_ORIGINS = [
-    'https://pilinmaster-production.up.railway.app',
-    'https://*.railway.app',
-]
 ROOT_URLCONF = 'condominio_app.urls'
 
+# ============ CONFIGURACIÓN DE CORS Y CSRF ============
+if DEBUG:
+    # Para desarrollo - permitir cualquier origen
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:8080",
+    ]
+    
+    # CSRF para desarrollo
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+    ]
+else:
+    # Para producción - orígenes específicos
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [
+        "https://pilinmaster-production.up.railway.app",
+    ]
+    
+    # CSRF para producción
+    CSRF_TRUSTED_ORIGINS = [
+        'https://pilinmaster-production.up.railway.app',
+        'https://*.railway.app',
+    ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 # Headers permitidos
 CORS_ALLOW_HEADERS = [
@@ -149,35 +164,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'condominio_app.wsgi.application'
 
-""" DB_LIVE=env('DB_LIVE')
+# ============ CONFIGURACIÓN DE BASE DE DATOS ============
+# Usar SQLite para desarrollo local si USE_LOCAL_DB=True, cambiar el valor tanto en el env como en las variables de railway
+USE_LOCAL_DB = env('USE_LOCAL_DB')
 
-
-if DB_LIVE in ["False", False]:
-
+if USE_LOCAL_DB:
+    print("🔧 Usando SQLite para desarrollo local")
     DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:
-
+    print("🚀 Usando PostgreSQL para producción")
     DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
+        "default": dj_database_url.config(
+            default=env('DATABASE_URL'), 
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-} """
-
-DATABASES = {
-    "default": dj_database_url.config(default=env('DATABASE_URL'), conn_max_age=600,
-            conn_health_checks=True,)
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -197,7 +204,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 LANGUAGE_CODE = 'es-es'
@@ -205,7 +211,6 @@ TIME_ZONE = 'America/La_Paz'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
@@ -232,7 +237,6 @@ LOGOUT_REDIRECT_URL = 'login'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
-
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -250,25 +254,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-
-if DEBUG:
-    # Para desarrollo - permitir cualquier origen
-    CORS_ALLOW_ALL_ORIGINS = True
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-    ]
-else:
-    # Para producción - orígenes específicos
-    CORS_ALLOW_ALL_ORIGINS = False
-    CORS_ALLOWED_ORIGINS = [
-        "https://pilinmaster-production.up.railway.app",
-        # Agrega aquí los dominios de tu frontend cuando los tengas
-    ]
-
-
 # Security settings for production
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
@@ -281,7 +266,7 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
-# ====== CONFIGURACIÓN DE LOGGING PARA DEBUG ======
+# ====== CONFIGURACIÓN DE LOGGING ======
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -293,7 +278,11 @@ LOGGING = {
     'loggers': {
         'corsheaders': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'DEBUG' if DEBUG else 'INFO',
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG and USE_LOCAL_DB else 'INFO',
         },
     },
 }
@@ -303,6 +292,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
 # Django AllAuth configuración
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
@@ -312,6 +302,7 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+# ============ CONFIGURACIÓN DE SITES (IMPORTANTE) ============
 SITE_ID = 1
 
 ACCOUNT_EMAIL_REQUIRED = True

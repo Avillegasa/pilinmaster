@@ -25,6 +25,7 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
     path('', views.home, name='home'),
     path('test-email/', views.test_email, name='test_email'), # Endpoint para probar el envío de emails
+     
     path('dashboard/', views.dashboard, name='dashboard'),
     path('perfil/', views.perfil, name='perfil'),
     # URLs de autenticación
